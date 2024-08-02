@@ -4,7 +4,6 @@
   "packageManager": "pnpm@9.6.0",
   "version": "0.0.1",
   "description": "syntax highlighting component for react using shiki",
-  "main": "index.js",
   "scripts": {
     "dev": "pnpm --stream -r --parallel dev",
     "package:dev": "pnpm --filter react-shiki dev",
@@ -21,15 +20,8 @@
   ],
   "author": "Bassim Shahidy",
   "license": "MIT",
-  "dependencies": {
-    "shiki": "^1.12.0"
-  },
   "devDependencies": {
     "@biomejs/biome": "^1.8.3",
-    "react": "^18.3.1",
     "typescript": "^5.5.4"
-  },
-  "peerDependencies": {
-    "react": ">= 15.0.0"
   }
 }

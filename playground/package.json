@@ -1,0 +1,10 @@
+{
+  "name": "TODO:package-name-playground",
+  "type": "module",
+  "version": "0.0.1",
+  "description": "TODO:package-description",
+  "author": "TODO:package-author",
+  "peerDependencies": {
+    "react": ">= 15.0.0"
+  }
+}

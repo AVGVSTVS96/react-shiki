@@ -1,0 +1,16 @@
+{
+  "name": "react-shiki",
+  "version": "0.0.1",
+  "description": "syntax highlighting component for react using shiki",
+  "author": "Bassim Shahidy",
+  "main": "index.ts",
+  "scripts": {
+    "dev": "tsc --watch",
+    "build": "tsc"
+  },
+  "keywords": ["react", "shiki", "syntax", "highlighting"],
+  "license": "MIT",
+  "peerDependencies": {
+    "react": ">= 15.0.0"
+  }
+}
