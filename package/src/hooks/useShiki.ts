@@ -1,7 +1,8 @@
-import parse from 'html-react-parser';
+import htmlReactParser from 'html-react-parser';
 import { type ReactNode, useEffect, useState } from 'react';
 import { type BundledLanguage, type BundledTheme, codeToHtml } from 'shiki';
 // import { removeTabIndexFromPre } from '@/lib/utils';
+const parse = htmlReactParser as unknown as (html: string) => ReactNode;
 
 export const useShikiHighlighter = (
   code: string,

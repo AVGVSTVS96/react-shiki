@@ -1,9 +1,11 @@
 {
   "name": "react-shiki",
   "version": "0.0.1",
+  "type": "module",
   "description": "syntax highlighting component for react using shiki",
   "author": "Bassim Shahidy",
-  "main": "index.ts",
+  "main": "./dist/index.js",
+  "types": "./dist/index.d.ts",
   "scripts": {
     "dev": "tsc --watch",
     "build": "tsc"

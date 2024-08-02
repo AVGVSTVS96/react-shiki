@@ -4,36 +4,33 @@
     "esModuleInterop": true,
     "skipLibCheck": true,
     "target": "es2022",
+    "module": "ESNext",
+    "moduleResolution": "Bundler",
+    "outDir": "dist",
+    "lib": ["es2022", "dom", "dom.iterable"],
     "allowJs": true,
     "resolveJsonModule": true,
     "moduleDetection": "force",
     "isolatedModules": true,
     "verbatimModuleSyntax": true,
-    // Enable strict type checking so you can catch bugs early
     "strict": true,
     "noUncheckedIndexedAccess": true,
     "noImplicitOverride": true,
-    // We are not transpiling, so preserve our source code and do not emit files
-    "module": "Node16",
-    "noEmit": false,
-    "outDir": "dist",
-    // Include the DOM types
-    "lib": ["es2022", "dom", "dom.iterable"],
-    // Settings for monorepo
-    "composite": false,
-    // Tells TypeScript to emit .d.ts files
+    "composite": true,
     "declaration": true,
-    // Tells TypeScript to emit source maps and declaration maps
     "declarationMap": true,
     "sourceMap": true,
     "baseUrl": ".",
     "paths": {
-      "@/*": ["./*"]
+      "@/*": ["./src/*"]
     },
     "jsx": "react-jsx",
     "jsxImportSource": "react"
   },
-  // Include the necessary files for your project
-  "include": ["**/*.ts", "**/*.tsx"],
-  "exclude": ["node_modules"]
+  "include": [
+    "src/components/**/*.tsx",
+    "src/hooks/**/*.ts",
+    "src/index.ts"
+  ],
+  "exclude": ["node_modules, dist"]
 }
