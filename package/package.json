@@ -8,9 +8,21 @@
     "dev": "tsc --watch",
     "build": "tsc"
   },
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "default": "./dist/index.js"
+    }
+  },
   "keywords": ["react", "shiki", "syntax", "highlighting"],
   "license": "MIT",
   "peerDependencies": {
     "react": ">= 15.0.0"
+  },
+  "dependencies": {
+    "@types/hast": "^3.0.4",
+    "@types/react": "^18.3.3",
+    "html-react-parser": "^5.1.12",
+    "shiki": "^1.12.1"
   }
 }

@@ -10,14 +10,9 @@
     "package:build": "pnpm --filter react-shiki build",
     "package:publish": "pnpm --filter react-shiki publish",
     "lint": "biome check .",
-    "lint:fix": "biome check --apply ."
+    "lint:fix": "biome check --write ."
   },
-  "keywords": [
-    "react",
-    "shiki",
-    "syntax",
-    "highlighting"
-  ],
+  "keywords": ["react", "shiki", "syntax", "highlighting"],
   "author": "Bassim Shahidy",
   "license": "MIT",
   "devDependencies": {

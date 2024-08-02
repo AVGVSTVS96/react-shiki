@@ -14,17 +14,24 @@
     "noUncheckedIndexedAccess": true,
     "noImplicitOverride": true,
     // We are not transpiling, so preserve our source code and do not emit files
-    "module": "preserve",
-    "noEmit": true,
+    "module": "Node16",
+    "noEmit": false,
+    "outDir": "dist",
     // Include the DOM types
     "lib": ["es2022", "dom", "dom.iterable"],
     // Settings for monorepo
-    "composite": true,
+    "composite": false,
     // Tells TypeScript to emit .d.ts files
     "declaration": true,
     // Tells TypeScript to emit source maps and declaration maps
     "declarationMap": true,
-    "sourceMap": true
+    "sourceMap": true,
+    "baseUrl": ".",
+    "paths": {
+      "@/*": ["./*"]
+    },
+    "jsx": "react-jsx",
+    "jsxImportSource": "react"
   },
   // Include the necessary files for your project
   "include": ["**/*.ts", "**/*.tsx"],

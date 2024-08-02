@@ -31,7 +31,8 @@
   "formatter": {
     "enabled": true,
     "indentStyle": "space",
-    "formatWithErrors": true
+    "formatWithErrors": true,
+    "lineWidth": 74
   },
   "javascript": {
     "formatter": {
@@ -41,10 +42,6 @@
     }
   },
   "files": {
-    "ignore": [
-      "node_modules",
-      "dist",
-      ".vscode"
-    ]
+    "ignore": ["node_modules", "dist", ".vscode"]
   }
 }
