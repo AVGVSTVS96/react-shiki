@@ -1,36 +1,23 @@
 {
   "compilerOptions": {
-    // Base Options recommended for all projects
     "esModuleInterop": true,
     "skipLibCheck": true,
-    "target": "es2022",
-    "module": "ESNext",
+    "module": "Preserve",
     "moduleResolution": "Bundler",
-    "outDir": "dist",
-    "lib": ["es2022", "dom", "dom.iterable"],
-    "allowJs": true,
+    "jsx": "preserve",
+    "noEmit": true,
     "resolveJsonModule": true,
-    "moduleDetection": "force",
     "isolatedModules": true,
     "verbatimModuleSyntax": true,
     "strict": true,
     "noUncheckedIndexedAccess": true,
     "noImplicitOverride": true,
-    "composite": true,
-    "declaration": true,
-    "declarationMap": true,
-    "sourceMap": true,
+    "lib": ["es2022", "dom", "dom.iterable"],
     "baseUrl": ".",
     "paths": {
       "@/*": ["./src/*"]
-    },
-    "jsx": "react-jsx",
-    "jsxImportSource": "react"
+    }
   },
-  "include": [
-    "src/components/**/*.tsx",
-    "src/hooks/**/*.ts",
-    "src/index.ts"
-  ],
-  "exclude": ["node_modules, dist"]
+  "include": ["src/**/*.ts", "src/**/*.tsx"],
+  "exclude": ["node_modules"]
 }

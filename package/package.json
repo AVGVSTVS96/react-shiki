@@ -1,23 +1,39 @@
 {
   "name": "react-shiki",
+  "description": "Syntax highlighter component for react using shiki",
   "version": "0.0.1",
+  "license": "MIT",
+  "author": {
+    "name": "Bassim Shahidy",
+    "email": "bassim@shahidy.com",
+    "url": "https://bassim.build"
+  },
+  "repository": "https://github.com/avgvstvs96/react-shiki",
+  "keywords": [
+    "react",
+    "shiki",
+    "code",
+    "syntax",
+    "highlighter",
+    "syntax-highlighter",
+    "react-syntax-highlighter"
+  ],
   "type": "module",
-  "description": "syntax highlighting component for react using shiki",
-  "author": "Bassim Shahidy",
   "main": "./dist/index.js",
   "types": "./dist/index.d.ts",
-  "scripts": {
-    "dev": "tsc --watch",
-    "build": "tsc"
-  },
+  "files": ["dist"],
   "exports": {
     ".": {
       "types": "./dist/index.d.ts",
       "default": "./dist/index.js"
     }
   },
-  "keywords": ["react", "shiki", "syntax", "highlighting"],
-  "license": "MIT",
+  "scripts": {
+    "dev": "tsup --watch",
+    "build": "tsup",
+    "lint": "tsc && biome check .",
+    "lint:fix": "biome check --write ."
+  },
   "peerDependencies": {
     "react": ">= 15.0.0"
   },
@@ -26,5 +42,8 @@
     "@types/react": "^18.3.3",
     "html-react-parser": "^5.1.12",
     "shiki": "^1.12.1"
+  },
+  "devDependencies": {
+    "tsup": "^8.2.4"
   }
 }
