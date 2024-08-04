@@ -11,5 +11,6 @@ export default defineConfig((options) => {
     clean: true,
     minify: !dev,
     tsconfig: 'tsconfig.json',
+    external: ['react', 'react-dom'],
   };
 });
