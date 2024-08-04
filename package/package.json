@@ -30,9 +30,7 @@
   },
   "scripts": {
     "dev": "tsup --watch",
-    "build": "tsup",
-    "lint": "tsc && biome check .",
-    "lint:fix": "biome check --write ."
+    "build": "tsup"
   },
   "peerDependencies": {
     "react": ">= 15.0.0"
