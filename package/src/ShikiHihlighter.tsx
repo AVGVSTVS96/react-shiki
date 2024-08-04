@@ -1,4 +1,4 @@
-import { useShikiHighlighter } from '@/hooks/useShiki';
+import { useShikiHighlighter } from '@/useShiki';
 import type React from 'react';
 import type { BundledLanguage, BundledTheme } from 'shiki';
 

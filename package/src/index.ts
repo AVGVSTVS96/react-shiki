@@ -1,2 +1,3 @@
-export { ShikiHighlighter as default } from './components/ShikiHihlighter';
-export { useShikiHighlighter } from './hooks/useShiki';
+export { ShikiHighlighter as default } from './ShikiHihlighter';
+export { useShikiHighlighter } from './useShiki';
+export { isInlineCode, type Element } from './utils';
