@@ -1,7 +1,8 @@
 import ShikiHighlighter from 'react-shiki';
+import React from 'react'
 import './App.css';
 
-export function HighlightCodeBlocks() {
+export const HighlightCodeBlocks = React.memo(() => {
   function AyuDarkCodeBlock() {
     const code = `
 function AyuDarkCodeBlock() {
@@ -110,4 +111,4 @@ function HoustonCodeBlock() {
       <HoustonCodeBlock />
     </div>
   );
-}
+});
