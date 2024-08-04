@@ -1,0 +1,21 @@
+.container {
+  position: relative;
+}
+
+.container pre {
+  overflow: auto;
+  border-radius: 0.5rem; /* Rounded large */
+  padding-left: 1.5rem; /* Padding x-axis: 6 (1.5rem) */
+  padding-right: 1.5rem;
+  padding-top: 1.25rem; /* Padding y-axis: 5 (1.25rem) */
+  padding-bottom: 1.25rem;
+}
+
+.languageTag {
+  position: absolute;
+  right: 0.75rem; /* Right: 3 (0.75rem) */
+  top: 0.5rem; /* Top: 2 (0.5rem) */
+  font-size: 0.75rem; /* Text size: xs (0.75rem) */
+  letter-spacing: -0.05em; /* Tracking: tighter (-0.05em) */
+  color: rgba(107, 114, 128, 0.85); /* Muted foreground color with 85% opacity */
+}

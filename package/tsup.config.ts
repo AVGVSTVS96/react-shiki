@@ -10,7 +10,7 @@ export default defineConfig((options) => {
     sourcemap: true,
     clean: true,
     minify: !dev,
-    tsconfig: 'tsconfig.json',
+    injectStyle: true,
     external: ['react', 'react-dom'],
   };
 });
