@@ -1,107 +1,7 @@
 import { useState } from 'react';
 import reactLogo from './assets/react.svg';
 import viteLogo from '/vite.svg';
-import ShikiHighlighter from 'react-shiki';
-import './App.css';
-
-function AyuDarkCodeBlock() {
-  const code = `
-function AyuDarkCodeBlock() {
-  return (
-    <ShikiHighlighter
-      language="jsx"
-      theme="ayu-dark"
-      style={{
-        whiteSpace: 'pre-wrap',
-        textAlign: 'left',
-      }}
-    >
-      {code}
-    </ShikiHighlighter>
-  );
-}
-  `;
-
-  return (
-    <ShikiHighlighter
-      language="jsx"
-      theme="ayu-dark"
-      style={{
-        whiteSpace: 'pre-wrap',
-        textAlign: 'left',
-      }}
-    >
-      {code}
-    </ShikiHighlighter>
-  );
-}
-
-function CatppuccinMochaCodeBlock() {
-  const code = `
-function CatpuccinMochaCodeBlock() {
-  return (
-    <ShikiHighlighter
-      language="jsx"
-      theme="ayu-dark"
-      showLanguage={false}
-      style={{
-        whiteSpace: 'pre-wrap',
-        textAlign: 'left',
-      }}
-    >
-      {code}
-    </ShikiHighlighter>
-  );
-}
-  `;
-
-  return (
-    <ShikiHighlighter
-      language="jsx"
-      theme="catppuccin-mocha"
-      showLanguage={false}
-      style={{
-        whiteSpace: 'pre-wrap',
-        textAlign: 'left',
-      }}
-    >
-      {code}
-    </ShikiHighlighter>
-  );
-}
-function HoustonCodeBlock() {
-  const code = `
-function HoustonCodeBlock() {
-  return (
-    <ShikiHighlighter
-      language="jsx"
-      theme="ayu-dark"
-      showLanguage={false}
-      style={{
-        whiteSpace: 'pre-wrap',
-        textAlign: 'left',
-      }}
-    >
-      {code}
-    </ShikiHighlighter>
-  );
-}
-  `;
-
-  return (
-    <ShikiHighlighter
-      language="jsx"
-      theme="houston"
-      showLanguage={false}
-      style={{
-        whiteSpace: 'pre-wrap',
-        textAlign: 'left',
-      }}
-    >
-      {code}
-    </ShikiHighlighter>
-  );
-}
+import { HighlightCodeBlocks } from './CodeTest';
 
 function App() {
   const [count, setCount] = useState(0);
@@ -118,9 +18,7 @@ function App() {
       </div>
       <h1>react-shiki testing</h1>
       <h2>Syntax highlighter component for react using shiki</h2>
-      <AyuDarkCodeBlock />
-      <CatppuccinMochaCodeBlock />
-      <HoustonCodeBlock />
+      <HighlightCodeBlocks />
       <div className="card">
         <button
           type="button"
