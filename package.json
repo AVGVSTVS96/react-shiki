@@ -9,10 +9,13 @@
     "package:build": "pnpm --filter react-shiki build",
     "lint": "tsc && biome check .",
     "lint:fix": "biome check --write .",
-    "format": "biome format --write ."
+    "format": "biome format --write .",
+    "changeset": "changeset",
+    "release": "node scripts/release.mjs"
   },
   "devDependencies": {
     "@biomejs/biome": "^1.8.3",
+    "@changesets/cli": "^2.27.7",
     "typescript": "^5.5.4"
   }
 }
