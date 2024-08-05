@@ -37,12 +37,13 @@
     "react-dom": ">= 15.0.0"
   },
   "dependencies": {
-    "@types/hast": "^3.0.4",
-    "@types/react": "^18.3.3",
+    "clsx": "^2.1.1",
     "html-react-parser": "^5.1.12",
     "shiki": "^1.12.1"
   },
   "devDependencies": {
+    "@types/hast": "^3.0.4",
+    "@types/react": "^18.3.3",
     "tsup": "^8.2.4"
   }
 }
