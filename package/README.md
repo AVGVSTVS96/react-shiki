@@ -1,5 +1,9 @@
-# react-shiki
+# 🎨 [react-shiki](https://react-shiki.vercel.app/)
+
 Syntax highlighting component for react using [Shiki](https://shiki.matsu.io/)
+
+
+See the [demo](https://react-shiki.vercel.app/) page with multiple theme examples and usage instructions!
 
 ## Installation
 ```bash
