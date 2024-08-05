@@ -1,7 +1,7 @@
 {
   "name": "react-shiki",
   "description": "Syntax highlighter component for react using shiki",
-  "version": "0.0.1",
+  "version": "0.1.0",
   "license": "MIT",
   "author": {
     "name": "Bassim Shahidy",
@@ -21,7 +21,9 @@
   "type": "module",
   "main": "./dist/index.js",
   "types": "./dist/index.d.ts",
-  "files": ["dist"],
+  "files": [
+    "dist"
+  ],
   "exports": {
     ".": {
       "types": "./dist/index.d.ts",
