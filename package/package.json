@@ -9,6 +9,7 @@
     "url": "https://bassim.build"
   },
   "repository": "https://github.com/avgvstvs96/react-shiki",
+  "homepage": "https://react-shiki.vercel.app/",
   "keywords": [
     "react",
     "shiki",
