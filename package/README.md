@@ -1,5 +1,5 @@
 > [!WARNING]
-> This package is still a work in progress, it is not yet recommended for production use. 
+> This package is still a work in progress, it is not yet recommended for production use. Contributions are welcome! My goal is to eventually build this out as a drop in replacement for `react-syntax-highlighter`
 
 
 # 🎨 [react-shiki](https://react-shiki.vercel.app/)
@@ -10,16 +10,29 @@ Syntax highlighting component for react using [Shiki](https://shiki.matsu.io/)
 See the [demo](https://react-shiki.vercel.app/) page with multiple theme examples and usage instructions!
 
 ## Installation
-```bash
-npm install react-shiki
-```
-or
 
 ```bash
 (pnpm|bun|yarn) add react-shiki
 ```
+or
+
+```bash
+npm install react-shiki
+```
 
 ## Usage
+
+You can use the `ShikiHighlighter` component, or the `useShikiHighlighter` hook to highlight code.
+
+
+`useShikiHighlighter` is a custom hook that takes in the code to be highlighted, the language, and the theme, and returns the highlighted code as a string:
+```tsx
+  const highlightedCode = useShikiHighlighter(code, language, theme);
+```
+
+The `ShikiHighlighter` component is imported in your project, with the code to be highlighted passed as it's children.
+
+Shiki automatically handles dynamically importing only the languages and themes used on the page.
 
 ```tsx
 function CodeBlock() {
@@ -30,9 +43,7 @@ function CodeBlock() {
   );
 }
 ```
-The ShikiHighlighter is imported in your project and used as a component, with code to be highlighted passed as children.
 
-Shiki handles dynamically imports only the languages and themes used on the page.
 
 The component accepts several props in addition to language and theme:
 
@@ -41,7 +52,7 @@ The component accepts several props in addition to language and theme:
 - `as: string` - The component to be rendered. Defaults to 'pre'.
 - `className: string` - Class name to be passed to the component.
 
-It can also be used with `react-markdown`
+It can also be used with `react-markdown`:
 ```tsx
 import type { ReactNode } from 'react';
 import type { BundledLanguage } from 'shiki';
@@ -80,7 +91,7 @@ export const CodeHighlight = ({
 };
 ```
 
-Pass CodeHighlight to `react-markdown` as a code component
+Pass CodeHighlight to `react-markdown` as a code component:
 ```tsx
 import ReactMarkdown from 'react-markdown';
 import { CodeHighlight } from './CodeHighlight';
