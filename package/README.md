@@ -1,3 +1,7 @@
+> [!WARNING]
+> This package is still a work in progress, it is not yet recommended for production use. 
+
+
 # 🎨 [react-shiki](https://react-shiki.vercel.app/)
 
 Syntax highlighting component for react using [Shiki](https://shiki.matsu.io/)
