@@ -6,13 +6,19 @@ import { useShikiHighlighter } from '@/useShiki';
 import { clsx } from 'clsx';
 
 export interface ShikiHighlighterProps {
-  /** The programming language for syntax highlighting */
+  /** 
+   * The programming language for syntax highlighting
+   * @see https://shiki.style/languages
+   */
   language: BundledLanguage;
 
-  /** The code to be highlighted */
+  /** 
+   * The code to be highlighted 
+   */
   children: string;
 
-  /** The color theme for syntax highlighting, only Shiki themes are supported at this time
+  /** 
+   * The color theme for syntax highlighting, only Shiki themes are supported at this time
    * @see https://shiki.style/themes
    */
   theme: BundledTheme;
@@ -25,18 +31,24 @@ export interface ShikiHighlighterProps {
    */
   addDefaultStyles?: boolean;
 
-  /** Add custom inline styles to the generated code block */
+  /** 
+   * Add custom inline styles to the generated code block 
+   */
   style?: React.CSSProperties;
 
-  /** Add custom CSS class names to the generated code block */
+  /** 
+   * Add custom CSS class names to the generated code block 
+   */
   className?: string;
 
-  /** Whether to show the language label
+  /** 
+   * Whether to show the language label
    * @default true
    */
   showLanguage?: boolean;
 
-  /** The HTML element that wraps the generated code block.
+  /** 
+   * The HTML element that wraps the generated code block.
    * @default 'pre'
    */
   as?: React.ElementType;
