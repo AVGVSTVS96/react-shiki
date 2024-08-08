@@ -330,8 +330,8 @@ export const HighlightCodeBlocks = React.memo(() => {
           the top right corner of the code block.
         </li>
         <li>
-          <code>style: object</code> - Style object to be passed to the
-          component.
+          <code>addDefaultStyles: boolean</code> - Adds default styles to
+          the top right corner of the code block.
         </li>
         <li>
           <code>as: string</code> - The component to be rendered. Defaults
@@ -339,6 +339,10 @@ export const HighlightCodeBlocks = React.memo(() => {
         </li>
         <li>
           <code>className: string</code> - Class name to be passed to the
+          component.
+        </li>
+        <li>
+          <code>style: object</code> - Style object to be passed to the
           component.
         </li>
       </ul>
