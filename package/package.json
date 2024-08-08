@@ -8,7 +8,11 @@
     "email": "bassim@shahidy.com",
     "url": "https://bassim.build"
   },
-  "repository": "https://github.com/avgvstvs96/react-shiki",
+  "repository": {
+    "type":"git",
+    "directory": "package",
+    "url":"https://github.com/avgvstvs96/react-shiki"
+  },
   "homepage": "https://react-shiki.vercel.app/",
   "keywords": [
     "react",
