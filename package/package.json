@@ -1,7 +1,7 @@
 {
   "name": "react-shiki",
   "description": "Syntax highlighter component for react using shiki",
-  "version": "0.1.0",
+  "version": "0.1.1",
   "license": "MIT",
   "author": {
     "name": "Bassim Shahidy",
@@ -9,9 +9,9 @@
     "url": "https://bassim.build"
   },
   "repository": {
-    "type":"git",
+    "type": "git",
     "directory": "package",
-    "url":"https://github.com/avgvstvs96/react-shiki"
+    "url": "https://github.com/avgvstvs96/react-shiki"
   },
   "homepage": "https://react-shiki.vercel.app/",
   "keywords": [
