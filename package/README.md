@@ -1,40 +1,35 @@
 > [!WARNING]
-> This package is still a work in progress, it is not yet recommended for production use. Contributions are welcome! My goal is to eventually build this out as a drop in replacement for `react-syntax-highlighter`
+> This package is still a work in progress, it is not yet recommended for production use. Contributions are welcome! My goal is to eventually build this out as a near-drop-in replacement for `react-syntax-highlighter`
 
 
 # 🎨 [react-shiki](https://react-shiki.vercel.app/)
 
-Syntax highlighting component for react using [Shiki](https://shiki.matsu.io/)
+Syntax highlighting component and hook for react using [Shiki](https://shiki.matsu.io/)
 
 
-See the [demo](https://react-shiki.vercel.app/) page with multiple theme examples and usage instructions!
+[See the demo page for a version of this README with highlighted code blocks showcasing several Shiki themes!](https://react-shiki.vercel.app/)
 
 ## Features
-- No `dangerouslySetInnerHTML`, output from Shiki is parsed using `html-react-parser` 
-- Provides a `ShikiHighlighter` component for highlighting code as children, as well as a `useShikiHighlighter` hook for users who want more control over the rendering of highlighted code
-- Supports all Shiki languages and themes
-- Includes minimal default styles for code blocks
-- Shiki dynamically imports only the languages and themes used on a page, optimizing for performance
-- `ShikiHighlighter` component displays a language label for each code block when `showLanguage` is set to `true` (default)
-- Users can customize the styling of the generated code blocks by passing a `style` object or a `className` 
+- 🖼️ Provides a `ShikiHighlighter` component for highlighting code as children, as well as a `useShikiHighlighter` hook for more flexibility
+- 🔐 No `dangerouslySetInnerHTML`, output from Shiki is parsed using `html-react-parser` 
+- 📦 Supports all Shiki languages and themes
+- 📚 Includes minimal default styles for code blocks
+- 🚀 Shiki dynamically imports only the languages and themes used on a page, optimizing for performance
+- 🖥️ `ShikiHighlighter` component displays a language label for each code block when `showLanguage` is set to `true` (default)
+- 🎨 Users can customize the styling of the generated code blocks by passing a `style` object or a `className`
+
 
 ## Installation
 
 ```bash
-(pnpm|bun|yarn) add react-shiki
-```
-or
-
-```bash
-npm install react-shiki
+[pnpm|bun|yarn|npm] [add|install] react-shiki
 ```
 
 ## Usage
 
 You can use the `ShikiHighlighter` component, or the `useShikiHighlighter` hook to highlight code.
 
-
-`useShikiHighlighter` is a custom hook that takes in the code to be highlighted, the language, and the theme, and returns the highlighted code as React elements:
+`useShikiHighlighter` is a hook that takes in the code to be highlighted, the language, and the theme, and returns the highlighted code as React elements. It's useful for users who want full control over the rendering of highlighted code.
 ```tsx
 const highlightedCode = useShikiHighlighter(code, language, theme);
 ```
@@ -60,6 +55,25 @@ The component accepts several props in addition to language and theme:
 - `style: object` - Style object to be passed to the component.
 - `as: string` - The component to be rendered. Defaults to 'pre'.
 - `className: string` - Class name to be passed to the component.
+
+```tsx
+function Houston() {
+  return (
+    <ShikiHighlighter
+      language="jsx"
+      theme="houston"
+      showLanguage={false}
+      addDefaultStyles={true}
+      as="div"
+      style={{
+        textAlign: 'left',
+      }}
+    >
+      {code.trim()}
+    </ShikiHighlighter>
+  );
+}
+```
 
 It can also be used with `react-markdown`:
 ```tsx
