@@ -20,8 +20,16 @@ function App() {
           <img src={shikiLogo} className="logo shiki" alt="Shiki logo" />
         </a>
       </div>
-      <h1>react-shiki testing</h1>
-      <h2>Syntax highlighter component for react using shiki</h2>
+      <h1>
+        🎨{' '}
+        <a href="https://github.com/avgvstvs96/react-shiki">
+          react-shiki
+        </a>
+      </h1>{' '}
+      <h2>
+        Syntax highlighter component for react using{' '}
+        <a href="https://shiki.matsu.io/">Shiki</a>
+      </h2>
       <HighlightCodeBlocks />
       <div style={{ marginBlock: '10rem' }} />
       <footer style={{ opacity: '55%', fontSize: '14px' }}>
