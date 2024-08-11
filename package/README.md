@@ -52,9 +52,10 @@ function CodeBlock() {
 The component accepts several props in addition to language and theme:
 
 - `showLanguage: boolean` - Shows the language name in the top right corner of the code block.
-- `style: object` - Style object to be passed to the component.
+- `addDefaultStyles`: boolean - Adds default styles (padding, overflow handling, and border-radius) to the code block.
 - `as: string` - The component to be rendered. Defaults to 'pre'.
 - `className: string` - Class name to be passed to the component.
+- `style: object` - Style object to be passed to the component.
 
 ```tsx
 function Houston() {

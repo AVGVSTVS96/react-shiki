@@ -5,6 +5,7 @@
   "packageManager": "pnpm@9.6.0",
   "scripts": {
     "dev": "pnpm --stream -r --parallel dev",
+    "build": "pnpm --stream -r --parallel build",
     "package:dev": "pnpm --filter react-shiki dev",
     "package:build": "pnpm --filter react-shiki build",
     "playground:dev": "pnpm --filter playground dev",

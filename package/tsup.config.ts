@@ -1,4 +1,5 @@
 import { defineConfig } from 'tsup';
+import { peerDependencies } from './package.json';
 
 export default defineConfig((options) => {
   const dev = !!options.watch;
@@ -11,6 +12,6 @@ export default defineConfig((options) => {
     clean: true,
     minify: !dev,
     injectStyle: true,
-    external: ['react', 'react-dom'],
+    external: [...Object.keys(peerDependencies)],
   };
 });
