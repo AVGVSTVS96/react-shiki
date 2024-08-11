@@ -1,5 +1,11 @@
 # react-shiki
 
+## 0.1.2
+
+### Patch Changes
+
+- 26666da: Update README, package.json, and tsup config
+
 ## 0.1.1
 
 ### Patch Changes
