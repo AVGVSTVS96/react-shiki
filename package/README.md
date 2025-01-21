@@ -1,23 +1,21 @@
 > [!WARNING]
 > This package is still a work in progress, it is not yet recommended for production use. Contributions are welcome! My goal is to eventually build this out as a near-drop-in replacement for `react-syntax-highlighter`
 
-
 # 🎨 [react-shiki](https://react-shiki.vercel.app/)
 
 Syntax highlighting component and hook for react using [Shiki](https://shiki.matsu.io/)
 
-
 [See the demo page for a version of this README with highlighted code blocks showcasing several Shiki themes!](https://react-shiki.vercel.app/)
 
 ## Features
+
 - 🖼️ Provides a `ShikiHighlighter` component for highlighting code as children, as well as a `useShikiHighlighter` hook for more flexibility
-- 🔐 No `dangerouslySetInnerHTML`, output from Shiki is parsed using `html-react-parser` 
+- 🔐 No `dangerouslySetInnerHTML`, output from Shiki is parsed using `html-react-parser`
 - 📦 Supports all Shiki languages and themes
 - 📚 Includes minimal default styles for code blocks
 - 🚀 Shiki dynamically imports only the languages and themes used on a page, optimizing for performance
 - 🖥️ `ShikiHighlighter` component displays a language label for each code block when `showLanguage` is set to `true` (default)
 - 🎨 Users can customize the styling of the generated code blocks by passing a `style` object or a `className`
-
 
 ## Installation
 
@@ -30,6 +28,7 @@ Syntax highlighting component and hook for react using [Shiki](https://shiki.mat
 You can use the `ShikiHighlighter` component, or the `useShikiHighlighter` hook to highlight code.
 
 `useShikiHighlighter` is a hook that takes in the code to be highlighted, the language, and the theme, and returns the highlighted code as React elements. It's useful for users who want full control over the rendering of highlighted code.
+
 ```tsx
 const highlightedCode = useShikiHighlighter(code, language, theme);
 ```
@@ -47,7 +46,6 @@ function CodeBlock() {
   );
 }
 ```
-
 
 The component accepts several props in addition to language and theme:
 
@@ -67,7 +65,7 @@ function Houston() {
       addDefaultStyles={true}
       as="div"
       style={{
-        textAlign: 'left',
+        textAlign: "left",
       }}
     >
       {code.trim()}
@@ -77,10 +75,10 @@ function Houston() {
 ```
 
 It can also be used with `react-markdown`:
+
 ```tsx
-import type { ReactNode } from 'react';
-import type { BundledLanguage } from 'shiki';
-import ShikiHighlighter, { isInlineCode, type Element } from 'react-shiki';
+import type { ReactNode } from "react";
+import ShikiHighlighter, { isInlineCode, type Element } from "react-shiki";
 
 interface CodeHighlightProps {
   className?: string | undefined;
@@ -95,16 +93,12 @@ export const CodeHighlight = ({
   ...props
 }: CodeHighlightProps): JSX.Element => {
   const match = className?.match(/language-(\w+)/);
-  // TODO: remove need for consumer use of BundledLanguage from shiki
-  const language = match ? (match[1] as BundledLanguage) : undefined;
+  const language = match ? match[1] : undefined;
 
   const isInline: boolean | undefined = node ? isInlineCode(node) : undefined;
 
   return !isInline ? (
-    <ShikiHighlighter
-      language={language as BundledLanguage}
-      theme={'houston'}
-      {...props}>
+    <ShikiHighlighter language={language} theme={"houston"} {...props}>
       {String(children)}
     </ShikiHighlighter>
   ) : (
@@ -116,9 +110,10 @@ export const CodeHighlight = ({
 ```
 
 Pass CodeHighlight to `react-markdown` as a code component:
+
 ```tsx
-import ReactMarkdown from 'react-markdown';
-import { CodeHighlight } from './CodeHighlight';
+import ReactMarkdown from "react-markdown";
+import { CodeHighlight } from "./CodeHighlight";
 
 <ReactMarkdown
   components={{
@@ -126,10 +121,11 @@ import { CodeHighlight } from './CodeHighlight';
   }}
 >
   {markdown}
-</ReactMarkdown>
+</ReactMarkdown>;
 ```
 
 This works great for highlighting in realtime on the client, I use it for an LLM chatbot UI, it renders markdown and highlights code in memoized chat messages:
+
 ```tsx
 const RenderedMessage = React.memo(({ message }: { message: Message }) => (
   <div className={cn(messageStyles[message.role])}>
@@ -141,7 +137,7 @@ const RenderedMessage = React.memo(({ message }: { message: Message }) => (
 
 export const ChatMessages = ({ messages }: { messages: Message[] }) => {
   return (
-    <div className='space-y-4'>
+    <div className="space-y-4">
       {messages.map((message) => (
         <RenderedMessage key={message.id} message={message} />
       ))}
@@ -149,3 +145,4 @@ export const ChatMessages = ({ messages }: { messages: Message[] }) => {
   );
 };
 ```
+
