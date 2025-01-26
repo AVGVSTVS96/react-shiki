@@ -1,17 +1,18 @@
-> [!WARNING]
-> This package is still a work in progress, it is not yet recommended for production use. Contributions are welcome! My goal is to eventually build this out as a near-drop-in replacement for `react-syntax-highlighter`
+> [!NOTE]
+> This package is still a work in progress, fully functional but not extensively tested.
 
 # 🎨 [react-shiki](https://react-shiki.vercel.app/)
 
 Syntax highlighting component and hook for react using [Shiki](https://shiki.matsu.io/)
 
-[See the demo page for a version of this README with highlighted code blocks showcasing several Shiki themes!](https://react-shiki.vercel.app/)
+[See the demo page with highlighted code blocks showcasing several Shiki themes!](https://react-shiki.vercel.app/)
 
 ## Features
 
 - 🖼️ Provides a `ShikiHighlighter` component for highlighting code as children, as well as a `useShikiHighlighter` hook for more flexibility
 - 🔐 No `dangerouslySetInnerHTML`, output from Shiki is parsed using `html-react-parser`
 - 📦 Supports all Shiki languages and themes
+- 🚰 Supports performant highlighting of streamed code on the client, with optional throttling
 - 📚 Includes minimal default styles for code blocks
 - 🚀 Shiki dynamically imports only the languages and themes used on a page, optimizing for performance
 - 🖥️ `ShikiHighlighter` component displays a language label for each code block when `showLanguage` is set to `true` (default)
@@ -20,7 +21,7 @@ Syntax highlighting component and hook for react using [Shiki](https://shiki.mat
 ## Installation
 
 ```bash
-[pnpm|bun|yarn|npm] [add|install] react-shiki
+[pnpm|bun|yarn|npm] install react-shiki
 ```
 
 ## Usage
@@ -74,9 +75,126 @@ function Houston() {
 }
 ```
 
+react-shiki exports `isInlineCode` to check if a code block is inline.
+
+```tsx
+const isInline: boolean | undefined = node ? isInlineCode(node) : undefined;
+
+return !isInline ? (
+  <ShikiHighlighter language={language} theme={"houston"} {...props}>
+    {String(children)}
+  </ShikiHighlighter>
+) : (
+  <code className={className} {...props}>
+    {children}
+  </code>
+);
+```
+
 It can also be used with `react-markdown`:
 
 ```tsx
+import type { ReactNode } from "react";
+import ShikiHighlighter, { type Element } from "react-shiki";
+
+interface CodeHighlightProps {
+  className?: string | undefined;
+  children?: ReactNode | undefined;
+  node?: Element | undefined;
+}
+
+export const CodeHighlight = ({
+  className,
+  children,
+  node,
+  ...props
+}: CodeHighlightProps): JSX.Element => {
+  const match = className?.match(/language-(\w+)/);
+  const language = match ? match[1] : undefined;
+
+  <ShikiHighlighter language={language} theme={"houston"} {...props}>
+    {String(children)}
+  </ShikiHighlighter>;
+};
+```
+
+Pass CodeHighlight to `react-markdown` as a code component:
+
+```tsx
+import ReactMarkdown from "react-markdown";
+import { CodeHighlight } from "./CodeHighlight";
+
+<ReactMarkdown
+  components={{
+    code: CodeHighlight,
+  }}
+>
+  {markdown}
+</ReactMarkdown>;
+```
+
+### Custom themes
+
+```tsx:title=CodeHighlight.tsx
+import tokyoNight from '@styles/tokyo-night.mjs';
+
+<ShikiHighlighter language="tsx" theme={tokyoNight}>
+  {String(code)}
+</ShikiHighlighter>;
+```
+
+## Client-side highlighting
+
+This works great for highlighting in real-time on the client, I use it for an LLM chatbot UI, it renders markdown and highlights code in memoized chat messages. It also Supports an optional delay between highlights for throttling.
+
+Using `useShikiHighlighter` hook:
+
+```tsx title=CodeHighlight.tsx
+import type { ReactNode } from "react";
+import { isInlineCode, useShikiHighlighter, type Element } from "react-shiki";
+import tokyoNight from "@styles/tokyo-night.mjs";
+
+interface CodeHighlightProps {
+  className?: string | undefined;
+  children?: ReactNode | undefined;
+  node?: Element | undefined;
+}
+
+export const CodeHighlight = ({
+  className,
+  children,
+  node,
+  ...props
+}: CodeHighlightProps) => {
+  const code = String(children);
+  const language = className?.match(/language-(\w+)/)?.[1];
+
+  const isInline = node ? isInlineCode(node) : false;
+
+  const highlightedCode = useShikiHighlighter(language, code, tokyoNight, {
+    delay: 150,
+  });
+
+  return !isInline ? (
+    <div className="shiki not-prose relative [&_pre]:overflow-auto [&_pre]:rounded-lg [&_pre]:px-6 [&_pre]:py-5">
+      {language ? (
+        <span className="absolute right-3 top-2 text-xs tracking-tighter text-muted-foreground/85">
+          {language}
+        </span>
+      ) : null}
+      {highlightedCode}
+    </div>
+  ) : (
+    <code className={className} {...props}>
+      {children}
+    </code>
+  );
+};
+```
+
+Or using the `ShikiHighlighter` component:
+
+```tsx title=CodeHighlight.tsx
 import type { ReactNode } from "react";
 import ShikiHighlighter, { isInlineCode, type Element } from "react-shiki";
 
@@ -109,24 +227,9 @@ export const CodeHighlight = ({
 };
 ```
 
-Pass CodeHighlight to `react-markdown` as a code component:
+Passed to `react-markdown` as a code component in memoized chat messages:
 
-```tsx
-import ReactMarkdown from "react-markdown";
-import { CodeHighlight } from "./CodeHighlight";
-
-<ReactMarkdown
-  components={{
-    code: CodeHighlight,
-  }}
->
-  {markdown}
-</ReactMarkdown>;
-```
-
-This works great for highlighting in realtime on the client, I use it for an LLM chatbot UI, it renders markdown and highlights code in memoized chat messages:
-
-```tsx
+```tsx title=ChatMessages.tsx
 const RenderedMessage = React.memo(({ message }: { message: Message }) => (
   <div className={cn(messageStyles[message.role])}>
     <ReactMarkdown components={{ code: CodeHighlight }}>
@@ -145,4 +248,3 @@ export const ChatMessages = ({ messages }: { messages: Message[] }) => {
   );
 };
 ```
-
