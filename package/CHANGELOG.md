@@ -1,5 +1,17 @@
 # react-shiki
 
+## 0.2.0
+
+### Minor Changes
+
+- Implement fleshed out solution built in <https://github.com/AVGVSTVS96/astroSite/>
+
+  - Adds support for custom textmate themes alongside bundled Shiki themes
+  - Introduces delay option to throttle highlighting for streamed code updates
+  - Uses singleton highlighter instance for better performance
+  - Adds comprehensive type definitions with improved language and theme support
+  - Enhances error handling with graceful fallbacks for unsupported languages
+
 ## 0.1.2
 
 ### Patch Changes
