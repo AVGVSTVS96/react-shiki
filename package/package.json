@@ -50,7 +50,9 @@
   },
   "devDependencies": {
     "@types/hast": "^3.0.4",
+    "@types/node": "22.10.10",
     "@types/react": "^18.3.3",
     "tsup": "^8.2.4"
-  }
+  },
+  "packageManager": "pnpm@9.6.0"
 }
