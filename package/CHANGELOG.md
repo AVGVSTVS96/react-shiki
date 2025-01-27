@@ -1,5 +1,11 @@
 # react-shiki
 
+## 0.2.2
+
+### Patch Changes
+
+- Update README
+
 ## 0.2.1
 
 ### Patch Changes
