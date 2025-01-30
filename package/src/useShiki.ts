@@ -18,15 +18,15 @@ import type {
 import { removeTabIndexFromPre } from '@/utils';
 
 
-/************************************
- ** Singleton highlighter instance **
- ************************************/
+/**
+* Singleton highlighter instance
+*/
 let highlighterPromise: Promise<Highlighter> | null = null;
 
 
-/***********************************************************
- ** Creates or returns the singleton highlighter instance **
- ***********************************************************/
+/**
+* Creates or returns the singleton highlighter instance
+*/
 const makeHighlighter = async (theme: Theme): Promise<Highlighter> => {
   if (!highlighterPromise) {
     highlighterPromise = createHighlighter({
@@ -41,9 +41,9 @@ const makeHighlighter = async (theme: Theme): Promise<Highlighter> => {
 };
 
 
-/************************************************************
- ** Loads a theme dynamically if it hasn't been loaded yet **
- ************************************************************/
+/**
+* Loads a theme dynamically if it hasn't been loaded yet
+*/
 const loadTheme = async (
   highlighter: Highlighter,
   theme: Theme
@@ -59,9 +59,9 @@ const loadTheme = async (
 };
 
 
-/******************************************************************************
- ** Loads a language dynamically, falling back to plaintext if not available **                                             **
- ******************************************************************************/
+/**
+* Loads a language dynamically, falling back to plaintext if not available
+*/
 const loadLanguage = async (
   highlighter: Highlighter,
   lang: Language
@@ -80,9 +80,9 @@ const loadLanguage = async (
 };
 
 
-/*******************************************************************************
- ** Throttles highlighting operations to prevent overwhelming the highlighter **                                               **
- *******************************************************************************/
+/**
+* Optionally throttles rapid sequential highlighting operations to conserve resources
+*/
 const throttleHighlighting = (
   performHighlight: () => Promise<void>,
   timeoutControl: React.MutableRefObject<TimeoutState>,
@@ -99,10 +99,10 @@ const throttleHighlighting = (
 };
 
 
-/************************************************************************
- ** A React hook that provides syntax highlighting using Shiki. Uses a **
- ** singleton highlighter instance and supports throttled updates.     **
-*************************************************************************/
+/**
+* A React hook that provides syntax highlighting using Shiki. Uses a
+* singleton highlighter instance and supports optional throttled highlights
+*/
 export const useShikiHighlighter = (
   code: string,
   lang: Language,
