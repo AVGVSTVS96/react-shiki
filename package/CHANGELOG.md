@@ -1,5 +1,12 @@
 # react-shiki
 
+## 0.2.3
+
+### Patch Changes
+
+- Add `langStyle` prop, separate from code block's `style`
+  Update README
+
 ## 0.2.2
 
 ### Patch Changes

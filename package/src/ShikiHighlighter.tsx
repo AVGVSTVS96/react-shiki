@@ -47,6 +47,11 @@ export interface ShikiHighlighterProps extends HighlighterOptions {
   style?: React.CSSProperties;
 
   /** 
+   * Add custom inline styles to the language label 
+   */
+  langStyle?: React.CSSProperties;
+
+  /** 
    * Add custom CSS class names to the generated code block 
    */
   className?: string;
@@ -85,6 +90,7 @@ export const ShikiHighlighter = ({
   delay,
   addDefaultStyles = true,
   style,
+  langStyle,
   className,
   showLanguage = true,
   children: code,
@@ -102,7 +108,7 @@ export const ShikiHighlighter = ({
       style={style}
     >
       {showLanguage && language ? (
-        <span className="languageLabel" style={style}>
+        <span className="languageLabel" style={langStyle}>
           {language}
         </span>
       ) : null}
