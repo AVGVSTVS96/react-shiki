@@ -4,7 +4,7 @@
 > This package is still a work in progress, fully functional but not
 > extensively tested.
 
-Performant server and client side syntax highlighting component + hook
+Performant client side syntax highlighting component + hook
 for react using [Shiki](https://shiki.matsu.io/)
 
 [See the demo page with highlighted code blocks showcasing several Shiki themes!](https://react-shiki.vercel.app/)
@@ -17,7 +17,7 @@ for react using [Shiki](https://shiki.matsu.io/)
   - [Usage](#usage)
     - [`react-markdown`](#react-markdown)
     - [Custom themes](#custom-themes)
-  - [Client-side highlighting](#client-side-highlighting)
+  - [Performance](#performance)
     - [Throttling real-time highlighting](#throttling-real-time-highlighting)
     - [Streaming and LLM chat UI](#streaming-and-llm-chat-ui)
     <!--toc:end-->
@@ -74,6 +74,8 @@ function CodeBlock() {
 }
 ```
 
+The `ShikiHighlighter` component will follow a similar API to `react-syntax-highlighter`, but uses Shiki and is optimized for performant sequential highlighting. As of now, not all of `react-syntax-highlighter` functionality is supported, but the goal of this component is to eventually act as a drop in replacement for `react-syntax-highlighter`.
+
 The component accepts several props in addition to language and theme:
 
 - `showLanguage: boolean` - Shows the language name in the top right corner of
@@ -84,13 +86,15 @@ The component accepts several props in addition to language and theme:
 - `delay: number` - Delay between highlights in milliseconds, useful for throttling
   rapid highlighting on the client
 - `className: string` - Class name to be passed to the component
-- `style: object` - Style object to be passed to the component
+- `style: object` - Inline style object to be passed to the component
+- `langStyle: object` - Inline style object to be passed to the language label
 
 ```tsx
 function Houston() {
   return (
     <ShikiHighlighter
       language="jsx"
+      className="code-block"
       theme="houston"
       showLanguage={false}
       addDefaultStyles={true}
@@ -105,7 +109,7 @@ function Houston() {
 }
 ```
 
-**react-shiki** exports `isInlineCode` to check if a code block is inline:
+`react-shiki` exports `isInlineCode` to check if a code block is inline:
 
 ```tsx
 const isInline: boolean | undefined = node ? isInlineCode(node) : undefined;
@@ -173,9 +177,9 @@ import tokyoNight from '@styles/tokyo-night.mjs';
 </ShikiHighlighter>;
 ```
 
-## Client-side highlighting
+## Performance
 
-react-shiki supports performance-optimized highlighting on the client.
+`react-shiki` supports performance-optimized highlighting on the client.
 
 ### Throttling real-time highlighting
 
@@ -190,7 +194,7 @@ const highlightedCode = useShikiHighlighter(code, language, theme, {
 
 ### Streaming and LLM chat UI
 
-react-shiki can be used to highlight streamed code from LLM responses in real-time.
+`react-shiki` can be used to highlight streamed code from LLM responses in real-time.
 
 I use it for an
 LLM chatbot UI, it renders markdown and highlights code in memoized chat messages.
