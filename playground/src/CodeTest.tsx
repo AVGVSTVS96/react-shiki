@@ -205,9 +205,6 @@ function Houston() {
       showLanguage={false}
       addDefaultStyles={true}
       as="div"
-      style={{
-        textAlign: 'left',
-      }}
     >
       {code.trim()}
     </ShikiHighlighter>
@@ -218,10 +215,8 @@ function Houston() {
     <ShikiHighlighter
       language="jsx"
       theme="houston"
+      as="div"
       showLanguage={false}
-      style={{
-        textAlign: 'left',
-      }}
     >
       {code.trim()}
     </ShikiHighlighter>
@@ -242,10 +237,9 @@ export const HighlightCodeBlocks = React.memo(() => {
         }}
       >
         <strong>WARNING:</strong> This package is still a work in
-        progress, it is not yet recommended for production use.
-        Contributions are welcome! My goal is to eventually build this out
-        as a near-drop-in replacement for{' '}
-        <code>react-syntax-highlighter</code>
+        progress, fully funtional but not extensively tested. The 
+        information on this page my be outdated, please refer to 
+        the GitHub repository for the most up-to-date documentation.
       </div>
 
       <p>

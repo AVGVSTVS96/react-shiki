@@ -37,22 +37,29 @@
   },
   "scripts": {
     "dev": "tsup --watch",
-    "build": "tsup"
+    "build": "tsup",
+    "test": "vitest"
   },
   "peerDependencies": {
     "react": ">= 15.0.0",
     "react-dom": ">= 15.0.0"
   },
   "dependencies": {
+    "@types/jest": "^29.5.14",
     "clsx": "^2.1.1",
     "html-react-parser": "^5.1.12",
     "shiki": "^1.12.1"
   },
   "devDependencies": {
+    "@testing-library/jest-dom": "^6.0.0",
+    "@testing-library/react": "^14.0.0",
     "@types/hast": "^3.0.4",
     "@types/node": "22.10.10",
     "@types/react": "^18.3.3",
-    "tsup": "^8.2.4"
+    "@vitejs/plugin-react": "^4.0.0",
+    "jsdom": "^22.1.0",
+    "tsup": "^8.2.4",
+    "vitest": "^0.34.0"
   },
   "packageManager": "pnpm@9.6.0"
 }
