@@ -1,5 +1,12 @@
 # react-shiki
 
+## 0.2.4
+
+### Patch Changes
+
+- 0985346: Add new prop `langClassName` for passing classNames to the language span when `showLanguage` is enabled
+- 1d9b95a: Accuartely check inline code with exported rehype inline code plugin, sets inline prop when passed to react markdown
+
 ## 0.2.3
 
 ### Patch Changes
