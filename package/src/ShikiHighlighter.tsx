@@ -113,9 +113,14 @@ export const ShikiHighlighter = ({
         className
       )}
       style={style}
+      id='shiki-container'
     >
       {showLanguage && language ? (
-        <span className={clsx('languageLabel', langClassName)} style={langStyle}>
+        <span
+          className={clsx('languageLabel', langClassName)} 
+          style={langStyle}
+          id='language-label'
+        >
           {language}
         </span>
       ) : null}

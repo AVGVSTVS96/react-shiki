@@ -15,7 +15,7 @@ import type {
   TimeoutState
 } from './types';
 
-import { removeTabIndexFromPre } from '@/utils';
+import { removeTabIndexFromPre } from './utils';
 
 
 /**
@@ -82,8 +82,9 @@ const loadLanguage = async (
 
 /**
 * Optionally throttles rapid sequential highlighting operations to conserve resources
+* Exported for testing in __tests__/throttleHighlighting.test.ts
 */
-const throttleHighlighting = (
+export const throttleHighlighting = (
   performHighlight: () => Promise<void>,
   timeoutControl: React.MutableRefObject<TimeoutState>,
   throttleMs: number
@@ -97,7 +98,6 @@ const throttleHighlighting = (
     timeoutControl.current.nextAllowedTime = now + throttleMs;
   }, delay);
 };
-
 
 /**
 * A React hook that provides syntax highlighting using Shiki. Uses a
