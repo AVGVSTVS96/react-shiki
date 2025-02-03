@@ -16,6 +16,7 @@ for react using [Shiki](https://shiki.matsu.io/)
   - [Installation](#installation)
   - [Usage](#usage)
     - [`react-markdown`](#react-markdown)
+    - [Check if code is inline](#check-if-code-is-inline)
     - [Custom themes](#custom-themes)
   - [Performance](#performance)
     - [Throttling real-time highlighting](#throttling-real-time-highlighting)
@@ -74,7 +75,10 @@ function CodeBlock() {
 }
 ```
 
-The `ShikiHighlighter` component will follow a similar API to `react-syntax-highlighter`, but uses Shiki and is optimized for performant sequential highlighting. As of now, not all of `react-syntax-highlighter` functionality is supported, but the goal of this component is to eventually act as a drop in replacement for `react-syntax-highlighter`.
+The `ShikiHighlighter` component will follow a similar API to `react-syntax-highlighter`,
+but uses Shiki and is optimized for performant sequential highlighting. As of now,
+not all of `react-syntax-highlighter` functionality is supported, but the goal of
+this component is to eventually act as a drop in replacement for `react-syntax-highlighter`.
 
 The component accepts several props in addition to language and theme:
 
@@ -108,22 +112,6 @@ function Houston() {
     </ShikiHighlighter>
   );
 }
-```
-
-`react-shiki` exports `isInlineCode` to check if a code block is inline:
-
-```tsx
-const isInline: boolean | undefined = node ? isInlineCode(node) : undefined;
-
-return !isInline ? (
-  <ShikiHighlighter language={language} theme={"houston"} {...props}>
-    {String(children)}
-  </ShikiHighlighter>
-) : (
-  <code className={className} {...props}>
-    {children}
-  </code>
-);
 ```
 
 ### `react-markdown`
@@ -166,6 +154,69 @@ import { CodeHighlight } from "./CodeHighlight";
 >
   {markdown}
 </ReactMarkdown>;
+```
+
+### Check if code is inline
+
+There are two ways to check if a code block is inline:
+`react-shiki` exports `isInlineCode`, good but marks multiline inline
+code tags as code blocks.
+
+```tsx
+const isInline: boolean | undefined = node ? isInlineCode(node) : undefined;
+
+return !isInline ? (
+  <ShikiHighlighter language={language} theme={"houston"} {...props}>
+    {String(children)}
+  </ShikiHighlighter>
+) : (
+  <code className={className} {...props}>
+    {children}
+  </code>
+);
+```
+
+`react-shiki` also exports `rehypeInlineCodeProperty`, a more accurate way
+to determine if code is inline.
+It's passed as a rehype plugin to `react-markdown`:
+
+```tsx
+import ReactMarkdown from "react-markdown";
+import { rehypeInlineCodeProperty } from "react-shiki";
+
+<ReactMarkdown
+  rehypePlugins={[rehypeInlineCodeProperty]}
+  components={{
+    code: CodeHighlight,
+  }}
+>
+  {markdown}
+</ReactMarkdown>;
+```
+
+And can be accessed as a prop:
+
+```tsx
+const CodeHighlight = ({
+  inline,
+  className,
+  children,
+  node,
+  ...props
+}: CodeHighlightProps): JSX.Element => {
+  const match = className?.match(/language-(\w+)/);
+  const language = match ? match[1] : undefined;
+
+
+return !inline ? (
+  <ShikiHighlighter language={language} theme={"houston"} {...props}>
+    {String(children)}
+  </ShikiHighlighter>
+) : (
+  <code className={className} {...props}>
+    {children}
+  </code>
+);
 ```
 
 ### Custom themes
