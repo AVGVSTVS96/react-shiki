@@ -85,9 +85,10 @@ The component accepts several props in addition to language and theme:
 - `as: string` - The component to be rendered. Defaults to 'pre'
 - `delay: number` - Delay between highlights in milliseconds, useful for throttling
   rapid highlighting on the client
-- `className: string` - Class name to be passed to the component
+- `className: string` - Class names to be passed to the component
 - `style: object` - Inline style object to be passed to the component
 - `langStyle: object` - Inline style object to be passed to the language label
+- `langClassName: string` - Class names to be passed to the language label
 
 ```tsx
 function Houston() {

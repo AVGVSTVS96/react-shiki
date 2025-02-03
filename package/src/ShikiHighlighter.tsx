@@ -57,6 +57,11 @@ export interface ShikiHighlighterProps extends HighlighterOptions {
   className?: string;
 
   /** 
+   * Add custom CSS class names to the language label 
+   */
+  langClassName?: string;
+
+  /** 
    * Whether to show the language label
    * @default true
    */
@@ -92,6 +97,7 @@ export const ShikiHighlighter = ({
   style,
   langStyle,
   className,
+  langClassName,
   showLanguage = true,
   children: code,
   as: Element = 'pre',
@@ -102,13 +108,14 @@ export const ShikiHighlighter = ({
     <Element
       className={clsx(
         'relative',
-        addDefaultStyles && 'container',
+        'not-prose',
+        addDefaultStyles && 'defaultStyles',
         className
       )}
       style={style}
     >
       {showLanguage && language ? (
-        <span className="languageLabel" style={langStyle}>
+        <span className={clsx('languageLabel', langClassName)} style={langStyle}>
           {language}
         </span>
       ) : null}
