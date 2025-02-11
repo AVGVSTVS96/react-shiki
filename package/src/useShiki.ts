@@ -30,6 +30,12 @@ const highlighter = createSingletonShorthands(createHighlighter);
 /**
  * A React hook that provides syntax highlighting using Shiki.
  * Supports optional throttled highlights and custom themes.
+ *
+ * @example
+ * const highlightedCode = useShikiHighlighter(code, language, theme, {
+ *   transformers: [removeTabIndexFromPre],
+ *   delay: 150
+ * });
  */
 export const useShikiHighlighter = (
   code: string,
@@ -48,11 +54,13 @@ export const useShikiHighlighter = (
   useEffect(() => {
     let isMounted = true;
 
+    const transformers = [removeTabIndexFromPre, ...(options.transformers || [])];
+
     const highlightCode = async () => {
       const html = await highlighter.codeToHtml(code, {
         lang: language,
         theme,
-        transformers: [removeTabIndexFromPre],
+        transformers
       });
 
       if (isMounted) {
