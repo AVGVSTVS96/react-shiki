@@ -1,5 +1,5 @@
 import { vi } from 'vitest';
-import { throttleHighlighting } from '../useShiki';
+import { throttleHighlighting } from '../utils';
 
 describe('throttleHighlighting', () => {
   beforeEach(() => {
