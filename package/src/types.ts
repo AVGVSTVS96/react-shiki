@@ -1,9 +1,4 @@
-import type { 
-  BundledLanguage, 
-  BundledTheme,
-  SpecialLanguage,
-  ThemeRegistration
-} from 'shiki';
+import type { BundledLanguage, BundledTheme, SpecialLanguage, ShikiTransformer, ThemeRegistration } from 'shiki';
 
 /** 
  * Languages for syntax highlighting.
@@ -27,9 +22,14 @@ type Theme = ThemeRegistration | BundledTheme;
 type HighlighterOptions = {
   /** 
    * Minimum time (in milliseconds) between highlight operations. 
-   * Defaults to undefined (no throttling)
+   * @default undefined (no throttling)
    */
   delay?: number;
+
+  /**
+   * Custom Shiki transformers to apply to the highlighted code.
+   */
+  transformers?: ShikiTransformer[];
 };
 
 /**
