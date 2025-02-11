@@ -57,8 +57,7 @@ describe('rehypeInlineCodeProperty', () => {
     // Locate the <code> element.
     const codeElement = tree?.children[0]?.children[0];
     expect(codeElement?.tagName).toBe('code');
-    // @ts-ignore
-    expect(codeElement?.properties.inline).toBe(true);
+    expect((codeElement?.properties as { inline: boolean }).inline).toBe(true);
   });
 
   it('does not add the inline property to <code> elements inside <pre>', () => {
@@ -93,7 +92,6 @@ describe('rehypeInlineCodeProperty', () => {
     const codeElement = preElement?.children[0];
     expect(codeElement?.tagName).toBe('code');
     // Since the code element is inside a <pre>, it should not have an inline property.
-    // @ts-ignore
-    expect(codeElement?.properties.inline).toBeUndefined();
+    expect((codeElement?.properties as { inline: boolean }).inline).toBeUndefined();
   });
 });
