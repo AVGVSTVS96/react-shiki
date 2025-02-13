@@ -21,8 +21,7 @@ describe('isInlineCode', () => {
         },
       ],
     };
-    // @ts-expect-error
-    expect(isInlineCode(blockNode)).toBe(false);
+    expect(isInlineCode(blockNode as any)).toBe(false);
   });
 });
 
@@ -74,7 +73,7 @@ describe('rehypeInlineCodeProperty', () => {
             {
               type: 'element',
               tagName: 'code',
-              properties: {}, // initially empty
+              properties: {},
               children: [
                 { type: 'text', value: 'block code' },
               ],
