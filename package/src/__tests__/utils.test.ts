@@ -1,9 +1,8 @@
-// ShikiHighlighter.utils.test.ts
 import { isInlineCode, rehypeInlineCodeProperty } from '../utils';
 
 describe('isInlineCode', () => {
   it('returns true for inline code (no newline in text)', () => {
-    // Simulate a node representing inline code.
+    // Mock a node representing inline code.
     const inlineNode = {
       children: [
         { type: 'text', value: 'console.log("Hello inline world!");' },
@@ -13,7 +12,7 @@ describe('isInlineCode', () => {
   });
 
   it('returns false for code fences (text contains newline)', () => {
-    // Simulate a node representing block (fenced) code.
+    // Mock a node representing block (fenced) code.
     const blockNode = {
       children: [
         {
@@ -22,13 +21,14 @@ describe('isInlineCode', () => {
         },
       ],
     };
-    expect(isInlineCode(blockNode as any)).toBe(false);
+    // @ts-expect-error
+    expect(isInlineCode(blockNode)).toBe(false);
   });
 });
 
 describe('rehypeInlineCodeProperty', () => {
   it('adds the inline property to <code> elements that are not inside <pre>', () => {
-    // Simulate a tree where a <code> element is inside a <p> (not inside a <pre>).
+    // Mock a tree where a <code> element is inside a <p>.
     const tree = {
       type: 'root',
       children: [
@@ -40,7 +40,7 @@ describe('rehypeInlineCodeProperty', () => {
             {
               type: 'element',
               tagName: 'code',
-              properties: {}, // initially empty
+              properties: {},
               children: [
                 { type: 'text', value: 'inline code' },
               ],
@@ -57,7 +57,8 @@ describe('rehypeInlineCodeProperty', () => {
     // Locate the <code> element.
     const codeElement = tree?.children[0]?.children[0];
     expect(codeElement?.tagName).toBe('code');
-    expect((codeElement?.properties as { inline: boolean }).inline).toBe(true);
+    // @ts-expect-error
+    expect(codeElement?.properties.inline).toBe(true);
   });
 
   it('does not add the inline property to <code> elements inside <pre>', () => {
@@ -92,6 +93,7 @@ describe('rehypeInlineCodeProperty', () => {
     const codeElement = preElement?.children[0];
     expect(codeElement?.tagName).toBe('code');
     // Since the code element is inside a <pre>, it should not have an inline property.
-    expect((codeElement?.properties as { inline: boolean }).inline).toBeUndefined();
+    // @ts-expect-error
+    expect(codeElement?.properties.inline).toBeUndefined();
   });
 });
