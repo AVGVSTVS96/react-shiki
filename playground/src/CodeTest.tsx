@@ -5,167 +5,64 @@ import './App.css';
 function MoreExamples() {
   return (
     <>
-      {' '}
       <h2>More Examples</h2>
       <ShikiHighlighter language="tsx" theme="catppuccin-mocha">
         {`
-const RenderedMessage = React.memo(({ message }: { message: Message }) => (
-  <div className={cn(messageStyles[message.role])}>
-    <ReactMarkdown components={{ code: CodeHighlight }}>
-      {message.content}
-    </ReactMarkdown>
-  </div>
-));
-
-export const ChatMessages = ({ messages }: { messages: Message[] }) => {
-  return (
-    <div className='space-y-4'>
-      {messages.map((message) => (
-        <RenderedMessage key={message.id} message={message} />
-      ))}
-    </div>
-  );
-};`.trim()}
+console.log('Hello from catppuccin-mocha!');
+        `.trim()}
       </ShikiHighlighter>
       <ShikiHighlighter language="tsx" theme="poimandres">
         {`
-const RenderedMessage = React.memo(({ message }: { message: Message }) => (
-  <div className={cn(messageStyles[message.role])}>
-    <ReactMarkdown components={{ code: CodeHighlight }}>
-      {message.content}
-    </ReactMarkdown>
-  </div>
-));
-
-export const ChatMessages = ({ messages }: { messages: Message[] }) => {
-  return (
-    <div className='space-y-4'>
-      {messages.map((message) => (
-        <RenderedMessage key={message.id} message={message} />
-      ))}
-    </div>
-  );
-};`.trim()}
+const sum = (a: number, b: number) => a + b;
+console.log('Sum:', sum(5, 7));
+        `.trim()}
       </ShikiHighlighter>
       <ShikiHighlighter language="tsx" theme="snazzy-light">
         {`
-const RenderedMessage = React.memo(({ message }: { message: Message }) => (
-  <div className={cn(messageStyles[message.role])}>
-    <ReactMarkdown components={{ code: CodeHighlight }}>
-      {message.content}
-    </ReactMarkdown>
-  </div>
-));
-
-export const ChatMessages = ({ messages }: { messages: Message[] }) => {
-  return (
-    <div className='space-y-4'>
-      {messages.map((message) => (
-        <RenderedMessage key={message.id} message={message} />
-      ))}
-    </div>
-  );
-};`.trim()}
+function greet(name: string) {
+  return \`Hello, \${name}!\`;
+}
+console.log(greet('Alice'));
+        `.trim()}
       </ShikiHighlighter>
       <ShikiHighlighter language="tsx" theme="vesper">
         {`
-const RenderedMessage = React.memo(({ message }: { message: Message }) => (
-  <div className={cn(messageStyles[message.role])}>
-    <ReactMarkdown components={{ code: CodeHighlight }}>
-      {message.content}
-    </ReactMarkdown>
-  </div>
-));
-
-export const ChatMessages = ({ messages }: { messages: Message[] }) => {
-  return (
-    <div className='space-y-4'>
-      {messages.map((message) => (
-        <RenderedMessage key={message.id} message={message} />
-      ))}
-    </div>
-  );
-};`.trim()}
+class Person {
+  constructor(public name: string) {}
+}
+const person = new Person('Bob');
+console.log('Person:', person);
+        `.trim()}
       </ShikiHighlighter>
       <ShikiHighlighter language="tsx" theme="vitesse-light">
         {`
-const RenderedMessage = React.memo(({ message }: { message: Message }) => (
-  <div className={cn(messageStyles[message.role])}>
-    <ReactMarkdown components={{ code: CodeHighlight }}>
-      {message.content}
-    </ReactMarkdown>
-  </div>
-));
+import React from 'react';
 
-export const ChatMessages = ({ messages }: { messages: Message[] }) => {
-  return (
-    <div className='space-y-4'>
-      {messages.map((message) => (
-        <RenderedMessage key={message.id} message={message} />
-      ))}
-    </div>
-  );
-};`.trim()}
+export default function App() {
+  return <div>Welcome to Vitesse Light</div>;
+}
+        `.trim()}
       </ShikiHighlighter>
       <ShikiHighlighter language="tsx" theme="synthwave-84">
         {`
-const RenderedMessage = React.memo(({ message }: { message: Message }) => (
-  <div className={cn(messageStyles[message.role])}>
-    <ReactMarkdown components={{ code: CodeHighlight }}>
-      {message.content}
-    </ReactMarkdown>
-  </div>
-));
-
-export const ChatMessages = ({ messages }: { messages: Message[] }) => {
-  return (
-    <div className='space-y-4'>
-      {messages.map((message) => (
-        <RenderedMessage key={message.id} message={message} />
-      ))}
-    </div>
-  );
-};`.trim()}
+let counter = 0;
+setInterval(() => {
+  counter++;
+  console.log('Counter:', counter);
+}, 1000);
+        `.trim()}
       </ShikiHighlighter>
       <ShikiHighlighter language="tsx" theme="catppuccin-latte">
         {`
-const RenderedMessage = React.memo(({ message }: { message: Message }) => (
-  <div className={cn(messageStyles[message.role])}>
-    <ReactMarkdown components={{ code: CodeHighlight }}>
-      {message.content}
-    </ReactMarkdown>
-  </div>
-));
-
-export const ChatMessages = ({ messages }: { messages: Message[] }) => {
-  return (
-    <div className='space-y-4'>
-      {messages.map((message) => (
-        <RenderedMessage key={message.id} message={message} />
-      ))}
-    </div>
-  );
-};`.trim()}
+const data = [1, 2, 3].map(n => n * 2);
+console.log('Data:', data);
+        `.trim()}
       </ShikiHighlighter>
       <ShikiHighlighter language="tsx" theme="night-owl">
         {`
-const RenderedMessage = React.memo(({ message }: { message: Message }) => (
-  <div className={cn(messageStyles[message.role])}>
-    <ReactMarkdown components={{ code: CodeHighlight }}>
-      {message.content}
-    </ReactMarkdown>
-  </div>
-));
-
-export const ChatMessages = ({ messages }: { messages: Message[] }) => {
-  return (
-    <div className='space-y-4'>
-      {messages.map((message) => (
-        <RenderedMessage key={message.id} message={message} />
-      ))}
-    </div>
-  );
-};`.trim()}
+export const PI = 3.1415;
+console.log('PI:', PI);
+        `.trim()}
       </ShikiHighlighter>
     </>
   );
@@ -264,8 +161,8 @@ export const HighlightCodeBlocks = React.memo(() => {
         <li>📦 Supports all Shiki languages and themes</li>
         <li>📚 Includes minimal default styles for code blocks</li>
         <li>
-          🚀 Shiki dynamically imports only the languages and themes used
-          on a page, optimizing for performance
+          🚀 Shiki dynamically imports only the languages and themes used on a
+          page, optimizing for performance
         </li>
         <li>
           🖥️ <code>ShikiHighlighter</code> component displays a language
@@ -315,29 +212,27 @@ export const HighlightCodeBlocks = React.memo(() => {
       <AyuDark />
 
       <p style={{ marginTop: '1.5rem', marginBottom: '-0.5rem' }}>
-        The component accepts several props in addition to language and
-        theme:
+        The component accepts several props in addition to <code>language</code> and{' '}
+        <code>theme</code>:
       </p>
       <ul style={{ marginBottom: '1.5rem' }}>
         <li>
-          <code>showLanguage: boolean</code> - Shows the language name in
-          the top right corner of the code block.
+          <code>showLanguage: boolean</code> - Shows the language name in the top
+          right corner of the code block.
         </li>
         <li>
-          <code>addDefaultStyles: boolean</code> - Adds default styles to
-          the top right corner of the code block.
+          <code>addDefaultStyles: boolean</code> - Adds default styles (padding,
+          overflow handling, and border-radius) to the code block.
         </li>
         <li>
-          <code>as: string</code> - The component to be rendered. Defaults
-          to 'pre'.
+          <code>as: string</code> - The component to be rendered. Defaults to{' '}
+          <code>'pre'</code>.
         </li>
         <li>
-          <code>className: string</code> - Class name to be passed to the
-          component.
+          <code>className: string</code> - Class name to be passed to the component.
         </li>
         <li>
-          <code>style: object</code> - Style object to be passed to the
-          component.
+          <code>style: object</code> - Style object to be passed to the component.
         </li>
       </ul>
       <Houston />
@@ -351,9 +246,9 @@ import type { BundledLanguage } from 'shiki';
 import ShikiHighlighter, { isInlineCode, type Element } from 'react-shiki';
 
 interface CodeHighlightProps {
-  className?: string | undefined;
-  children?: ReactNode | undefined;
-  node?: Element | undefined;
+  className?: string;
+  children?: ReactNode;
+  node?: Element;
 }
 
 export const CodeHighlight = ({
@@ -363,16 +258,15 @@ export const CodeHighlight = ({
   ...props
 }: CodeHighlightProps): JSX.Element => {
   const match = className?.match(/language-(\\w+)/);
-  // TODO: remove need for consumer use of BundledLanguage from shiki
   const language = match ? (match[1] as BundledLanguage) : undefined;
-
   const isInline: boolean | undefined = node ? isInlineCode(node) : undefined;
 
   return !isInline ? (
     <ShikiHighlighter
-      language={language as BundledLanguage}
-      theme={'houston'}
-      {...props}>
+      language={language}
+      theme="houston"
+      {...props}
+    >
       {String(children)}
     </ShikiHighlighter>
   ) : (
@@ -380,10 +274,11 @@ export const CodeHighlight = ({
       {children}
     </code>
   );
-};`.trim()}
+};
+        `.trim()}
       </ShikiHighlighter>
       <p>
-        Pass CodeHighlight to <code>react-markdown</code> as a code
+        Pass <code>CodeHighlight</code> to <code>react-markdown</code> as a code
         component:
       </p>
       <ShikiHighlighter language="tsx" theme="rose-pine-moon">
@@ -397,12 +292,13 @@ import { CodeHighlight } from './CodeHighlight';
   }}
 >
   {markdown}
-</ReactMarkdown>`.trim()}
+</ReactMarkdown>
+        `.trim()}
       </ShikiHighlighter>
       <p>
-        This works great for highlighting in realtime on the client, I use
-        it for an LLM chatbot UI, it renders markdown and highlights code
-        in memoized chat messages:
+        This works great for realtime highlighting on the client – I use it for an
+        LLM chatbot UI that renders markdown and highlights code in memoized chat
+        messages:
       </p>
       <ShikiHighlighter language="tsx" theme="material-theme-ocean">
         {`const RenderedMessage = React.memo(({ message }: { message: Message }) => (
@@ -415,7 +311,7 @@ import { CodeHighlight } from './CodeHighlight';
 
 export const ChatMessages = ({ messages }: { messages: Message[] }) => {
   return (
-    <div className='space-y-4'>
+    <div className="space-y-4">
       {messages.map((message) => (
         <RenderedMessage key={message.id} message={message} />
       ))}
@@ -427,3 +323,4 @@ export const ChatMessages = ({ messages }: { messages: Message[] }) => {
     </div>
   );
 });
+
