@@ -1,6 +1,7 @@
 import type { ShikiTransformer } from 'shiki';
 import type { Element, Root } from 'hast';
 import { visit } from 'unist-util-visit';
+import type { TimeoutState } from './types';
 
 /**
  * Rehype plugin to add an 'inline' property to <code> elements.
@@ -47,6 +48,34 @@ export const removeTabIndexFromPre: ShikiTransformer = {
     }
     return node;
   },
+};
+
+
+/**
+ * Optionally throttles rapid sequential highlighting operations.
+ * Exported for testing in __tests__/throttleHighlighting.test.ts
+ *
+ * @example
+ * const timeoutControl = useRef<TimeoutState>({
+ *   nextAllowedTime: 0,
+ *   timeoutId: undefined
+ * });
+ *
+ * throttleHighlighting(highlightCode, timeoutControl, 1000);
+  */
+export const throttleHighlighting = (
+  performHighlight: () => Promise<void>,
+  timeoutControl: React.MutableRefObject<TimeoutState>,
+  throttleMs: number
+) => {
+  const now = Date.now();
+  clearTimeout(timeoutControl.current.timeoutId);
+
+  const delay = Math.max(0, timeoutControl.current.nextAllowedTime - now);
+  timeoutControl.current.timeoutId = setTimeout(() => {
+    performHighlight().catch(console.error);
+    timeoutControl.current.nextAllowedTime = now + throttleMs;
+  }, delay);
 };
 
 export type { Element };
