@@ -42,7 +42,7 @@ code.
 <ShikiHighlighter language="tsx" theme="ayu-dark">
 {`
 const highlightedCode = useShikiHighlighter(code, language, theme, options);
-`.trim()}
+`}
 </ShikiHighlighter>
 
 The `ShikiHighlighter` component is imported in your project, with the code to
@@ -53,13 +53,13 @@ used on the page.
 
 <ShikiHighlighter language="tsx" theme="ayu-dark">
 {`
-function CodeBlock() {
-  return (
-    <ShikiHighlighter language="jsx" theme="ayu-dark">
-      {code.trim()}
-    </ShikiHighlighter>
-  );
-}
+  function CodeBlock() {
+    return (
+      <ShikiHighlighter language="jsx" theme="ayu-dark">
+        {code.trim()}
+      </ShikiHighlighter>
+    );
+  }
 `.trim()}
 </ShikiHighlighter>
 
@@ -81,23 +81,23 @@ The component accepts several props in addition to language and theme:
 
 <ShikiHighlighter language="tsx" theme="houston">
 {`
-function Houston() {
-  return (
-    <ShikiHighlighter
-      language="jsx"
-      className="code-block"
-      theme="houston"
-      showLanguage={false}
-      addDefaultStyles={true}
-      as="div"
-      style={{
-        textAlign: "left",
-      }}
-    >
-      {code.trim()}
-    </ShikiHighlighter>
-  );
-}
+  function Houston() {
+    return (
+      <ShikiHighlighter
+        language="jsx"
+        className="code-block"
+        theme="houston"
+        showLanguage={false}
+        addDefaultStyles={true}
+        as="div"
+        style={{
+          textAlign: "left",
+        }}
+      >
+        {code.trim()}
+      </ShikiHighlighter>
+    );
+  }
 `.trim()}
 </ShikiHighlighter>
 
@@ -105,30 +105,30 @@ function Houston() {
 
 <ShikiHighlighter language="tsx" theme="andromeeda">
 {`
-import type { ReactNode } from "react";
-import ShikiHighlighter, { type Element } from "react-shiki";
+  import type { ReactNode } from "react";
+  import ShikiHighlighter, { type Element } from "react-shiki";
 
-interface CodeHighlightProps {
-  className?: string | undefined;
-  children?: ReactNode | undefined;
-  node?: Element | undefined;
-}
+  interface CodeHighlightProps {
+    className?: string | undefined;
+    children?: ReactNode | undefined;
+    node?: Element | undefined;
+  }
 
-export const CodeHighlight = ({
-  className,
-  children,
-  node,
-  ...props
-}: CodeHighlightProps): JSX.Element => {
-  const match = className?.match(/language-(\\w+)/);
-  const language = match ? match[1] : undefined;
+  export const CodeHighlight = ({
+    className,
+    children,
+    node,
+    ...props
+  }: CodeHighlightProps): JSX.Element => {
+    const match = className?.match(/language-(\\w+)/);
+    const language = match ? match[1] : undefined;
 
-  return (
-    <ShikiHighlighter language={language} theme={"houston"} {...props}>
-      {String(children)}
-    </ShikiHighlighter>
-  );
-};
+    return (
+      <ShikiHighlighter language={language} theme={"houston"} {...props}>
+        {String(children)}
+      </ShikiHighlighter>
+    );
+  };
 `.trim()}
 </ShikiHighlighter>
 
@@ -140,11 +140,10 @@ import ReactMarkdown from "react-markdown";
 import { CodeHighlight } from "./CodeHighlight";
 
 <ReactMarkdown
-  components={{
-    code: CodeHighlight,
-  }}
->
-  {markdown}
+    components={{
+      code: CodeHighlight,
+    }}>
+    {markdown}
 </ReactMarkdown>;
 `.trim()}
 </ShikiHighlighter>
@@ -156,17 +155,17 @@ There are two ways to check if a code block is inline:
 
 <ShikiHighlighter language="tsx" theme="material-theme-ocean">
 {`
-const isInline: boolean | undefined = node ? isInlineCode(node) : undefined;
+  const isInline: boolean | undefined = node ? isInlineCode(node) : undefined;
 
-return !isInline ? (
-  <ShikiHighlighter language={language} theme={"houston"} {...props}>
-    {String(children)}
-  </ShikiHighlighter>
-) : (
-  <code className={className} {...props}>
-    {children}
-  </code>
-);
+  return !isInline ? (
+    <ShikiHighlighter language={language} theme={"houston"} {...props}>
+      {String(children)}
+    </ShikiHighlighter>
+  ) : (
+    <code className={className} {...props}>
+      {children}
+    </code>
+  );
 `.trim()}
 </ShikiHighlighter>
 
@@ -176,17 +175,16 @@ It's passed as a rehype plugin to `react-markdown`:
 
 <ShikiHighlighter language="tsx" theme="catppuccin-latte">
 {`
-import ReactMarkdown from "react-markdown";
-import { rehypeInlineCodeProperty } from "react-shiki";
+  import ReactMarkdown from "react-markdown";
+  import { rehypeInlineCodeProperty } from "react-shiki";
 
-<ReactMarkdown
-  rehypePlugins={[rehypeInlineCodeProperty]}
-  components={{
-    code: CodeHighlight,
-  }}
->
-  {markdown}
-</ReactMarkdown>;
+  <ReactMarkdown
+    rehypePlugins={[rehypeInlineCodeProperty]}
+    components={{
+      code: CodeHighlight,
+    }}>
+    {markdown}
+  </ReactMarkdown>;
 `.trim()}
 </ShikiHighlighter>
 
@@ -194,26 +192,26 @@ And can be accessed as a prop:
 
 <ShikiHighlighter language="tsx" theme="vitesse-light">
 {`
-const CodeHighlight = ({
-  inline,
-  className,
-  children,
-  node,
-  ...props
-}: CodeHighlightProps): JSX.Element => {
-  const match = className?.match(/language-(\\w+)/);
-  const language = match ? match[1] : undefined;
+  const CodeHighlight = ({
+    inline,
+    className,
+    children,
+    node,
+    ...props
+  }: CodeHighlightProps): JSX.Element => {
+    const match = className?.match(/language-(\\w+)/);
+    const language = match ? match[1] : undefined;
 
-  return !inline ? (
-    <ShikiHighlighter language={language} theme={"houston"} {...props}>
-      {String(children)}
-    </ShikiHighlighter>
-  ) : (
-    <code className={className} {...props}>
-      {children}
-    </code>
-  );
-};
+    return !inline ? (
+      <ShikiHighlighter language={language} theme={"houston"} {...props}>
+        {String(children)}
+      </ShikiHighlighter>
+    ) : (
+      <code className={className} {...props}>
+        {children}
+      </code>
+    );
+  };
 `.trim()}
 </ShikiHighlighter>
 
@@ -224,7 +222,7 @@ const CodeHighlight = ({
 import tokyoNight from '@styles/tokyo-night.mjs';
 
 <ShikiHighlighter language="tsx" theme={tokyoNight}>
-  {String(code)}
+    {String(code)}
 </ShikiHighlighter>;
 `.trim()}
 </ShikiHighlighter>
@@ -237,9 +235,9 @@ import tokyoNight from '@styles/tokyo-night.mjs';
 
 <ShikiHighlighter language="tsx" theme="night-owl">
 {`
-const highlightedCode = useShikiHighlighter(code, language, theme, {
-  delay: 150,
-});
+  const highlightedCode = useShikiHighlighter(code, language, theme, {
+    delay: 150,
+  });
 `.trim()}
 </ShikiHighlighter>
 
@@ -253,52 +251,52 @@ Using `useShikiHighlighter` hook:
 
 <ShikiHighlighter language="tsx" theme="poimandres">
 {`
-import type { ReactNode } from "react";
-import { isInlineCode, useShikiHighlighter, type Element } from "react-shiki";
-import tokyoNight from "@styles/tokyo-night.mjs";
+  import type { ReactNode } from "react";
+  import { isInlineCode, useShikiHighlighter, type Element } from "react-shiki";
+  import tokyoNight from "@styles/tokyo-night.mjs";
 
-interface CodeHighlightProps {
-  className?: string | undefined;
-  children?: ReactNode | undefined;
-  node?: Element | undefined;
-}
+  interface CodeHighlightProps {
+    className?: string | undefined;
+    children?: ReactNode | undefined;
+    node?: Element | undefined;
+  }
 
-export const CodeHighlight = ({
-  className,
-  children,
-  node,
-  ...props
-}: CodeHighlightProps) => {
-  const code = String(children);
-  const language = className?.match(/language-(\\w+)/)?.[1];
+  export const CodeHighlight = ({
+    className,
+    children,
+    node,
+    ...props
+  }: CodeHighlightProps) => {
+    const code = String(children);
+    const language = className?.match(/language-(\\w+)/)?.[1];
 
-  const isInline = node ? isInlineCode(node) : false;
+    const isInline = node ? isInlineCode(node) : false;
 
-  const highlightedCode = useShikiHighlighter(language, code, tokyoNight, {
-    delay: 150,
-  });
+    const highlightedCode = useShikiHighlighter(language, code, tokyoNight, {
+      delay: 150,
+    });
 
-  return !isInline ? (
-    <div
-      className="shiki not-prose relative [&_pre]:overflow-auto 
-      [&_pre]:rounded-lg [&_pre]:px-6 [&_pre]:py-5"
-    >
-      {language ? (
-        <span
-          className="absolute right-3 top-2 text-xs tracking-tighter
-          text-muted-foreground/85"
-        >
-          {language}
-        </span>
-      ) : null}
-      {highlightedCode}
-    </div>
-  ) : (
-    <code className={className} {...props}>
-      {children}
-    </code>
-  );
-};
+    return !isInline ? (
+      <div
+        className="shiki not-prose relative [&_pre]:overflow-auto 
+        [&_pre]:rounded-lg [&_pre]:px-6 [&_pre]:py-5"
+      >
+        {language ? (
+          <span
+            className="absolute right-3 top-2 text-xs tracking-tighter
+            text-muted-foreground/85"
+          >
+            {language}
+          </span>
+        ) : null}
+        {highlightedCode}
+      </div>
+    ) : (
+      <code className={className} {...props}>
+        {children}
+      </code>
+    );
+  };
 `.trim()}
 </ShikiHighlighter>
 
@@ -306,41 +304,41 @@ Or using the `ShikiHighlighter` component:
 
 <ShikiHighlighter language="tsx" theme="andromeeda">
 {`
-import type { ReactNode } from "react";
-import ShikiHighlighter, { isInlineCode, type Element } from "react-shiki";
+  import type { ReactNode } from "react";
+  import ShikiHighlighter, { isInlineCode, type Element } from "react-shiki";
 
-interface CodeHighlightProps {
-  className?: string | undefined;
-  children?: ReactNode | undefined;
-  node?: Element | undefined;
-}
+  interface CodeHighlightProps {
+    className?: string | undefined;
+    children?: ReactNode | undefined;
+    node?: Element | undefined;
+  }
 
-export const CodeHighlight = ({
-  className,
-  children,
-  node,
-  ...props
-}: CodeHighlightProps): JSX.Element => {
-  const match = className?.match(/language-(\\w+)/);
-  const language = match ? match[1] : undefined;
+  export const CodeHighlight = ({
+    className,
+    children,
+    node,
+    ...props
+  }: CodeHighlightProps): JSX.Element => {
+    const match = className?.match(/language-(\\w+)/);
+    const language = match ? match[1] : undefined;
 
-  const isInline: boolean | undefined = node ? isInlineCode(node) : undefined;
+    const isInline: boolean | undefined = node ? isInlineCode(node) : undefined;
 
-  return !isInline ? (
-    <ShikiHighlighter
-      language={language}
-      theme={"houston"}
-      delay={150}
-      {...props}
-    >
-      {String(children)}
-    </ShikiHighlighter>
-  ) : (
-    <code className={className} {...props}>
-      {children}
-    </code>
-  );
-};
+    return !isInline ? (
+      <ShikiHighlighter
+        language={language}
+        theme={"houston"}
+        delay={150}
+        {...props}
+      >
+        {String(children)}
+      </ShikiHighlighter>
+    ) : (
+      <code className={className} {...props}>
+        {children}
+      </code>
+    );
+  };
 `.trim()}
 </ShikiHighlighter>
 
@@ -348,23 +346,23 @@ Passed to `react-markdown` as a `code` component in memo-ized chat messages:
 
 <ShikiHighlighter language="tsx" theme="synthwave-84">
 {`
-const RenderedMessage = React.memo(({ message }: { message: Message }) => (
-  <div className={cn(messageStyles[message.role])}>
-    <ReactMarkdown components={{ code: CodeHighlight }}>
-      {message.content}
-    </ReactMarkdown>
-  </div>
-));
-
-export const ChatMessages = ({ messages }: { messages: Message[] }) => {
-  return (
-    <div className="space-y-4">
-      {messages.map((message) => (
-        <RenderedMessage key={message.id} message={message} />
-      ))}
+  const RenderedMessage = React.memo(({ message }: { message: Message }) => (
+    <div className={cn(messageStyles[message.role])}>
+      <ReactMarkdown components={{ code: CodeHighlight }}>
+        {message.content}
+      </ReactMarkdown>
     </div>
-  );
-};
+  ));
+
+  export const ChatMessages = ({ messages }: { messages: Message[] }) => {
+    return (
+      <div className="space-y-4">
+        {messages.map((message) => (
+          <RenderedMessage key={message.id} message={message} />
+        ))}
+      </div>
+    );
+  };
 `.trim()}
 </ShikiHighlighter>
 
