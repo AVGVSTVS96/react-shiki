@@ -1,0 +1,16 @@
+// Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
+
+exports[`ShikiHighlighter Component > matches snapshot for complex language input 1`] = `
+<pre
+  class="relative not-prose defaultStyles"
+  data-testid="shiki-container"
+  id="shiki-container"
+>
+  <span
+    class="languageLabel"
+    id="language-label"
+  >
+    javascript
+  </span>
+</pre>
+`;
