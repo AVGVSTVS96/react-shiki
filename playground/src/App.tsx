@@ -1,4 +1,3 @@
-// @ts-ignore: idk why its erroring
 import Demo from './Demo.mdx';
 
 function App() {
