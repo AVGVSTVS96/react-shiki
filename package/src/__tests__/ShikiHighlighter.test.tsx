@@ -1,79 +1,156 @@
 import React from 'react';
 import { render, waitFor } from '@testing-library/react';
 import { ShikiHighlighter } from '../ShikiHighlighter';
+import type { ShikiTransformer } from 'shiki';
 
 const codeSample = 'console.log("Hello World");';
 
 describe('ShikiHighlighter Component', () => {
   test('renders language label and highlighted code', async () => {
-    render(
-      <ShikiHighlighter language="javascript" theme={"github-light"}>
+    const { container } = render(
+      <ShikiHighlighter language="javascript" theme="github-light">
         {codeSample}
       </ShikiHighlighter>
     );
 
-    // Verify that the language label element (with id "language-label") is present and has the correct text.
+    // Query the language label using its id.
     await waitFor(() => {
-      const langLabel = document.getElementById('language-label');
+      const langLabel = container.querySelector('#language-label');
       expect(langLabel).toBeInTheDocument();
       expect(langLabel?.textContent).toBe('javascript');
     });
 
-    // Wait for the asynchronous highlighted code to be rendered.
+    // Verify that the highlighted code is rendered.
     await waitFor(() => {
-      const highlightedContainer = document.querySelector('.shiki');
-      expect(highlightedContainer).toBeInTheDocument();
-      expect(highlightedContainer?.textContent).toMatch(/console\.log/);
+      const preElement = container.querySelector('pre.shiki.github-light');
+      expect(preElement).toBeInTheDocument();
+      expect(preElement?.textContent).toMatch(/console\.log/);
     });
   });
 
   test('does not render language label when showLanguage is false', async () => {
-    render(
-      <ShikiHighlighter language="javascript" theme={"github-light"} showLanguage={false}>
+    const { container } = render(
+      <ShikiHighlighter language="javascript" theme="github-light" showLanguage={false}>
         {codeSample}
       </ShikiHighlighter>
     );
 
-    // Confirm that the language label is not rendered.
     await waitFor(() => {
-      const langLabel = document.getElementById('language-label');
+      const langLabel = container.querySelector('#language-label');
       expect(langLabel).toBeNull();
     });
   });
 
   test('renders with a custom wrapper element when "as" prop is provided', async () => {
-    render(
-      <ShikiHighlighter language="javascript" theme={"github-light"} as="div">
+    const { container } = render(
+      <ShikiHighlighter language="javascript" theme="github-light" as="div">
         {codeSample}
       </ShikiHighlighter>
     );
 
-    // Wait until the container element with id "shiki-container" is available.
     await waitFor(() => {
-      const containerElement = document.getElementById('shiki-container');
+      const containerElement = container.querySelector('[data-testid="shiki-container"]');
       expect(containerElement).toBeInTheDocument();
       expect(containerElement?.tagName.toLowerCase()).toBe('div');
     });
   });
 
-  test('gracefully fallback to plaintext for unknown languages', async () => {
+  test('falls back to plaintext highlighting for unknown languages', async () => {
     const unknownLangCode = 'function test() { return true; }';
-    
-    render(
-      <ShikiHighlighter language="unknownlang" theme={"github-light"}>
+    const { container } = render(
+      <ShikiHighlighter language="unknownlang" theme="github-light">
         {unknownLangCode}
       </ShikiHighlighter>
     );
 
     await waitFor(() => {
-      const highlightedContainer = document.querySelector('.shiki');
-      expect(highlightedContainer).toBeInTheDocument();
-      expect(highlightedContainer?.textContent).toBe(unknownLangCode);
-    });
+      const outerContainer = container.querySelector('[data-testid="shiki-container"]');
+      expect(outerContainer).toBeInTheDocument();
 
-    // Verify language label still shows the unknown language
-    const langLabel = document.getElementById('language-label');
-    expect(langLabel?.textContent).toBe('unknownlang');
+      const langLabel = outerContainer?.querySelector('#language-label');
+      expect(langLabel).toBeInTheDocument();
+      expect(langLabel?.textContent).toBe('unknownlang');
+
+      const preElement = outerContainer?.querySelector('pre.shiki.github-light');
+      expect(preElement).toBeInTheDocument();
+
+      const codeElement = preElement?.querySelector('code');
+      expect(codeElement).toBeInTheDocument();
+
+      // Ensure the rendered code exactly matches the input.
+      expect(preElement?.textContent).toBe(unknownLangCode);
+
+      // Verify no inline-styled spans exist.
+      const styledSpans = codeElement?.querySelectorAll('span[style]');
+      expect(styledSpans?.length).toBe(0);
+    });
+  });
+
+  test('matches snapshot for complex language input', async () => {
+    const complexCode = `
+function greet(name) {
+  console.log('Hello, ' + name);
+}
+greet('World');
+    `.trim();
+
+    const { container } = render(
+      <ShikiHighlighter language="javascript" theme="github-light">
+        {complexCode}
+      </ShikiHighlighter>
+    );
+
+    await waitFor(() => {
+      const outerContainer = container.querySelector('[data-testid="shiki-container"]');
+      expect(outerContainer).toMatchSnapshot();
+    });
+  });
+
+  test('applies custom transformers and custom styling props', async () => {
+    const customCode = 'console.log("Custom transformer test");';
+    // Transformer that adds a custom attribute to the <pre> tag.
+    const addDataAttributeTransformer: ShikiTransformer = {
+      pre(node) {
+        node.properties = {
+          ...node.properties,
+          'data-custom': 'applied'
+        };
+      }
+    };
+
+    const customStyle = { border: '1px solid red' };
+    const customLangStyle = { color: 'blue' };
+
+    const { container } = render(
+      <ShikiHighlighter
+        language="javascript"
+        theme="github-light"
+        transformers={[addDataAttributeTransformer]}
+        className="custom-code-block"
+        langClassName="custom-lang-label"
+        style={customStyle}
+        langStyle={customLangStyle}
+      >
+        {customCode}
+      </ShikiHighlighter>
+    );
+
+    await waitFor(() => {
+      // Check container custom style and class.
+      const outerContainer = container.querySelector('[data-testid="shiki-container"]');
+      expect(outerContainer).toHaveStyle('border: 1px solid red');
+      expect(outerContainer?.className).toContain('custom-code-block');
+
+      // Check language label custom style and class.
+      const langLabel = outerContainer?.querySelector('#language-label');
+      // The computed style for blue is rgb(0, 0, 255).
+      expect(langLabel).toHaveStyle('color: rgb(0, 0, 255)');
+      expect(langLabel?.className).toContain('custom-lang-label');
+
+      // Verify that our custom transformer injected the data attribute on the inner <pre>.
+      const innerPreElement = outerContainer?.querySelector('pre.shiki.github-light');
+      expect(innerPreElement).toHaveAttribute('data-custom', 'applied');
+    });
   });
 });
 
