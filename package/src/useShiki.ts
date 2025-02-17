@@ -4,7 +4,6 @@ import parse from 'html-react-parser';
 import {
   createHighlighter,
   createSingletonShorthands,
-  type BundledLanguage,
 } from 'shiki';
 
 import type {
@@ -16,8 +15,10 @@ import type {
 
 import { 
   removeTabIndexFromPre,
-  throttleHighlighting
+  throttleHighlighting,
+  resolvedLang
 } from './utils';
+
 
 /**
  * Create singleton shorthands which handle automatic loading
@@ -37,7 +38,7 @@ export const useShikiHighlighter = (
   options: HighlighterOptions = {}
 ) => {
   const [highlightedCode, setHighlightedCode] = useState<ReactNode | null>(null);
-  const language = lang as BundledLanguage
+  const language = resolvedLang(lang);
 
   const timeoutControl = useRef<TimeoutState>({
     nextAllowedTime: 0,
