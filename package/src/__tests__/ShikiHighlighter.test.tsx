@@ -55,5 +55,25 @@ describe('ShikiHighlighter Component', () => {
       expect(containerElement?.tagName.toLowerCase()).toBe('div');
     });
   });
+
+  test('gracefully fallback to plaintext for unknown languages', async () => {
+    const unknownLangCode = 'function test() { return true; }';
+    
+    render(
+      <ShikiHighlighter language="unknownlang" theme={"github-light"}>
+        {unknownLangCode}
+      </ShikiHighlighter>
+    );
+
+    await waitFor(() => {
+      const highlightedContainer = document.querySelector('.shiki');
+      expect(highlightedContainer).toBeInTheDocument();
+      expect(highlightedContainer?.textContent).toBe(unknownLangCode);
+    });
+
+    // Verify language label still shows the unknown language
+    const langLabel = document.getElementById('language-label');
+    expect(langLabel?.textContent).toBe('unknownlang');
+  });
 });
 
