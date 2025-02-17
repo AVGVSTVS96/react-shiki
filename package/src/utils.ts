@@ -1,7 +1,8 @@
-import type { ShikiTransformer } from 'shiki';
-import type { Element, Root } from 'hast';
 import { visit } from 'unist-util-visit';
-import type { TimeoutState } from './types';
+import { bundledLanguages, isSpecialLang, } from 'shiki';
+import type { BundledLanguage, ShikiTransformer } from 'shiki';
+import type { Element, Root } from 'hast';
+import type { Language, TimeoutState } from './types';
 
 /**
  * Rehype plugin to add an 'inline' property to <code> elements.
@@ -76,6 +77,23 @@ export const throttleHighlighting = (
     performHighlight().catch(console.error);
     timeoutControl.current.nextAllowedTime = now + throttleMs;
   }, delay);
+};
+
+/**
+ * Resolve the requested language to a bundled language.
+ * If the language is not special or not included in Shiki’s bundledLanguages,
+ * fall back to "plaintext".
+ *
+ * @returns {BundledLanguage} The resolved language.
+ */
+export const resolvedLang = (lang: Language): BundledLanguage => {
+  if (typeof lang === 'string') {
+    if (!(lang in bundledLanguages) && !isSpecialLang(lang)) {
+      return 'plaintext' as BundledLanguage;
+    }
+    return lang as BundledLanguage;
+  }
+  return lang as Language as BundledLanguage;
 };
 
 export type { Element };
