@@ -1,4 +1,9 @@
-import type { BundledLanguage, BundledTheme, ThemeRegistration } from 'shiki';
+import type { 
+  BundledLanguage, 
+  BundledTheme,
+  SpecialLanguage,
+  ThemeRegistration
+} from 'shiki';
 
 /** 
  * Languages for syntax highlighting.
@@ -6,7 +11,7 @@ import type { BundledLanguage, BundledTheme, ThemeRegistration } from 'shiki';
  */
 type Language =
   BundledLanguage
-  | "plaintext"
+  | SpecialLanguage
   | (string & {})
   | undefined;
 
