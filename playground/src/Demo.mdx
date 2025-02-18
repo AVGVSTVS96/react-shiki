@@ -1,4 +1,3 @@
-
 import ShikiHighlighter from 'react-shiki';
 
 # 🎨 react-shiki
@@ -11,8 +10,9 @@ for react using [Shiki](https://shiki.matsu.io/)
 - 🖼️ Provides a `ShikiHighlighter` component for highlighting code as children,
   as well as a `useShikiHighlighter` hook for more flexibility
 - 🔐 No `dangerouslySetInnerHTML`, output from Shiki is parsed using `html-react-parser`
-- 📦 Supports all Shiki languages and themes in addition to
+- 📦 Supports all Shiki languages and themes
 - 🖌️ Full support for custom TextMate themes in a JavaScript object format
+- 🔧 Supports passing custom Shiki transformers to the highlighter
 - 🚰 Performant highlighting of streamed code on the client, with optional throttling
 - 📚 Includes minimal default styles for code blocks
 - 🚀 Shiki dynamically imports only the languages and themes used on a page,
@@ -69,10 +69,13 @@ this component is to eventually act as a drop in replacement for `react-syntax-h
 
 The component accepts several props in addition to language and theme:
 
-- `showLanguage: boolean` - Shows the language name in the top right corner of the code block
-- `addDefaultStyles: boolean` - Adds default styles (padding, overflow handling, and border-radius) to the code block
-- `as: string` - The component to be rendered. Defaults to `pre`
-- `delay: number` - Delay between highlights in milliseconds, useful for throttling rapid highlighting on the client
+- `showLanguage: boolean` - Shows the language name in the top right corner of
+  the code block
+- `addDefaultStyles`: boolean - Adds default styles (padding, overflow handling,
+  and border-radius) to the code block
+- `as: string` - The component to be rendered. Defaults to 'pre'
+- `delay: number` - Delay between highlights in milliseconds, useful for throttling
+  rapid highlighting on the client
 - `className: string` - Class names to be passed to the component
 - `style: object` - Inline style object to be passed to the component
 - `langStyle: object` - Inline style object to be passed to the language label
@@ -102,7 +105,7 @@ The component accepts several props in addition to language and theme:
 
 ### \`react-markdown\`
 
-<ShikiHighlighter language="tsx" theme="andromeeda">
+<ShikiHighlighter language="tsx" theme="houston">
 {`
   import type { ReactNode } from "react";
   import ShikiHighlighter, { type Element } from "react-shiki";
@@ -124,7 +127,7 @@ The component accepts several props in addition to language and theme:
 
     return (
       <ShikiHighlighter language={language} theme={"houston"} {...props}>
-        {String(children)}
+        {String(children).trim()}
       </ShikiHighlighter>
     );
   };
@@ -158,7 +161,7 @@ There are two ways to check if a code block is inline:
 
   return !isInline ? (
     <ShikiHighlighter language={language} theme={"houston"} {...props}>
-      {String(children)}
+      {String(children).trim()}
     </ShikiHighlighter>
   ) : (
     <code className={className} {...props}>
@@ -203,7 +206,7 @@ And can be accessed as a prop:
 
     return !inline ? (
       <ShikiHighlighter language={language} theme={"houston"} {...props}>
-        {String(children)}
+        {String(children).trim()}
       </ShikiHighlighter>
     ) : (
       <code className={className} {...props}>
@@ -221,9 +224,23 @@ And can be accessed as a prop:
 import tokyoNight from '@styles/tokyo-night.mjs';
 
 <ShikiHighlighter language="tsx" theme={tokyoNight}>
-    {String(code)}
+    {String(code).trim()}
 </ShikiHighlighter>;
 `.trim()}
+</ShikiHighlighter>
+
+### Custom transformers
+
+
+<ShikiHighlighter language="tsx" theme="snazzy-light">
+{`
+import { customTransformer } from '@utils/customTransformers';
+<ShikiHighlighter
+  language="tsx"
+  transformers={[customTransformer]}>
+  {String(code).trim()}
+</ShikiHighlighter>;
+`}
 </ShikiHighlighter>
 
 ## Performance
@@ -231,6 +248,9 @@ import tokyoNight from '@styles/tokyo-night.mjs';
 `react-shiki` supports performance-optimized highlighting on the client.
 
 ### Throttling real-time highlighting
+
+Throttling real-time highlighting on the client is possible with the
+`delay` option.
 
 <ShikiHighlighter language="tsx" theme="night-owl">
 {`
@@ -244,7 +264,8 @@ import tokyoNight from '@styles/tokyo-night.mjs';
 
 `react-shiki` can be used to highlight streamed code from LLM responses in real-time.
 
-I use it for an LLM chatbot UI, it renders markdown and highlights code in memoized chat messages.
+I use it for an LLM chatbot UI, it renders markdown and highlights
+code in memoized chat messages.
 
 Using `useShikiHighlighter` hook:
 
@@ -266,7 +287,7 @@ Using `useShikiHighlighter` hook:
     node,
     ...props
   }: CodeHighlightProps) => {
-    const code = String(children);
+    const code = String(children).trim();
     const language = className?.match(/language-(\\w+)/)?.[1];
 
     const isInline = node ? isInlineCode(node) : false;
@@ -330,7 +351,7 @@ Or using the `ShikiHighlighter` component:
         delay={150}
         {...props}
       >
-        {String(children)}
+        {String(children).trim()}
       </ShikiHighlighter>
     ) : (
       <code className={className} {...props}>

@@ -18,6 +18,7 @@ for react using [Shiki](https://shiki.matsu.io/)
     - [`react-markdown`](#react-markdown)
     - [Check if code is inline](#check-if-code-is-inline)
     - [Custom themes](#custom-themes)
+    - [Custom transformers](#custom-transformers)
   - [Performance](#performance)
     - [Throttling real-time highlighting](#throttling-real-time-highlighting)
     - [Streaming and LLM chat UI](#streaming-and-llm-chat-ui)
@@ -28,8 +29,9 @@ for react using [Shiki](https://shiki.matsu.io/)
 - 🖼️ Provides a `ShikiHighlighter` component for highlighting code as children,
   as well as a `useShikiHighlighter` hook for more flexibility
 - 🔐 No `dangerouslySetInnerHTML`, output from Shiki is parsed using `html-react-parser`
-- 📦 Supports all Shiki languages and themes in addition to
+- 📦 Supports all Shiki languages and themes
 - 🖌️ Full support for custom TextMate themes in a JavaScript object format
+- 🔧 Supports passing custom Shiki transformers to the highlighter
 - 🚰 Performant highlighting of streamed code on the client, with optional throttling
 - 📚 Includes minimal default styles for code blocks
 - 🚀 Shiki dynamically imports only the languages and themes used on a page,
@@ -136,7 +138,7 @@ export const CodeHighlight = ({
   const language = match ? match[1] : undefined;
 
   <ShikiHighlighter language={language} theme={"houston"} {...props}>
-    {String(children)}
+    {String(children).trim()}
   </ShikiHighlighter>;
 };
 ```
@@ -167,7 +169,7 @@ const isInline: boolean | undefined = node ? isInlineCode(node) : undefined;
 
 return !isInline ? (
   <ShikiHighlighter language={language} theme={"houston"} {...props}>
-    {String(children)}
+    {String(children).trim()}
   </ShikiHighlighter>
 ) : (
   <code className={className} {...props}>
@@ -210,7 +212,7 @@ const CodeHighlight = ({
 
 return !inline ? (
   <ShikiHighlighter language={language} theme={"houston"} {...props}>
-    {String(children)}
+    {String(children).trim()}
   </ShikiHighlighter>
 ) : (
   <code className={className} {...props}>
@@ -221,11 +223,23 @@ return !inline ? (
 
 ### Custom themes
 
-```tsx:title=CodeHighlight.tsx
+```tsx
 import tokyoNight from '@styles/tokyo-night.mjs';
 
 <ShikiHighlighter language="tsx" theme={tokyoNight}>
   {String(code)}
+</ShikiHighlighter>;
+```
+
+### Custom transformers
+
+```tsx
+import { customTransformer } from '@utils/customTransformers';
+
+<ShikiHighlighter
+  language="tsx"
+  transformers={[customTransformer]}>
+  {String(code).trim()}
 </ShikiHighlighter>;
 ```
 
@@ -248,12 +262,12 @@ const highlightedCode = useShikiHighlighter(code, language, theme, {
 
 `react-shiki` can be used to highlight streamed code from LLM responses in real-time.
 
-I use it for an
-LLM chatbot UI, it renders markdown and highlights code in memoized chat messages.
+I use it for an LLM chatbot UI, it renders markdown and highlights
+code in memoized chat messages.
 
 Using `useShikiHighlighter` hook:
 
-```tsx title=CodeHighlight.tsx
+```tsx
 import type { ReactNode } from "react";
 import { isInlineCode, useShikiHighlighter, type Element } from "react-shiki";
 import tokyoNight from "@styles/tokyo-night.mjs";
@@ -270,7 +284,7 @@ export const CodeHighlight = ({
   node,
   ...props
 }: CodeHighlightProps) => {
-  const code = String(children);
+  const code = String(children).trim();
   const language = className?.match(/language-(\w+)/)?.[1];
 
   const isInline = node ? isInlineCode(node) : false;
@@ -304,7 +318,7 @@ export const CodeHighlight = ({
 
 Or using the `ShikiHighlighter` component:
 
-```tsx title=CodeHighlight.tsx
+```tsx
 import type { ReactNode } from "react";
 import ShikiHighlighter, { isInlineCode, type Element } from "react-shiki";
 
@@ -332,7 +346,7 @@ export const CodeHighlight = ({
       delay={150}
       {...props}
     >
-      {String(children)}
+      {String(children).trim()}
     </ShikiHighlighter>
   ) : (
     <code className={className} {...props}>
@@ -344,7 +358,7 @@ export const CodeHighlight = ({
 
 Passed to `react-markdown` as a `code` component in memo-ized chat messages:
 
-```tsx title=ChatMessages.tsx
+```tsx
 const RenderedMessage = React.memo(({ message }: { message: Message }) => (
   <div className={cn(messageStyles[message.role])}>
     <ReactMarkdown components={{ code: CodeHighlight }}>
