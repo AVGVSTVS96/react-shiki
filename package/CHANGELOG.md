@@ -1,5 +1,17 @@
 # react-shiki
 
+## 0.3.0
+
+### Minor Changes
+
+- 623bdc3: Refactored Shiki syntax highlighting implementation to use singleton shorthands for simplified theme/language loading and more reliable resource management.
+- 0e23eaa: feat: Add support for custom Shiki transformers
+
+### Patch Changes
+
+- facf2bc: - Fix boolean attribute error
+  - Improve `isInlineCode` function, achieve parity with `rehypeInlineCodeProperty`
+
 ## 0.2.4
 
 ### Patch Changes
