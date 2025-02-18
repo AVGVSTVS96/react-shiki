@@ -2,7 +2,6 @@
   "name": "root",
   "private": true,
   "license": "MIT",
-  "packageManager": "pnpm@9.6.0",
   "scripts": {
     "dev": "pnpm --stream -r --parallel dev",
     "build": "pnpm --stream -r --parallel build",
@@ -21,5 +20,6 @@
     "@biomejs/biome": "^1.8.3",
     "@changesets/cli": "^2.27.7",
     "typescript": "^5.5.4"
-  }
+  },
+  "packageManager": "pnpm@10.4.0"
 }
