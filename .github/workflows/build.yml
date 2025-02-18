@@ -9,14 +9,14 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v4
 
-      - name: Setup PNPM
-        run: corepack enable && pnpm -v
-
       - name: Setup Node
         uses: actions/setup-node@v4
         with:
-          node-version: 18.20.3
+          node-version: 20.18.2
           cache: pnpm
+
+      - name: Setup PNPM
+        run: corepack enable && pnpm -v
 
       - name: Install dependencies
         run: pnpm install --frozen-lockfile
