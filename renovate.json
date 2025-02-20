@@ -1,6 +1,36 @@
 {
   "$schema": "https://docs.renovatebot.com/renovate-schema.json",
   "extends": [
-    "config:recommended"
+    ":dependencyDashboard",
+    ":ignoreModulesAndTests",
+    ":rebaseStalePrs",
+    ":semanticCommitType(chore)",
+    ":separateMajorReleases",
+    "group:definitelyTyped",
+    "group:monorepos",
+    "group:recommended",
+    "replacements:all",
+    "workarounds:all"
+  ],
+  "prHourlyLimit": 10,
+  "rangeStrategy": "bump",
+  "labels": [
+    "dependencies"
+  ],
+  "commitMessageTopic": "{{depName}}",
+  "commitBodyTable": true,
+  "timezone": "America/New_York",
+  "schedule": [
+    "every 2 weeks on friday at 8pm"
+  ],
+  "transitiveRemediation": true,
+  "packageRules": [
+    {
+      "groupName": "dev-dependencies",
+      "semanticCommitScope": "dev-deps",
+      "matchDepTypes": [
+        "devDependencies"
+      ]
+    }
   ]
 }
