@@ -1,2 +1,1 @@
-# react-shiki
-syntax highlighting component for react using shiki
+package/README.md

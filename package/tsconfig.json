@@ -1,32 +1,38 @@
 {
   "compilerOptions": {
-    // Base Options recommended for all projects
     "esModuleInterop": true,
     "skipLibCheck": true,
-    "target": "es2022",
-    "allowJs": true,
+    "module": "Preserve",
+    "moduleResolution": "Bundler",
+    "jsx": "preserve",
+    "noEmit": true,
     "resolveJsonModule": true,
-    "moduleDetection": "force",
     "isolatedModules": true,
     "verbatimModuleSyntax": true,
-    // Enable strict type checking so you can catch bugs early
     "strict": true,
     "noUncheckedIndexedAccess": true,
     "noImplicitOverride": true,
-    // We are not transpiling, so preserve our source code and do not emit files
-    "module": "preserve",
-    "noEmit": true,
-    // Include the DOM types
-    "lib": ["es2022", "dom", "dom.iterable"],
-    // Settings for monorepo
-    "composite": true,
-    // Tells TypeScript to emit .d.ts files
-    "declaration": true,
-    // Tells TypeScript to emit source maps and declaration maps
-    "declarationMap": true,
-    "sourceMap": true
+    "lib": [
+      "es2022",
+      "dom",
+      "dom.iterable"
+    ],
+    "baseUrl": ".",
+    "paths": {
+      "@/*": [
+        "./src/*"
+      ]
+    },
+    "types": [
+      "vitest",
+      "node"
+    ]
   },
-  // Include the necessary files for your project
-  "include": ["**/*.ts", "**/*.tsx"],
-  "exclude": ["node_modules"]
+  "include": [
+    "src/**/*.ts",
+    "src/**/*.tsx"
+  ],
+  "exclude": [
+    "node_modules"
+  ]
 }

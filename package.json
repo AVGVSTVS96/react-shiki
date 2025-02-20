@@ -1,35 +1,25 @@
 {
-  "name": "react-shiki",
+  "name": "root",
   "private": true,
-  "packageManager": "pnpm@9.6.0",
-  "version": "0.0.1",
-  "description": "syntax highlighting component for react using shiki",
-  "main": "index.js",
+  "license": "MIT",
   "scripts": {
     "dev": "pnpm --stream -r --parallel dev",
+    "build": "pnpm --stream -r --parallel build",
     "package:dev": "pnpm --filter react-shiki dev",
     "package:build": "pnpm --filter react-shiki build",
-    "package:publish": "pnpm --filter react-shiki publish",
-    "lint": "biome check .",
-    "lint:fix": "biome check --apply ."
-  },
-  "keywords": [
-    "react",
-    "shiki",
-    "syntax",
-    "highlighting"
-  ],
-  "author": "Bassim Shahidy",
-  "license": "MIT",
-  "dependencies": {
-    "shiki": "^1.12.0"
+    "playground:dev": "pnpm --filter playground dev",
+    "playground:build": "pnpm --filter playground build",
+    "test": "pnpm --filter react-shiki test",
+    "lint": "tsc && biome check .",
+    "lint:fix": "biome check --write .",
+    "format": "biome format --write .",
+    "changeset": "changeset",
+    "release": "node scripts/release.mjs"
   },
   "devDependencies": {
     "@biomejs/biome": "^1.8.3",
-    "react": "^18.3.1",
+    "@changesets/cli": "^2.27.7",
     "typescript": "^5.5.4"
   },
-  "peerDependencies": {
-    "react": ">= 15.0.0"
-  }
+  "packageManager": "pnpm@10.4.0"
 }
