@@ -30,11 +30,6 @@
       "semanticCommitScope": "dev-deps",
       "matchDepTypes": [
         "devDependencies"
-      ],
-      "matchUpdateTypes": [
-        "minor",
-        "patch",
-        "major"
       ]
     }
   ]
