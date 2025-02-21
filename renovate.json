@@ -37,6 +37,13 @@
       "matchDepTypes": [
         "devDependencies"
       ]
+    },
+    {
+      "groupName": "syntax highlighting dependencies",
+      "matchPackageNames": [
+        "shiki",
+        "html-react-parser"
+      ]
     }
   ]
 }
