@@ -26,6 +26,12 @@
   "transitiveRemediation": true,
   "packageRules": [
     {
+      "matchDepTypes": [
+        "peerDependencies"
+      ],
+      "enabled": false
+    },
+    {
       "groupName": "dev-dependencies",
       "semanticCommitScope": "dev-deps",
       "matchDepTypes": [
