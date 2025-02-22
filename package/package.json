@@ -48,7 +48,7 @@
     "@types/jest": "^29.5.14",
     "clsx": "^2.1.1",
     "html-react-parser": "^5.1.12",
-    "shiki": "^1.12.1",
+    "shiki": "^3.0.0",
     "unist-util-visit": "^5.0.0"
   },
   "devDependencies": {
