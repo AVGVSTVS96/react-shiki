@@ -52,14 +52,14 @@
     "unist-util-visit": "^5.0.0"
   },
   "devDependencies": {
-    "@testing-library/jest-dom": "^6.0.0",
-    "@testing-library/react": "^14.0.0",
+    "@testing-library/jest-dom": "^6.6.3",
+    "@testing-library/react": "^14.3.1",
     "@types/hast": "^3.0.4",
-    "@types/node": "22.10.10",
-    "@types/react": "^18.3.3",
-    "@vitejs/plugin-react": "^4.0.0",
+    "@types/node": "22.13.4",
+    "@types/react": "^18.3.18",
+    "@vitejs/plugin-react": "^4.3.4",
     "jsdom": "^22.1.0",
-    "tsup": "^8.2.4",
-    "vitest": "^0.34.0"
+    "tsup": "^8.3.6",
+    "vitest": "^0.34.6"
   }
 }

@@ -17,9 +17,15 @@
     "release": "node scripts/release.mjs"
   },
   "devDependencies": {
-    "@biomejs/biome": "^1.8.3",
-    "@changesets/cli": "^2.27.7",
-    "typescript": "^5.5.4"
+    "@biomejs/biome": "^1.9.4",
+    "@changesets/cli": "^2.28.1",
+    "typescript": "^5.7.3"
   },
-  "packageManager": "pnpm@10.4.0"
+  "packageManager": "pnpm@10.4.0",
+  "pnpm": {
+    "onlyBuiltDependencies": [
+      "@biomejs/biome",
+      "esbuild"
+    ]
+  }
 }
