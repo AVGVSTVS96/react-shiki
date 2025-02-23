@@ -1,11 +1,12 @@
 # 🎨 [react-shiki](https://npmjs.com/react-shiki)
 
 > [!NOTE]
-> This package is still a work in progress, fully functional but not
-> extensively tested.
+> This library is still in development, more features will 
+> continue to be implemented, and API may change. 
+> Contributions are welcome!
 
 Performant client side syntax highlighting component + hook
-for react using [Shiki](https://shiki.matsu.io/)
+for react built with [Shiki](https://shiki.matsu.io/)
 
 [See the demo page with highlighted code blocks showcasing several Shiki themes!](https://react-shiki.vercel.app/)
 
@@ -18,6 +19,7 @@ for react using [Shiki](https://shiki.matsu.io/)
     - [`react-markdown`](#react-markdown)
     - [Check if code is inline](#check-if-code-is-inline)
     - [Custom themes](#custom-themes)
+    - [Custom languages](#custom-languages)
     - [Custom transformers](#custom-transformers)
   - [Performance](#performance)
     - [Throttling real-time highlighting](#throttling-real-time-highlighting)
@@ -258,7 +260,8 @@ import { customTransformer } from '../utils/shikiTransformers';
 // component
 <ShikiHighlighter
   language="tsx"
-  transformers={[customTransformer]}>
+  transformers={[customTransformer]}
+>
   {String(code).trim()}
 </ShikiHighlighter>;
 
