@@ -1,6 +1,6 @@
 import { visit } from 'unist-util-visit';
 import { bundledLanguages, isSpecialLang, } from 'shiki';
-import type { BundledLanguage, ShikiTransformer } from 'shiki';
+import type { ShikiTransformer } from 'shiki';
 import type { Element, Root } from 'hast';
 import type { Language, TimeoutState } from './types';
 
@@ -88,7 +88,7 @@ export const throttleHighlighting = (
  */
 export const resolvedLang = (lang: Language): string => {
   if (typeof lang === 'string' && (lang in bundledLanguages || isSpecialLang(lang))) return lang;
-  if (typeof lang === 'object' && lang?.name && typeof lang.name === 'string') return lang.name;
+  if (typeof lang === 'object' && 'name' in lang && typeof lang.name === 'string') return lang.name;
   return 'plaintext';
 };
 

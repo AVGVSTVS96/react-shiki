@@ -1,31 +1,32 @@
-import { useEffect, useRef, useState, type ReactNode } from 'react';
+// last working
+import { 
+  useEffect,
+  useRef,
+  useState,
+  type ReactNode
+} from 'react';
+
 import parse from 'html-react-parser';
 
-import {
+import { 
   createHighlighter,
-  createSingletonShorthands,
+  createSingletonShorthands
 } from 'shiki';
 
-import type {
-  Language,
-  Theme,
-  HighlighterOptions,
+import type { 
+  Language, 
+  Theme, 
+  HighlighterOptions, 
   TimeoutState
 } from './types';
 
 import { 
   removeTabIndexFromPre,
-  throttleHighlighting,
-  resolvedLang
+  throttleHighlighting
 } from './utils';
 
-
-/**
- * Create singleton shorthands which handle automatic loading
- * of the languages and themes, with support for custom themes.
- */
+// We use a singleton for bundled languages, but for custom languages we'll create a fresh instance.
 const highlighter = createSingletonShorthands(createHighlighter);
-
 
 /**
  * A React hook that provides syntax highlighting using Shiki.
@@ -35,6 +36,7 @@ const highlighter = createSingletonShorthands(createHighlighter);
  * const highlightedCode = useShikiHighlighter(code, language, theme, {
  *   transformers: [removeTabIndexFromPre],
  *   delay: 150
+ *   customLanguages: ['bosque', 'mcfunction']
  * });
  */
 export const useShikiHighlighter = (
@@ -44,41 +46,60 @@ export const useShikiHighlighter = (
   options: HighlighterOptions = {}
 ) => {
   const [highlightedCode, setHighlightedCode] = useState<ReactNode | null>(null);
-  const language = resolvedLang(lang);
+  const isCustomLang = typeof lang === 'object' && lang !== null;
+  // Derive the identifier you want to use – e.g. the first file type or a simpler alias.
+  const languageIdentifier = isCustomLang
+    ? ((lang as any).fileTypes?.[0] || (lang as any).name)
+    : lang;
 
   const timeoutControl = useRef<TimeoutState>({
     nextAllowedTime: 0,
-    timeoutId: undefined
+    timeoutId: undefined,
   });
 
   useEffect(() => {
     let isMounted = true;
-
     const transformers = [removeTabIndexFromPre, ...(options.transformers || [])];
 
     const highlightCode = async () => {
-      // If provided, load custom language after highlighter is initialized
-      if (typeof lang === 'object' && lang !== null && 'id' in lang) {
-        const shikiInstance = await highlighter.getSingletonHighlighter({
-          langs: [language],
+      let shikiInstance;
+      if (isCustomLang) {
+        // Create a fresh highlighter instance with a langAlias mapping:
+        shikiInstance = await createHighlighter({
+          langs: [],
+          themes: [theme],
+          langAlias: {
+            // Map alias to the custom language's name.
+            [languageIdentifier]: (lang as any).name,
+          },
+        });
+        try {
+          await shikiInstance.loadLanguage(lang); // load the custom language
+        } catch (error) {
+          console.error('[highlightCode] Error loading custom language:', error);
+        }
+      } else {
+        shikiInstance = await highlighter.getSingletonHighlighter({
+          langs: [languageIdentifier],
           themes: [theme],
         });
-        await shikiInstance.loadLanguage(lang);
       }
-
-      const html = await highlighter.codeToHtml(code, {
-        lang: language,
-        theme,
-        transformers
-      });
-
-      if (isMounted) {
-        setHighlightedCode(parse(html));
+      
+      try {
+        const html = shikiInstance.codeToHtml(code, {
+          lang: languageIdentifier,
+          theme,
+          transformers,
+        });
+        if (isMounted) {
+          setHighlightedCode(parse(html));
+        }
+      } catch (err) {
+        console.error('[highlightCode] Error during codeToHtml:', err);
       }
     };
 
     const { delay } = options;
-
     if (delay) {
       throttleHighlighting(highlightCode, timeoutControl, delay);
     } else {
@@ -93,4 +114,3 @@ export const useShikiHighlighter = (
 
   return highlightedCode;
 };
-
