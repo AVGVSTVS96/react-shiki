@@ -57,6 +57,15 @@ export const useShikiHighlighter = (
     const transformers = [removeTabIndexFromPre, ...(options.transformers || [])];
 
     const highlightCode = async () => {
+      // If provided, load custom language after highlighter is initialized
+      if (typeof lang === 'object' && lang !== null && 'id' in lang) {
+        const shikiInstance = await highlighter.getSingletonHighlighter({
+          langs: [language],
+          themes: [theme],
+        });
+        await shikiInstance.loadLanguage(lang);
+      }
+
       const html = await highlighter.codeToHtml(code, {
         lang: language,
         theme,

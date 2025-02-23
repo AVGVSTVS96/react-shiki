@@ -80,20 +80,17 @@ export const throttleHighlighting = (
 };
 
 /**
- * Resolve the requested language to a bundled language.
- * If the language is not special or not included in Shiki’s bundledLanguages,
- * fall back to "plaintext".
+ * Resolve the requested language to a bundled language
+ * or the language name from a custom language object.
+ * Fall back to "plaintext" if the language is not bundled or special.
  *
- * @returns {BundledLanguage} The resolved language.
+ * @returns The resolved language.
  */
-export const resolvedLang = (lang: Language): BundledLanguage => {
-  if (typeof lang === 'string') {
-    if (!(lang in bundledLanguages) && !isSpecialLang(lang)) {
-      return 'plaintext' as BundledLanguage;
-    }
-    return lang as BundledLanguage;
-  }
-  return lang as Language as BundledLanguage;
+export const resolvedLang = (lang: Language): string => {
+  if (typeof lang === 'string' && (lang in bundledLanguages || isSpecialLang(lang))) return lang;
+  if (typeof lang === 'object' && lang?.name && typeof lang.name === 'string') return lang.name;
+  return 'plaintext';
 };
+
 
 export type { Element };

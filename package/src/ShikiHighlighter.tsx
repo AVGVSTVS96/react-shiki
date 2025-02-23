@@ -4,6 +4,7 @@ import { clsx } from 'clsx';
 import { useShikiHighlighter } from './useShiki';
 import type { Language, Theme, HighlighterOptions } from './types';
 import type { ShikiTransformer } from 'shiki';
+import { resolvedLang } from './utils';
 
 /**
  * Props for the ShikiHighlighter component
@@ -111,6 +112,11 @@ export const ShikiHighlighter = ({
 }: ShikiHighlighterProps): React.ReactElement => {
   const options: HighlighterOptions = { delay, transformers };
   const highlightedCode = useShikiHighlighter(code, language, theme, options);
+  
+  const languageLabel =
+    language && typeof language === 'object'
+      ? resolvedLang(language)
+      : language;
 
   return (
     <Element
@@ -130,7 +136,7 @@ export const ShikiHighlighter = ({
           style={langStyle}
           id='language-label'
         >
-          {language}
+          {languageLabel}
         </span>
       ) : null}
       {highlightedCode}

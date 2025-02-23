@@ -1,4 +1,11 @@
-import type { BundledLanguage, BundledTheme, SpecialLanguage, ShikiTransformer, ThemeRegistration } from 'shiki';
+import type {
+  BundledLanguage,
+  SpecialLanguage,
+  LanguageRegistration,
+  BundledTheme,
+  ThemeRegistration,
+  ShikiTransformer,
+} from 'shiki';
 
 /** 
  * Languages for syntax highlighting.
@@ -6,6 +13,7 @@ import type { BundledLanguage, BundledTheme, SpecialLanguage, ShikiTransformer, 
  */
 type Language =
   BundledLanguage
+  | LanguageRegistration
   | SpecialLanguage
   | (string & {})
   | undefined;
