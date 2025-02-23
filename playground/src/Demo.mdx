@@ -10,8 +10,7 @@ for react using [Shiki](https://shiki.matsu.io/)
 - 🖼️ Provides a `ShikiHighlighter` component for highlighting code as children,
   as well as a `useShikiHighlighter` hook for more flexibility
 - 🔐 No `dangerouslySetInnerHTML`, output from Shiki is parsed using `html-react-parser`
-- 📦 Supports all Shiki languages and themes
-- 🖌️ Full support for custom TextMate themes in a JavaScript object format
+- 🖌️ Full support for custom TextMate languages and themes
 - 🔧 Supports passing custom Shiki transformers to the highlighter
 - 🚰 Performant highlighting of streamed code on the client, with optional throttling
 - 📚 Includes minimal default styles for code blocks
@@ -152,8 +151,9 @@ import { CodeHighlight } from "./CodeHighlight";
 
 ### Check if code is inline
 
-There are two ways to check if a code block is inline:  
-`react-shiki` exports `isInlineCode`, good but marks multiline inline code tags as code blocks.
+There are two ways to check if a code block is inline:
+`react-shiki` exports `isInlineCode` which parses the `node` 
+prop to determine if the code is inline based on the presence of line breaks:
 
 <ShikiHighlighter language="tsx" theme="material-theme-ocean">
 {`
@@ -171,8 +171,9 @@ There are two ways to check if a code block is inline:
 `.trim()}
 </ShikiHighlighter>
 
-`react-shiki` also exports `rehypeInlineCodeProperty`, a more accurate way
-to determine if code is inline.
+`react-shiki` also exports `rehypeInlineCodeProperty`, a rehype plugin that adds
+an `inline` property to `react-markdown` to determine if code is inline based on 
+the presence of a `<pre>` tag as a parent of `<code>`.
 It's passed as a rehype plugin to `react-markdown`:
 
 <ShikiHighlighter language="tsx" theme="catppuccin-latte">
@@ -221,11 +222,31 @@ And can be accessed as a prop:
 
 <ShikiHighlighter language="tsx" theme="snazzy-light">
 {`
-import tokyoNight from '@styles/tokyo-night.mjs';
+import tokyoNight from '../styles/tokyo-night.mjs';
 
+// component
 <ShikiHighlighter language="tsx" theme={tokyoNight}>
     {String(code).trim()}
 </ShikiHighlighter>;
+
+// hook
+const highlightedCode = useShikiHighlighter(code, "tsx", tokyoNight);
+`.trim()}
+</ShikiHighlighter>
+
+### Custom languages
+
+<ShikiHighlighter language="tsx" theme="github-dark">
+{`
+import mcfunction from "../langs/mcfunction.tmLanguage.json"
+
+// component
+<ShikiHighlighter language={mcfunction} theme="github-dark" >
+    {String(code).trim()}
+</ShikiHighlighter>;
+
+// hook
+const highlightedCode = useShikiHighlighter(code, mcfunction, "github-dark");
 `.trim()}
 </ShikiHighlighter>
 
@@ -234,12 +255,18 @@ import tokyoNight from '@styles/tokyo-night.mjs';
 
 <ShikiHighlighter language="tsx" theme="snazzy-light">
 {`
-import { customTransformer } from '@utils/customTransformers';
+import { customTransformer } from '../utils/shikiTransformers';
+
+// component
 <ShikiHighlighter
-  language="tsx"
-  transformers={[customTransformer]}>
-  {String(code).trim()}
+   language="tsx"
+   transformers={[customTransformer]}
+>
+   {String(code).trim()}
 </ShikiHighlighter>;
+
+// hook
+const highlightedCode = useShikiHighlighter(code, "tsx", "github-dark", [customTransformer]);
 `}
 </ShikiHighlighter>
 

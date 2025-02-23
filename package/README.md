@@ -29,8 +29,7 @@ for react using [Shiki](https://shiki.matsu.io/)
 - 🖼️ Provides a `ShikiHighlighter` component for highlighting code as children,
   as well as a `useShikiHighlighter` hook for more flexibility
 - 🔐 No `dangerouslySetInnerHTML`, output from Shiki is parsed using `html-react-parser`
-- 📦 Supports all Shiki languages and themes
-- 🖌️ Full support for custom TextMate themes in a JavaScript object format
+- 🖌️ Full support for custom TextMate languages and themes
 - 🔧 Supports passing custom Shiki transformers to the highlighter
 - 🚰 Performant highlighting of streamed code on the client, with optional throttling
 - 📚 Includes minimal default styles for code blocks
@@ -161,8 +160,8 @@ import { CodeHighlight } from "./CodeHighlight";
 ### Check if code is inline
 
 There are two ways to check if a code block is inline:
-`react-shiki` exports `isInlineCode`, good but marks multiline inline
-code tags as code blocks.
+`react-shiki` exports `isInlineCode` which parses the `node` 
+prop to determine if the code is inline based on the presence of line breaks:
 
 ```tsx
 const isInline: boolean | undefined = node ? isInlineCode(node) : undefined;
@@ -178,8 +177,9 @@ return !isInline ? (
 );
 ```
 
-`react-shiki` also exports `rehypeInlineCodeProperty`, a more accurate way
-to determine if code is inline.
+`react-shiki` also exports `rehypeInlineCodeProperty`, a rehype plugin that adds
+an `inline` property to `react-markdown` to determine if code is inline based on 
+the presence of a `<pre>` tag as a parent of `<code>`.
 It's passed as a rehype plugin to `react-markdown`:
 
 ```tsx
@@ -196,7 +196,7 @@ import { rehypeInlineCodeProperty } from "react-shiki";
 </ReactMarkdown>;
 ```
 
-And can be accessed as a prop:
+Now `inline` can be accessed as a prop in the `CodeHighlight` component:
 
 ```tsx
 const CodeHighlight = ({
@@ -208,11 +208,12 @@ const CodeHighlight = ({
 }: CodeHighlightProps): JSX.Element => {
   const match = className?.match(/language-(\w+)/);
   const language = match ? match[1] : undefined;
+  const code = String(children).trim();
 
 
 return !inline ? (
   <ShikiHighlighter language={language} theme={"houston"} {...props}>
-    {String(children).trim()}
+    {code}
   </ShikiHighlighter>
 ) : (
   <code className={className} {...props}>
@@ -224,23 +225,45 @@ return !inline ? (
 ### Custom themes
 
 ```tsx
-import tokyoNight from '@styles/tokyo-night.mjs';
+import tokyoNight from '../styles/tokyo-night.mjs';
 
+// component
 <ShikiHighlighter language="tsx" theme={tokyoNight}>
-  {String(code)}
+  {String(code).trim()}
 </ShikiHighlighter>;
+
+// hook
+const highlightedCode = useShikiHighlighter(code, "tsx", tokyoNight);
+```
+
+### Custom languages
+
+```tsx
+import mcfunction from "../langs/mcfunction.tmLanguage.json"
+
+// component
+<ShikiHighlighter language={mcfunction} theme="github-dark" >
+  {String(code).trim()}
+</ShikiHighlighter>;
+
+// hook
+const highlightedCode = useShikiHighlighter(code, mcfunction, "github-dark");
 ```
 
 ### Custom transformers
 
 ```tsx
-import { customTransformer } from '@utils/customTransformers';
+import { customTransformer } from '../utils/shikiTransformers';
 
+// component
 <ShikiHighlighter
   language="tsx"
   transformers={[customTransformer]}>
   {String(code).trim()}
 </ShikiHighlighter>;
+
+// hook
+const highlightedCode = useShikiHighlighter(code, "tsx", "github-dark", [customTransformer]);
 ```
 
 ## Performance
