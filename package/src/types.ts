@@ -38,6 +38,11 @@ type HighlighterOptions = {
    * Custom Shiki transformers to apply to the highlighted code.
    */
   transformers?: ShikiTransformer[];
+
+  /**
+   * Custom textmate grammar to be preloaded for highlighting.
+   */
+  customLanguage?: Language;
 };
 
 /**

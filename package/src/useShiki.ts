@@ -9,7 +9,9 @@ import parse from 'html-react-parser';
 
 import {
   createHighlighter,
-  createSingletonShorthands
+  createSingletonShorthands,
+  type Highlighter,
+  type LanguageRegistration
 } from 'shiki';
 
 import type {
@@ -27,6 +29,7 @@ import {
 
 // We use a singleton for bundled languages, but for custom languages we'll create a fresh instance.
 const highlighter = createSingletonShorthands(createHighlighter);
+const customHighlighterCache = new Map<string, Promise<Highlighter>>();
 
 /**
  * A React hook that provides syntax highlighting using Shiki.
@@ -46,12 +49,40 @@ export const useShikiHighlighter = (
   options: HighlighterOptions = {}
 ) => {
   const [highlightedCode, setHighlightedCode] = useState<ReactNode | null>(null);
-  const isCustom = lang && typeof lang === 'object';
 
-  const timeoutControl = useRef<TimeoutState>({
-    nextAllowedTime: 0,
-    timeoutId: undefined,
-  });
+const preloadedCustomLang = options.customLanguage as LanguageRegistration | undefined;
+// Only use the preloaded custom language if:
+// - lang is an object (already custom) OR
+// - lang is a string and matches one of customLang.fileTypes (if available)
+// Check if custom language is preloaded by checking lang type and fileTypes match
+const useCustomPreloadedLang = Boolean(
+  preloadedCustomLang
+  && (typeof lang === 'object'
+    || (typeof lang === 'string' && Array.isArray(preloadedCustomLang.fileTypes)
+      && preloadedCustomLang.fileTypes?.includes(lang)
+    )
+  )
+);
+// Otherwise, if lang is an object and no customLanguage was passed, treat it as a custom language.
+const isCustom = !useCustomPreloadedLang && lang && typeof lang === 'object';
+
+const timeoutControl = useRef<TimeoutState>({
+  nextAllowedTime: 0,
+  timeoutId: undefined,
+});
+
+  // Retrieve or create a cached highlighter with customLang
+  const getCachedCustomHighlighter = async (cacheKey: string, customLang: LanguageRegistration | typeof lang) => {
+    let instance = customHighlighterCache.get(cacheKey);
+    if (!instance) {
+      instance = createHighlighter({
+        langs: [customLang as LanguageRegistration],
+        themes: [theme],
+      });
+      customHighlighterCache.set(cacheKey, instance);
+    }
+    return instance;
+  };
 
   useEffect(() => {
     let isMounted = true;
@@ -60,31 +91,24 @@ export const useShikiHighlighter = (
     const highlightCode = async () => {
       let html: string;
 
-      if (isCustom) {
-        // Build an alias mapping from lang objects fileTypes to it's original name.
-        // This ensure that shiki can reference the custom language by its fileTypes.
-        // const aliasMapping = (lang.fileTypes || []).reduce(
-        //   (acc: Record<string, string>, ft: string) => {
-        //     acc[ft] = lang.name;
-        //     return acc;
-        //   },
-        //   {} as Record<string, string>
-        // );
-
-        // Create a fresh highlighter instance with the custom language passed directly.
-        // This is necessary because we cannot add an alias mapping to an already created highlighter.
-        const shikiInstance = await createHighlighter({
-          langs: [lang], // pass the custom language object when creating highlighter
-          themes: [theme],
-          // langAlias: aliasMapping, 
+      if (useCustomPreloadedLang && preloadedCustomLang) {
+        const cacheKey = `${preloadedCustomLang.name}-${theme}`;
+        const instance = await getCachedCustomHighlighter(cacheKey, preloadedCustomLang);
+        html = instance.codeToHtml(code, {
+          lang: preloadedCustomLang.name,
+          theme,
+          transformers,
         });
-        html = shikiInstance.codeToHtml(code, {
+      } else if (isCustom && !preloadedCustomLang) {
+        const cacheKey = `${lang.name}-${theme}`;
+        const instance = await getCachedCustomHighlighter(cacheKey, lang);
+        html = instance.codeToHtml(code, {
           lang: lang.name,
           theme,
           transformers,
         });
       } else {
-        // Bundled languages: use the cached singleton instance.
+        // Bundled languages: use the singleton instance.
         html = await highlighter.codeToHtml(code, {
           lang: resolvedLang(lang),
           theme,
@@ -96,7 +120,6 @@ export const useShikiHighlighter = (
         setHighlightedCode(parse(html));
       }
     };
-
     if (options.delay) {
       throttleHighlighting(highlightCode, timeoutControl, options.delay);
     } else {
