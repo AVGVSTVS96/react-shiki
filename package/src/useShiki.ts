@@ -50,26 +50,27 @@ export const useShikiHighlighter = (
 ) => {
   const [highlightedCode, setHighlightedCode] = useState<ReactNode | null>(null);
 
-const preloadedCustomLang = options.customLanguage as LanguageRegistration | undefined;
-// Only use the preloaded custom language if:
-// - lang is an object (already custom) OR
-// - lang is a string and matches one of customLang.fileTypes (if available)
-// Check if custom language is preloaded by checking lang type and fileTypes match
-const useCustomPreloadedLang = Boolean(
-  preloadedCustomLang
-  && (typeof lang === 'object'
-    || (typeof lang === 'string' && Array.isArray(preloadedCustomLang.fileTypes)
-      && preloadedCustomLang.fileTypes?.includes(lang)
-    )
-  )
-);
-// Otherwise, if lang is an object and no customLanguage was passed, treat it as a custom language.
-const isCustom = !useCustomPreloadedLang && lang && typeof lang === 'object';
+  const preloadedCustomLang = options.customLanguage as LanguageRegistration | undefined;
 
-const timeoutControl = useRef<TimeoutState>({
-  nextAllowedTime: 0,
-  timeoutId: undefined,
-});
+  // Use the preloaded custom language if:
+  // - lang is an object (already custom) OR
+  // - lang is a string and matches one of preloadedCustomLang.fileTypes
+  const useCustomPreloadedLang = Boolean(
+    preloadedCustomLang != null 
+      && ( typeof lang === 'object' 
+        || ( typeof lang === 'string'
+          && Array.isArray(preloadedCustomLang.fileTypes)
+          && preloadedCustomLang.fileTypes.includes(lang)
+      )
+    )
+  );
+  // Otherwise, if lang is an object and no customLanguage was passed, treat it as a custom language.
+  const useCustomLang = !useCustomPreloadedLang && lang && typeof lang === 'object';
+
+  const timeoutControl = useRef<TimeoutState>({
+    nextAllowedTime: 0,
+    timeoutId: undefined,
+  });
 
   // Retrieve or create a cached highlighter with customLang
   const getCachedCustomHighlighter = async (cacheKey: string, customLang: LanguageRegistration | typeof lang) => {
@@ -99,7 +100,7 @@ const timeoutControl = useRef<TimeoutState>({
           theme,
           transformers,
         });
-      } else if (isCustom && !preloadedCustomLang) {
+      } else if (useCustomLang) {
         const cacheKey = `${lang.name}-${theme}`;
         const instance = await getCachedCustomHighlighter(cacheKey, lang);
         html = instance.codeToHtml(code, {
