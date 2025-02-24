@@ -61,30 +61,30 @@ export const useShikiHighlighter = (
       let html: string;
 
       if (isCustom) {
-        // Build an alias mapping from all declared file types to the custom language's original name.
-        const aliasMapping = ((lang as any).fileTypes || []).reduce((acc: Record<string, string>, ft: string) => {
-          acc[ft] = (lang as any).name;
-          return acc;
-        }, {} as Record<string, string>);
+        // Build an alias mapping from lang objects fileTypes to it's original name.
+        // This ensure that shiki can reference the custom language by its fileTypes.
+        // const aliasMapping = (lang.fileTypes || []).reduce(
+        //   (acc: Record<string, string>, ft: string) => {
+        //     acc[ft] = lang.name;
+        //     return acc;
+        //   },
+        //   {} as Record<string, string>
+        // );
 
-        // Create a fresh highlighter instance with our alias mapping.
+        // Create a fresh highlighter instance with the custom language passed directly.
+        // This is necessary because we cannot add an alias mapping to an already created highlighter.
         const shikiInstance = await createHighlighter({
-          langs: [],
+          langs: [lang], // pass the custom language object when creating highlighter
           themes: [theme],
-          langAlias: aliasMapping,
+          // langAlias: aliasMapping, 
         });
-        try {
-          await shikiInstance.loadLanguage(lang);
-        } catch (err) {
-          console.error('[highlightCode] Error loading custom language:', err);
-        }
         html = shikiInstance.codeToHtml(code, {
           lang: lang.name,
           theme,
           transformers,
         });
       } else {
-        // Bundled languages: use the cached singleton instance (with automatic loading).
+        // Bundled languages: use the cached singleton instance.
         html = await highlighter.codeToHtml(code, {
           lang: resolvedLang(lang),
           theme,
