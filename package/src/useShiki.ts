@@ -27,7 +27,7 @@ import {
   resolvedLang
 } from './utils';
 
-// We use a singleton for bundled languages, but for custom languages we'll create a fresh instance.
+// Use a singleton for bundled languages, create a fresh instance for custom languages
 const highlighter = createSingletonShorthands(createHighlighter);
 const customHighlighterCache = new Map<string, Promise<Highlighter>>();
 
@@ -52,20 +52,29 @@ export const useShikiHighlighter = (
 
   const preloadedCustomLang = options.customLanguage as LanguageRegistration | undefined;
 
-  // Use the preloaded custom language if:
+  // Use the preloaded custom language if
+  // = lang is preloaded AND
   // - lang is an object (already custom) OR
   // - lang is a string and matches one of preloadedCustomLang.fileTypes
   const useCustomPreloadedLang = Boolean(
-    preloadedCustomLang != null 
-      && ( typeof lang === 'object' 
-        || ( typeof lang === 'string'
-          && Array.isArray(preloadedCustomLang.fileTypes)
-          && preloadedCustomLang.fileTypes.includes(lang)
+    preloadedCustomLang != null
+    && (typeof lang === 'object'
+      || (typeof lang === 'string'
+        && Array.isArray(preloadedCustomLang.fileTypes)
+        && preloadedCustomLang.fileTypes.includes(lang)
       )
     )
   );
-  // Otherwise, if lang is an object and no customLanguage was passed, treat it as a custom language.
+
+  // Otherwise, if no customLanguage is preloaded, use the custom language directly from the lang prop
   const useCustomLang = !useCustomPreloadedLang && lang && typeof lang === 'object';
+
+  // Determine the custom language to use (if any).
+  const customLang = useCustomPreloadedLang
+    ? preloadedCustomLang
+    : useCustomLang
+      ? lang
+      : undefined;
 
   const timeoutControl = useRef<TimeoutState>({
     nextAllowedTime: 0,
@@ -92,24 +101,18 @@ export const useShikiHighlighter = (
     const highlightCode = async () => {
       let html: string;
 
-      if (useCustomPreloadedLang && preloadedCustomLang) {
-        const cacheKey = `${preloadedCustomLang.name}-${theme}`;
-        const instance = await getCachedCustomHighlighter(cacheKey, preloadedCustomLang);
+      if (customLang) {
+        const cacheKey = `${customLang.name}-${theme}`;
+        const instance = await getCachedCustomHighlighter(cacheKey, customLang);
+
         html = instance.codeToHtml(code, {
-          lang: preloadedCustomLang.name,
+          lang: customLang.name,
           theme,
           transformers,
         });
-      } else if (useCustomLang) {
-        const cacheKey = `${lang.name}-${theme}`;
-        const instance = await getCachedCustomHighlighter(cacheKey, lang);
-        html = instance.codeToHtml(code, {
-          lang: lang.name,
-          theme,
-          transformers,
-        });
+
       } else {
-        // Bundled languages: use the singleton instance.
+
         html = await highlighter.codeToHtml(code, {
           lang: resolvedLang(lang),
           theme,
@@ -121,6 +124,7 @@ export const useShikiHighlighter = (
         setHighlightedCode(parse(html));
       }
     };
+
     if (options.delay) {
       throttleHighlighting(highlightCode, timeoutControl, options.delay);
     } else {
@@ -131,7 +135,7 @@ export const useShikiHighlighter = (
       isMounted = false;
       clearTimeout(timeoutControl.current.timeoutId);
     };
-  }, [code, lang]);
+  }, [code, lang, customLang]);
 
   return highlightedCode;
 };
