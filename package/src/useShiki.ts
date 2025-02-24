@@ -11,8 +11,12 @@ import {
   createHighlighter,
   createSingletonShorthands,
   type Highlighter,
-  type LanguageRegistration
 } from 'shiki';
+
+import type {
+  LanguageRegistration,
+  ShikiLanguageRegistration
+} from './customTypes';
 
 import type {
   Language,
@@ -27,7 +31,7 @@ import {
   resolvedLang
 } from './utils';
 
-// Use a singleton for bundled languages, create a fresh instance for custom languages
+// Use Shiki managed singleton for bundled languages, create a fresh instance for custom languages
 const highlighter = createSingletonShorthands(createHighlighter);
 const customHighlighterCache = new Map<string, Promise<Highlighter>>();
 
@@ -50,7 +54,7 @@ export const useShikiHighlighter = (
 ) => {
   const [highlightedCode, setHighlightedCode] = useState<ReactNode | null>(null);
 
-  const preloadedCustomLang = options.customLanguage as LanguageRegistration | undefined;
+  const preloadedCustomLang = options.customLanguage;
 
   // Use the preloaded custom language if
   // = lang is preloaded AND
@@ -66,10 +70,9 @@ export const useShikiHighlighter = (
     )
   );
 
-  // Otherwise, if no customLanguage is preloaded, use the custom language directly from the lang prop
+  // Otherwise, use the custom language directly from the lang prop
   const useCustomLang = !useCustomPreloadedLang && lang && typeof lang === 'object';
 
-  // Determine the custom language to use (if any).
   const customLang = useCustomPreloadedLang
     ? preloadedCustomLang
     : useCustomLang
@@ -86,7 +89,7 @@ export const useShikiHighlighter = (
     let instance = customHighlighterCache.get(cacheKey);
     if (!instance) {
       instance = createHighlighter({
-        langs: [customLang as LanguageRegistration],
+        langs: [customLang as ShikiLanguageRegistration],
         themes: [theme],
       });
       customHighlighterCache.set(cacheKey, instance);
@@ -96,6 +99,9 @@ export const useShikiHighlighter = (
 
   useEffect(() => {
     let isMounted = true;
+    // TODO: Consider retaining tabindex for WCAG 2.1 compliance
+    // https://github.com/shikijs/shiki/issues/428
+    // https://www.w3.org/WAI/standards-guidelines/act/rules/0ssw9k/proposed/
     const transformers = [removeTabIndexFromPre, ...(options.transformers || [])];
 
     const highlightCode = async () => {
@@ -103,9 +109,9 @@ export const useShikiHighlighter = (
 
       if (customLang) {
         const cacheKey = `${customLang.name}-${theme}`;
-        const instance = await getCachedCustomHighlighter(cacheKey, customLang);
+        const customLangHighlighter = await getCachedCustomHighlighter(cacheKey, customLang);
 
-        html = instance.codeToHtml(code, {
+        html = customLangHighlighter.codeToHtml(code, {
           lang: customLang.name,
           theme,
           transformers,
@@ -135,7 +141,7 @@ export const useShikiHighlighter = (
       isMounted = false;
       clearTimeout(timeoutControl.current.timeoutId);
     };
-  }, [code, lang, customLang]);
+  }, [code, lang]);
 
   return highlightedCode;
 };

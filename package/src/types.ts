@@ -1,11 +1,13 @@
 import type {
   BundledLanguage,
   SpecialLanguage,
-  LanguageRegistration,
   BundledTheme,
   ThemeRegistration,
   ShikiTransformer,
 } from 'shiki';
+
+import type { LanguageRegistration } from './customTypes';
+
 
 /** 
  * Languages for syntax highlighting.
@@ -42,7 +44,7 @@ type HighlighterOptions = {
   /**
    * Custom textmate grammar to be preloaded for highlighting.
    */
-  customLanguage?: Language;
+  customLanguage?: LanguageRegistration;
 };
 
 /**
