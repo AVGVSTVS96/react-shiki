@@ -1,0 +1,151 @@
+{
+	"name": "Bosque",
+	"patterns": [
+		{
+			"include": "#comments"
+		},
+		{
+			"include": "#string-double"
+		},
+		{
+			"include": "#string-single"
+		},
+		{
+			"include": "#constants"
+		},
+		{
+			"include": "#keywords"
+		},
+		{
+			"include": "#types"
+		},
+		{
+			"include": "#variables"
+		}
+	],
+	"repository": {
+		"comments": {
+			"patterns": [
+				{
+					"captures": {
+						"1": {
+							"name": "punctuation.definition.comment.bosque"
+						}
+					},
+					"begin": "//",
+					"end": "$",
+					"name": "comment.line.double-dash.bosque"
+				},
+				{
+					"captures": {
+						"1": {
+							"name": "punctuation.definition.comment.bosque"
+						}
+					},
+					"begin": "/\\*",
+					"end": "\\*/",
+					"name": "comment.multiline.double-dash.bosque"
+				}
+			]
+		},
+		"string-double": {
+			"name": "string.quoted.double.bosque",
+			"begin": "\"",
+			"beginCaptures": {
+				"0": {
+					"name": "punctuation.definition.string.begin.bosque"
+				}
+			},
+			"end": "\"",
+			"endCaptures": {
+				"0": {
+					"name": "punctuation.definition.string.end.bosque"
+				}
+			},
+			"patterns": [
+				{
+					"name": "constant.character.escape.bosque",
+					"match": "\\\\."
+				}
+			]
+		},
+		"string-single": {
+			"name": "string.quoted.single.bosque",
+			"begin": "'",
+			"beginCaptures": {
+				"0": {
+					"name": "punctuation.definition.string.begin.bosque"
+				}
+			},
+			"end": "'",
+			"endCaptures": {
+				"0": {
+					"name": "punctuation.definition.string.end.bosque"
+				}
+			},
+			"patterns": [
+				{
+					"name": "constant.character.escape.bosque",
+					"match": "\\\\."
+				}
+			]
+		},
+		"keywords": {
+			"patterns": [
+				{
+					"name": "keyword.control.bosque",
+					"match": "\\b(#if|#else|#endif|_debug|abort|assert|elif|else|ensures|if|invariant|match|release|return|requires|spec|doc|switch|debug|test|validate|yield)\\b"
+				},
+				{
+					"name": "keyword.bosque",
+					"match": "\\b(#if|#else|#endif|recursive?|recursive|_debug|abort|assert|astype|concept|const|elif|else|enum|entity|ensures|err|field|fn|pred|function|if|import|invariant|istype|let|match|method|namespace|of|ok|operator|provides|ref|out|out?|release|return|requires|something|spec|doc|switch|debug|test|type|typedef|typedecl|datatype|using|validate|var|when|yield)\\b"
+				}
+			]
+		},
+		"constants": {
+			"patterns": [
+				{
+					"name": "constant.numeric.bosque",
+					"match": "\\b((0|[1-9][0-9]*)_([A-Z][_a-zA-Z0-9]+))|(0|[1-9][0-9]*)/(0|[1-9][0-9]*)(_([A-Z][_a-zA-Z0-9]+))|([0-9]+(\\.[0-9]+)?|\\.[0-9]+)([eE][-+]?[0-9]+)?(_([A-Z][_a-zA-Z0-9]+))\\b"
+				},
+				{
+					"name": "constant.numeric.bosque",
+					"match": "\\b((0|[1-9][0-9]*)(n|i|N|I))|((0|[1-9][0-9]*)/(0|[1-9][0-9]*)R)|(([0-9]+(\\.[0-9]+)?|\\.[0-9]+)([eE][-+]?[0-9]+)?(f|d))\\b"
+				},
+				{
+					"name": "constant.numeric.bosque",
+					"match": "\\b(0|[1-9][0-9]*)|((0|[1-9][0-9]*)/(0|[1-9][0-9]*))|(([0-9]+(\\.[0-9]+)?|\\.[0-9]+)([eE][-+]?[0-9]+)?)\\b"
+				},
+				{
+					"name": "constant.language",
+					"match": "\\b(none|nothing|true|false)\\b"
+				}
+			]
+		},
+		"types": {
+			"patterns": [
+				{
+					"name": "entity.name.type.bosque",
+					"match": "\\b((([A-Z][_a-zA-Z0-9]+)::)*([A-Z][_a-zA-Z0-9]+))\\b"
+				},
+				{
+					"name": "entity.name.type.bosque",
+					"match": "\\b[A-Z]\\b"
+				}
+			]
+		},
+		"variables": {
+			"patterns": [
+				{
+					"name": "variable.name",
+					"match": "\\b(%([_a-z]|([_a-z][_a-zA-Z0-9]+))%)\\b"
+				},
+				{
+					"name": "variable.name",
+					"match": "\\b([$]?([_a-z]|([_a-z][_a-zA-Z0-9]+)))\\b"
+				}
+			]
+		}
+	},
+	"scopeName": "source.bsq"
+}

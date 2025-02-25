@@ -1,5 +1,6 @@
 import ShikiHighlighter from 'react-shiki';
 import mcfunction from './assets/mcfunction.tmLanguage.json';
+import bosque from './assets/bosque.tmLanguage.json';
 
 # 🎨 react-shiki
 
@@ -263,6 +264,28 @@ const highlightedCode = useShikiHighlighter(code, mcfunction, "github-dark");
     tag @s add isBad
     tag @s remove isBad
     execute if entity @s[tag=isBad] run say he is bad
+  `.trim()}
+</ShikiHighlighter>
+
+**Bosque**:
+<ShikiHighlighter language={bosque} theme="rose-pine">
+  {`
+    function sign(x?: Int=0i): Int {
+        var y: Int;
+
+        if(x == 0i) {
+            y = 0i;
+        }
+        else {
+            y = (x > 0i) ? 1i : -1i;
+        }
+
+        return y;
+    }
+
+    sign(5i)    //1
+    sign(-5i)   //-1
+    sign()     //0
   `.trim()}
 </ShikiHighlighter>
 
