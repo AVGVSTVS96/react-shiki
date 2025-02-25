@@ -63,7 +63,7 @@ export const useShikiHighlighter = (
       : [options.customLanguages]
     : [];
 
-const { isCustom, languageId, customLanguage } = resolveLanguage(lang, normalizedCustomLanguages);
+  const { isCustom, languageId, customLanguage } = resolveLanguage(lang, normalizedCustomLanguages);
 
   const timeoutControl = useRef<TimeoutState>({
     nextAllowedTime: 0,
@@ -91,26 +91,16 @@ const { isCustom, languageId, customLanguage } = resolveLanguage(lang, normalize
     const transformers = [removeTabIndexFromPre, ...(options.transformers || [])];
 
     const highlightCode = async () => {
-      let html: string;
+      const codeHighlighter = isCustom && customLanguage
+        ? await getCachedCustomHighlighter(`${customLanguage.name}--${themeKey}`, customLanguage)
+        : highlighter;
 
-      if (isCustom && customLanguage) {
-        const cacheKey = `${customLanguage.name}--${themeKey}`;
-        const customLangHighlighter = await getCachedCustomHighlighter(cacheKey, customLanguage);
-
-        html = customLangHighlighter.codeToHtml(code, {
-          lang: languageId,
-          theme,
-          transformers,
-        });
-
-      } else {
-
-        html = await highlighter.codeToHtml(code, {
-          lang: languageId,
-          theme,
-          transformers,
-        });
-      }
+      // Use the selected highlighter with consistent parameters
+      const html = await codeHighlighter.codeToHtml(code, {
+        lang: languageId,
+        theme,
+        transformers,
+      });
 
       if (isMounted) {
         setHighlightedCode(parse(html));
