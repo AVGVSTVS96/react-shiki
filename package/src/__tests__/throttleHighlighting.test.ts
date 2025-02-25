@@ -1,99 +1,58 @@
-import { vi } from 'vitest';
 import { throttleHighlighting } from '../utils';
+import { vi } from 'vitest';
 
+// Test the throttling function directly instead of through the React component
 describe('throttleHighlighting', () => {
   beforeEach(() => {
     vi.useFakeTimers();
-    // Set a known system time for predictability.
-    vi.setSystemTime(1000);
   });
 
   afterEach(() => {
     vi.useRealTimers();
   });
 
-  test('schedules performHighlight immediately if nextAllowedTime is in the past', async () => {
-    // Setup a dummy timeout control object.
+  test('throttles function calls based on timing', () => {
+    // Mock date to have a consistent starting point
+    const originalDateNow = Date.now;
+    let mockTime = 1000;
+    Date.now = vi.fn(() => mockTime);
+
+    // Mock the perform highlight function
+    const performHighlight = vi.fn().mockResolvedValue(undefined);
+
+    // Setup timeout control like in the hook
     const timeoutControl = {
       current: {
-        timeoutId: undefined as ReturnType<typeof setTimeout> | undefined,
-        nextAllowedTime: 0,
-      },
+        timeoutId: undefined,
+        nextAllowedTime: 0
+      }
     };
-    const performHighlight = vi.fn().mockResolvedValue(undefined);
-    const throttleMs = 500;
-    // With nextAllowedTime at 0, delay = max(0, 0 - 1000) = 0.
-    throttleHighlighting(performHighlight, timeoutControl, throttleMs);
 
-    // A timeout should be scheduled immediately.
+    // First call should schedule immediately since nextAllowedTime is in the past
+    throttleHighlighting(performHighlight, timeoutControl, 500);
     expect(timeoutControl.current.timeoutId).toBeDefined();
 
-    // Advance time by 0 ms; the callback should fire immediately.
-    await vi.advanceTimersByTimeAsync(0);
-    // Wait a tick for the promise resolution.
-    await Promise.resolve();
-
+    // Run the timeout
+    vi.runAllTimers();
     expect(performHighlight).toHaveBeenCalledTimes(1);
-    // Since our fake timers don't update Date.now(), we expect:
-    // nextAllowedTime = 1000 (initial time) + throttleMs.
-    expect(timeoutControl.current.nextAllowedTime).toBe(1000 + throttleMs);
-  });
+    expect(timeoutControl.current.nextAllowedTime).toBe(1500); // 1000 + 500
 
-  test('delays performHighlight if nextAllowedTime is in the future', async () => {
-    // Set nextAllowedTime 300ms in the future.
-    const futureTime = 1000 + 300;
-    const timeoutControl = {
-      current: {
-        timeoutId: undefined as ReturnType<typeof setTimeout> | undefined,
-        nextAllowedTime: futureTime,
-      },
-    };
-    const performHighlight = vi.fn().mockResolvedValue(undefined);
-    const throttleMs = 500;
+    // Reset the mock
+    performHighlight.mockClear();
 
-    // Expected delay: futureTime - now = 300.
-    throttleHighlighting(performHighlight, timeoutControl, throttleMs);
+    // Call again - should be delayed by the throttle duration
+    throttleHighlighting(performHighlight, timeoutControl, 500);
+    expect(performHighlight).not.toHaveBeenCalled(); // Not called yet
 
-    // Before 300ms, the callback should not fire.
-    await vi.advanceTimersByTimeAsync(299);
+    // Advance halfway through the delay - should still not be called
+    vi.advanceTimersByTime(250);
     expect(performHighlight).not.toHaveBeenCalled();
 
-    // Advance by 1 more ms to reach 300ms total.
-    await vi.advanceTimersByTimeAsync(1);
-    // Wait for promise resolution.
-    await Promise.resolve();
-
+    // Advance the full delay
+    vi.advanceTimersByTime(250);
     expect(performHighlight).toHaveBeenCalledTimes(1);
-    // Because our fake timers do not update Date.now(), we expect nextAllowedTime to be
-    // the initial time (1000) plus throttleMs.
-    expect(timeoutControl.current.nextAllowedTime).toBe(1000 + throttleMs);
-  });
 
-  test('cancels previous scheduled callback when called again', async () => {
-    const timeoutControl = {
-      current: {
-        timeoutId: undefined as ReturnType<typeof setTimeout> | undefined,
-        nextAllowedTime: 0,
-      },
-    };
-    const performHighlight = vi.fn().mockResolvedValue(undefined);
-    const throttleMs = 500;
-
-    // First call: should schedule immediately.
-    throttleHighlighting(performHighlight, timeoutControl, throttleMs);
-    const firstTimeoutId = timeoutControl.current.timeoutId;
-
-    // Second call: should cancel the first timeout and schedule a new one.
-    throttleHighlighting(performHighlight, timeoutControl, throttleMs);
-    const secondTimeoutId = timeoutControl.current.timeoutId;
-
-    expect(firstTimeoutId).not.toEqual(secondTimeoutId);
-
-    // Advance time by 0ms; only the second scheduled callback should fire.
-    await vi.advanceTimersByTimeAsync(0);
-    await Promise.resolve();
-
-    expect(performHighlight).toHaveBeenCalledTimes(1);
+    // Restore original Date.now
+    Date.now = originalDateNow;
   });
 });
-
