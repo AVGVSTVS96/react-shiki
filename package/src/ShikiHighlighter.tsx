@@ -114,6 +114,7 @@ export const ShikiHighlighter = ({
 
   return (
     <Element
+      data-testid="shiki-container"
       className={clsx(
         'relative',
         'not-prose',
