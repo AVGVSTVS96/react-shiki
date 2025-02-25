@@ -53,32 +53,52 @@ export const useShikiHighlighter = (
   options: HighlighterOptions = {}
 ) => {
   const [highlightedCode, setHighlightedCode] = useState<ReactNode | null>(null);
+  console.log('useShikiHighlighter hook initialized');
 
-  const preloadedCustomLang = options.customLanguage;
+  // const preloadedCustomLang = options.customLanguage as LanguageRegistration | undefined;
 
   // Use the preloaded custom language if
   // = lang is preloaded AND
   // - lang is an object (already custom) OR
   // - lang is a string and matches one of preloadedCustomLang.fileTypes
-  const useCustomPreloadedLang = Boolean(
-    preloadedCustomLang != null
-    && (typeof lang === 'object'
-      || (typeof lang === 'string'
-        && Array.isArray(preloadedCustomLang.fileTypes)
-        && preloadedCustomLang.fileTypes.includes(lang)
-      )
-    )
-  );
+  // const useCustomPreloadedLang = Boolean(
+  //   preloadedCustomLang != null
+  //   && (typeof lang === 'object'
+  //     || (typeof lang === 'string'
+  //       && Array.isArray(preloadedCustomLang.fileTypes)
+  //       && preloadedCustomLang.fileTypes.includes(lang)
+  //     )
+  //   )
+  // );
 
   // Otherwise, use the custom language directly from the lang prop
-  const useCustomLang = !useCustomPreloadedLang && lang && typeof lang === 'object';
+  // const useCustomLang = !useCustomPreloadedLang && lang && typeof lang === 'object';
+  //
+  // const customLang = useCustomPreloadedLang
+  //   ? preloadedCustomLang
+  //   : useCustomLang
+  //     ? lang
+  //     : undefined;
 
-  const customLang = useCustomPreloadedLang
-    ? preloadedCustomLang
-    : useCustomLang
-      ? lang
-      : undefined;
+  // Normalize customLanguage to always be an array.
+  const customLangArray: LanguageRegistration[] = options.customLanguage
+    ? Array.isArray(options.customLanguage)
+      ? options.customLanguage
+      : [options.customLanguage]
+    : [];
 
+  // Choose the matching custom language:
+  const customLang: LanguageRegistration | undefined =
+    typeof lang === 'string'
+      ? customLangArray.find(cl =>
+        (cl.fileTypes && cl.fileTypes.includes(lang)) ||
+        (cl.scopeName && cl.scopeName.split('.')[1] === lang) ||
+        // and if the lang.name === lang
+        (cl.name && cl.name === lang)
+      )
+      : (lang && typeof lang === 'object' ? lang as LanguageRegistration : undefined);
+
+  console.log('Resolved customLang:', customLang, lang);
   const timeoutControl = useRef<TimeoutState>({
     nextAllowedTime: 0,
     timeoutId: undefined,
