@@ -53,52 +53,31 @@ export const useShikiHighlighter = (
   options: HighlighterOptions = {}
 ) => {
   const [highlightedCode, setHighlightedCode] = useState<ReactNode | null>(null);
-  console.log('useShikiHighlighter hook initialized');
 
-  // const preloadedCustomLang = options.customLanguage as LanguageRegistration | undefined;
+  // Setup themeKey for highlighter caching, checks if theme is string (builtin) or object (custom)
+  const themeKey = typeof theme === 'string' ? theme : theme.name;
 
-  // Use the preloaded custom language if
-  // = lang is preloaded AND
-  // - lang is an object (already custom) OR
-  // - lang is a string and matches one of preloadedCustomLang.fileTypes
-  // const useCustomPreloadedLang = Boolean(
-  //   preloadedCustomLang != null
-  //   && (typeof lang === 'object'
-  //     || (typeof lang === 'string'
-  //       && Array.isArray(preloadedCustomLang.fileTypes)
-  //       && preloadedCustomLang.fileTypes.includes(lang)
-  //     )
-  //   )
-  // );
-
-  // Otherwise, use the custom language directly from the lang prop
-  // const useCustomLang = !useCustomPreloadedLang && lang && typeof lang === 'object';
-  //
-  // const customLang = useCustomPreloadedLang
-  //   ? preloadedCustomLang
-  //   : useCustomLang
-  //     ? lang
-  //     : undefined;
-
-  // Normalize customLanguage to always be an array.
-  const customLangArray: LanguageRegistration[] = options.customLanguage
-    ? Array.isArray(options.customLanguage)
-      ? options.customLanguage
-      : [options.customLanguage]
+  const customLanguages: LanguageRegistration[] = options.customLanguages
+    ? Array.isArray(options.customLanguages)
+      ? options.customLanguages
+      : [options.customLanguages]
     : [];
 
-  // Choose the matching custom language:
+  // Use customLang if:
+  // - lang prop is a string and matches customLang.fileTypes, customLang.scopeName, or customLang.name
+  // - lang prop is an object (custom language)
+  // Otherwise, check if lang is an object (custom language)
+  // - if lang is an object, use it directly
+  // - otherwise return undefined so no custom language is used
   const customLang: LanguageRegistration | undefined =
     typeof lang === 'string'
-      ? customLangArray.find(cl =>
+      ? customLanguages.find(cl =>
         (cl.fileTypes && cl.fileTypes.includes(lang)) ||
         (cl.scopeName && cl.scopeName.split('.')[1] === lang) ||
-        // and if the lang.name === lang
-        (cl.name && cl.name === lang)
+        (cl.name && cl.name.toLowerCase() === lang)
       )
-      : (lang && typeof lang === 'object' ? lang as LanguageRegistration : undefined);
+      : (lang && typeof lang === 'object' ? lang : undefined);
 
-  console.log('Resolved customLang:', customLang, lang);
   const timeoutControl = useRef<TimeoutState>({
     nextAllowedTime: 0,
     timeoutId: undefined,
@@ -128,7 +107,7 @@ export const useShikiHighlighter = (
       let html: string;
 
       if (customLang) {
-        const cacheKey = `${customLang.name}-${theme}`;
+        const cacheKey = `${customLang.name}--${themeKey}`;
         const customLangHighlighter = await getCachedCustomHighlighter(cacheKey, customLang);
 
         html = customLangHighlighter.codeToHtml(code, {

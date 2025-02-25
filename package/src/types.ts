@@ -44,7 +44,7 @@ type HighlighterOptions = {
   /**
    * Custom textmate grammar to be preloaded for highlighting.
    */
-  customLanguage?: LanguageRegistration | LanguageRegistration[];
+  customLanguages?: LanguageRegistration | LanguageRegistration[];
 };
 
 /**
