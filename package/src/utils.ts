@@ -3,6 +3,12 @@ import { bundledLanguages, isSpecialLang, } from 'shiki';
 import type { ShikiTransformer } from 'shiki';
 import type { Element, Root } from 'hast';
 import type { Language, TimeoutState } from './types';
+import type { LanguageRegistration } from './customTypes';
+
+/**
+ * Type for the HAST node, use to type `node` from react-markdown
+ */
+export type { Element };
 
 /**
  * Rehype plugin to add an 'inline' property to <code> elements.
@@ -79,18 +85,63 @@ export const throttleHighlighting = (
   }, delay);
 };
 
-/**
- * Resolve the requested language to a bundled language
- * or the language name from a custom language object.
- * Fall back to "plaintext" if the language is not bundled or special.
- *
- * @returns The resolved language.
- */
-export const resolvedLang = (lang: Language): string => {
-  if (typeof lang === 'string' && (lang in bundledLanguages || isSpecialLang(lang))) return lang;
-  if (typeof lang === 'object' && 'name' in lang && typeof lang.name === 'string') return lang.name;
-  return 'plaintext';
+
+type ResolvedLanguage = {
+  isCustom: boolean;
+  languageId: string;
+  customLanguage?: LanguageRegistration;
+  resolvedLanguage?: LanguageRegistration;
 };
 
+/**
+ * Determines whether a language is custom or built-in, normalizing 
+ * the language identifier and returning an object with pa
+ * to represent the result.
+ * 
+ * @param lang - The language identifier, either as a string name or language object
+ * @param customLanguages - Optional array of custom language definitions
+ * @returns Object containing:
+ *   - isCustom: Whether the language requires custom highlighting
+ *   - languageId: The normalized language identifier
+ *   - displayLanguageId: The display name for language label
+ *   - customLanguage: The full language definition if custom
+ */
+export const resolveLanguage = (
+  lang: Language,
+  customLanguages: LanguageRegistration[] = []
+): ResolvedLanguage => {
+  // Languaghe is custom but not preloaded
+  if (lang && typeof lang === 'object') {
+    return {
+      isCustom: true,
+      languageId: lang.name,
+      customLanguage: lang
+    };
+  }
 
-export type { Element };
+  // Language is string and is built-in or matches preloaded custom languages
+  if (typeof lang === 'string') {
+    if (lang in bundledLanguages || isSpecialLang(lang)) {
+      return { isCustom: false, languageId: lang };
+    }
+
+    const customMatch = customLanguages.find(cl =>
+      (cl.fileTypes?.includes(lang)) ||
+      (cl.scopeName?.split('.')[1] === lang) ||
+      (cl.name?.toLowerCase() === lang.toLowerCase())
+    );
+
+    if (customMatch) {
+      return {
+        isCustom: true,
+        languageId: customMatch.name,
+        customLanguage: customMatch
+      };
+    }
+
+  }
+
+  // Fallback to plaintext
+  return { isCustom: false, languageId: 'plaintext' };
+};
+

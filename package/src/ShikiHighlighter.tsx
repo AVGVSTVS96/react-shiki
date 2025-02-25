@@ -4,7 +4,8 @@ import { clsx } from 'clsx';
 import { useShikiHighlighter } from './useShiki';
 import type { Language, Theme, HighlighterOptions } from './types';
 import type { ShikiTransformer } from 'shiki';
-import { resolvedLang } from './utils';
+import { resolveLanguage } from './utils';
+import type { LanguageRegistration } from './customTypes';
 
 /**
  * Props for the ShikiHighlighter component
@@ -79,6 +80,11 @@ export interface ShikiHighlighterProps extends HighlighterOptions {
    * @default 'pre'
    */
   as?: React.ElementType;
+
+  /**
+   * Custom languages to be preloaded for highlighting.
+   */
+  customLanguages?: LanguageRegistration[];
 }
 
 /**
@@ -109,15 +115,23 @@ export const ShikiHighlighter = ({
   showLanguage = true,
   children: code,
   as: Element = 'pre',
+  customLanguages,
 }: ShikiHighlighterProps): React.ReactElement => {
-  const options: HighlighterOptions = { delay, transformers };
+    const options: HighlighterOptions = { 
+    delay, 
+    transformers,
+    customLanguages,
+  };
+  
+  const normalizedCustomLanguages = customLanguages
+    ? Array.isArray(customLanguages)
+      ? customLanguages
+      : [customLanguages]
+    : [];
+  
+  const { languageId, customLanguage, isCustom } = resolveLanguage(language, normalizedCustomLanguages);
   const highlightedCode = useShikiHighlighter(code, language, theme, options);
   
-  const languageLabel =
-    language && typeof language === 'object'
-      ? resolvedLang(language)
-      : language;
-
   return (
     <Element
       data-testid="shiki-container"
@@ -136,7 +150,7 @@ export const ShikiHighlighter = ({
           style={langStyle}
           id='language-label'
         >
-          {languageLabel}
+          {isCustom ? `${customLanguage?.scopeName.split('.')[1]}` : languageId}
         </span>
       ) : null}
       {highlightedCode}

@@ -28,7 +28,7 @@ import type {
 import {
   removeTabIndexFromPre,
   throttleHighlighting,
-  resolvedLang
+  resolveLanguage
 } from './utils';
 
 // Use Shiki managed singleton for bundled languages, create a fresh instance for custom languages
@@ -57,26 +57,13 @@ export const useShikiHighlighter = (
   // Setup themeKey for highlighter caching, checks if theme is string (builtin) or object (custom)
   const themeKey = typeof theme === 'string' ? theme : theme.name;
 
-  const customLanguages: LanguageRegistration[] = options.customLanguages
+  const normalizedCustomLanguages: LanguageRegistration[] = options.customLanguages
     ? Array.isArray(options.customLanguages)
       ? options.customLanguages
       : [options.customLanguages]
     : [];
 
-  // Use customLang if:
-  // - lang prop is a string and matches customLang.fileTypes, customLang.scopeName, or customLang.name
-  // - lang prop is an object (custom language)
-  // Otherwise, check if lang is an object (custom language)
-  // - if lang is an object, use it directly
-  // - otherwise return undefined so no custom language is used
-  const customLang: LanguageRegistration | undefined =
-    typeof lang === 'string'
-      ? customLanguages.find(cl =>
-        (cl.fileTypes && cl.fileTypes.includes(lang)) ||
-        (cl.scopeName && cl.scopeName.split('.')[1] === lang) ||
-        (cl.name && cl.name.toLowerCase() === lang)
-      )
-      : (lang && typeof lang === 'object' ? lang : undefined);
+const { isCustom, languageId, customLanguage } = resolveLanguage(lang, normalizedCustomLanguages);
 
   const timeoutControl = useRef<TimeoutState>({
     nextAllowedTime: 0,
@@ -106,12 +93,12 @@ export const useShikiHighlighter = (
     const highlightCode = async () => {
       let html: string;
 
-      if (customLang) {
-        const cacheKey = `${customLang.name}--${themeKey}`;
-        const customLangHighlighter = await getCachedCustomHighlighter(cacheKey, customLang);
+      if (isCustom && customLanguage) {
+        const cacheKey = `${customLanguage.name}--${themeKey}`;
+        const customLangHighlighter = await getCachedCustomHighlighter(cacheKey, customLanguage);
 
         html = customLangHighlighter.codeToHtml(code, {
-          lang: customLang.name,
+          lang: languageId,
           theme,
           transformers,
         });
@@ -119,7 +106,7 @@ export const useShikiHighlighter = (
       } else {
 
         html = await highlighter.codeToHtml(code, {
-          lang: resolvedLang(lang),
+          lang: languageId,
           theme,
           transformers,
         });
