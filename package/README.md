@@ -20,6 +20,7 @@ for react built with [Shiki](https://shiki.matsu.io/)
     - [Check if code is inline](#check-if-code-is-inline)
     - [Custom themes](#custom-themes)
     - [Custom languages](#custom-languages)
+      - [Preloading custom languages](#preloading-custom-languages)
     - [Custom transformers](#custom-transformers)
   - [Performance](#performance)
     - [Throttling real-time highlighting](#throttling-real-time-highlighting)
@@ -31,7 +32,8 @@ for react built with [Shiki](https://shiki.matsu.io/)
 - 🖼️ Provides a `ShikiHighlighter` component for highlighting code as children,
   as well as a `useShikiHighlighter` hook for more flexibility
 - 🔐 No `dangerouslySetInnerHTML`, output from Shiki is parsed using `html-react-parser`
-- 🖌️ Full support for custom TextMate languages and themes
+- 📦 Supports all built-in Shiki languages and themes
+- 🖌️ Full support for custom TextMate themes in a JavaScript object format
 - 🔧 Supports passing custom Shiki transformers to the highlighter
 - 🚰 Performant highlighting of streamed code on the client, with optional throttling
 - 📚 Includes minimal default styles for code blocks
@@ -39,13 +41,12 @@ for react built with [Shiki](https://shiki.matsu.io/)
   optimizing for performance
 - 🖥️ `ShikiHighlighter` component displays a language label for each code block
   when `showLanguage` is set to `true` (default)
-- 🎨 Users can customize the styling of the generated code blocks by passing
-  a `style` object or a `className`
+- 🎨 Customizable styling of generated code blocks and language labels
 
 ## Installation
 
 ```bash
-[pnpm|bun|yarn|npm] install react-shiki
+pnpm install react-shiki
 ```
 
 ## Usage
@@ -226,8 +227,10 @@ return !inline ? (
 
 ### Custom themes
 
+Pass custom TextMate themes as a JSON object:
+
 ```tsx
-import tokyoNight from '../styles/tokyo-night.mjs';
+import tokyoNight from '../styles/tokyo-night.json';
 
 // component
 <ShikiHighlighter language="tsx" theme={tokyoNight}>
@@ -240,6 +243,8 @@ const highlightedCode = useShikiHighlighter(code, "tsx", tokyoNight);
 
 ### Custom languages
 
+Pass custom TextMate languages as a JSON object:
+
 ```tsx
 import mcfunction from "../langs/mcfunction.tmLanguage.json"
 
@@ -250,6 +255,22 @@ import mcfunction from "../langs/mcfunction.tmLanguage.json"
 
 // hook
 const highlightedCode = useShikiHighlighter(code, mcfunction, "github-dark");
+```
+#### Preloading custom languages
+
+For dynamic highlighting scenarios (like LLM chat apps) where language selection happens at runtime, preload custom languages to make them available when needed:
+
+```tsx
+import mcfunction from "../langs/mcfunction.tmLanguage.json"
+import bosque from "../langs/bosque.tmLanguage.json"
+
+// component
+<ShikiHighlighter language={mcfunction} theme="github-dark" customLanguages={[mcfunction, bosque]} >
+  {String(code).trim()}
+</ShikiHighlighter>;
+
+// hook
+const highlightedCode = useShikiHighlighter(code, mcfunction, "github-dark", { customLanguages: [mcfunction, bosque] });
 ```
 
 ### Custom transformers
