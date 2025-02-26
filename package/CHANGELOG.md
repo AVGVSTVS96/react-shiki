@@ -1,5 +1,15 @@
 # react-shiki
 
+## 0.4.0
+
+### Minor Changes
+
+- d2f57de: Add support for custom languages
+
+### Patch Changes
+
+- 4b8364e: Update Shiki to 3.0
+
 ## 0.3.0
 
 ### Minor Changes
