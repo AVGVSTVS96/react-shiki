@@ -11,11 +11,11 @@ import type { LanguageRegistration } from './customTypes';
 export type { Element };
 
 /**
- * Rehype plugin to add an 'inline' property to <code> elements.
- * Sets 'inline' property to true if the <code> is not within a <pre> tag.
+ * Rehype plugin to add an 'inline' property to <code> elements
+ * Sets 'inline' property to true if the <code> is not within a <pre> tag
  *
- * Pass this plugin to the `rehypePlugins` prop of ReactMarkdown.
- * You can then access `inline` as a prop from ReactMarkdown.
+ * Pass this plugin to the `rehypePlugins` prop of react-markdown
+ * You can then access `inline` as a prop in components passed to react-markdown
  *
  * @example
  * <ReactMarkdown rehypePlugins={[rehypeInlineCodeProperty]} />
@@ -35,7 +35,7 @@ export function rehypeInlineCodeProperty() {
 }
 
 /**
- * Function to determine if code is inline based on the presence of line breaks.
+ * Function to determine if code is inline based on the presence of line breaks
  *
  * @example
  * const isInline = node && isInlineCode(node: Element)
@@ -50,11 +50,9 @@ export const isInlineCode = (node: Element): boolean => {
 };
 
 /**
- * Shiki transformer to remove tabindex from <pre> elements.
+ * Shiki transformer to remove tabindex from <pre> elements
  *
- * This will be removed in the future to comply with
- * WCAG 2.1 guidelines - .
- * Consider retaining tabindex for WCAG 2.1 compliance, scrollable code blocks should be focusable
+ * Consider retaining tabindex for WCAG 3.1 compliance, scrollable code blocks should be focusable
  *   https://github.com/shikijs/shiki/issues/428
  *   https://www.w3.org/WAI/standards-guidelines/act/rules/0ssw9k/proposed/
  */
@@ -68,7 +66,7 @@ export const removeTabIndexFromPre: ShikiTransformer = {
 };
 
 /**
- * Optionally throttles rapid sequential highlighting operations.
+ * Optionally throttles rapid sequential highlighting operations
  * Exported for testing in __tests__/throttleHighlighting.test.ts
  *
  * @example
@@ -97,6 +95,7 @@ export const throttleHighlighting = (
 type ResolvedLanguage = {
   isCustom: boolean;
   languageId: string;
+  displayLanguageId?: string;
   resolvedLanguage?: LanguageRegistration;
 };
 
@@ -121,18 +120,25 @@ export const resolveLanguage = (
     return {
       isCustom: true,
       languageId: lang.name,
+      displayLanguageId: lang.name,
       resolvedLanguage: lang,
     };
   }
 
-  // Language is string and
+  // Language is a string
   if (typeof lang === 'string') {
-    // is built-in
+    const displayLanguageId = lang;
+
+    // Check if its built-in
     if (lang in bundledLanguages || isSpecialLang(lang)) {
-      return { isCustom: false, languageId: lang };
+      return {
+        isCustom: false,
+        languageId: lang,
+        displayLanguageId,
+      };
     }
 
-    // matches a preloaded custom language
+    // Check if it matches a preloaded custom language
     const customMatch = customLanguages.find(
       (cl) =>
         cl.fileTypes?.includes(lang) ||
@@ -144,11 +150,23 @@ export const resolveLanguage = (
       return {
         isCustom: true,
         languageId: customMatch.name,
+        displayLanguageId,
         resolvedLanguage: customMatch,
       };
     }
+
+    // If unknown, highlight in plaintext but display unknown language
+    return {
+      isCustom: false,
+      languageId: 'plaintext',
+      displayLanguageId,
+    };
   }
 
-  // Fallback to plaintext if no matches
-  return { isCustom: false, languageId: 'plaintext' };
+  // Fallback
+  return {
+    isCustom: false,
+    languageId: 'plaintext',
+    displayLanguageId: 'plaintext',
+  };
 };
