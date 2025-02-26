@@ -13,7 +13,7 @@ for react using [Shiki](https://shiki.matsu.io/)
   as well as a `useShikiHighlighter` hook for more flexibility
 - 🔐 No `dangerouslySetInnerHTML`, output from Shiki is parsed using `html-react-parser`
 - 📦 Supports all built-in Shiki languages and themes
-- 🖌️ Full support for custom TextMate themes in a JavaScript object format
+- 🖌️ Full support for custom TextMate themes and languages
 - 🔧 Supports passing custom Shiki transformers to the highlighter
 - 🚰 Performant highlighting of streamed code on the client, with optional throttling
 - 📚 Includes minimal default styles for code blocks
@@ -81,6 +81,7 @@ The component accepts several props in addition to language and theme:
 - `style: object` - Inline style object to be passed to the component
 - `langStyle: object` - Inline style object to be passed to the language label
 - `langClassName: string` - Class names to be passed to the language label
+- `customLanguages: LanguageRegistration[]` - Custom languages to be preloaded for highlighting
 
 <ShikiHighlighter language="tsx" theme="houston">
 {`
@@ -153,7 +154,7 @@ import { CodeHighlight } from "./CodeHighlight";
 
 ### Check if code is inline
 
-There are two ways to check if a code block is inline:
+There are two built-in ways to check if a code block is inline, both provide the same result:
 `react-shiki` exports `isInlineCode` which parses the `node` 
 prop to determine if the code is inline based on the presence of line breaks:
 
