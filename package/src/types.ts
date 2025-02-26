@@ -8,13 +8,12 @@ import type {
 
 import type { LanguageRegistration } from './customTypes';
 
-
-/** 
+/**
  * Languages for syntax highlighting.
  * @see https://shiki.style/languages
  */
 type Language =
-  BundledLanguage
+  | BundledLanguage
   | LanguageRegistration
   | SpecialLanguage
   | (string & {})
@@ -30,8 +29,8 @@ type Theme = ThemeRegistration | BundledTheme;
  * Configuration options for the syntax highlighter
  */
 type HighlighterOptions = {
-  /** 
-   * Minimum time (in milliseconds) between highlight operations. 
+  /**
+   * Minimum time (in milliseconds) between highlight operations.
    * @default undefined (no throttling)
    */
   delay?: number;

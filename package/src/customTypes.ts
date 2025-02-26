@@ -1,13 +1,13 @@
 /**
-* Attribution: 
-*  This workaround is was written by github:hippotastic in expressive-code/expressive-code
-*  https://github.com/expressive-code/expressive-code/blob/main/packages/%40expressive-code/plugin-shiki/src/languages.ts
-*/
+ * Attribution:
+ *  This code was written by github:hippotastic in expressive-code/expressive-code
+ *  https://github.com/expressive-code/expressive-code/blob/main/packages/%40expressive-code/plugin-shiki/src/languages.ts
+ */
 
-import type { 
+import type {
   LanguageRegistration as ShikiLanguageRegistration,
   MaybeGetter,
-  MaybeArray
+  MaybeArray,
 } from 'shiki';
 
 // Extract or rebuild non-exported types from Shiki
@@ -31,7 +31,11 @@ interface IRawCapturesMap {
 type IRawCaptures = IRawCapturesMap & ILocatable;
 
 // Create our less strict version of Shiki's internal `IRawRule` interface
-interface IRawRule extends Omit<IShikiRawRule, 'applyEndPatternLast' | 'captures' | 'patterns'> {
+interface IRawRule
+  extends Omit<
+    IShikiRawRule,
+    'applyEndPatternLast' | 'captures' | 'patterns'
+  > {
   readonly applyEndPatternLast?: boolean | number;
   readonly captures?: IRawCaptures;
   readonly comment?: string;
@@ -44,11 +48,11 @@ interface IRawRule extends Omit<IShikiRawRule, 'applyEndPatternLast' | 'captures
  * of type errors that would occur when importing and adding external grammars,
  * while still being supported by the language processing code.
  */
-export interface LanguageRegistration extends Omit<ShikiLanguageRegistration, 'repository'> {
+export interface LanguageRegistration
+  extends Omit<ShikiLanguageRegistration, 'repository'> {
   repository?: IRawRepository;
 }
 
 export type LanguageInput = MaybeGetter<MaybeArray<LanguageRegistration>>;
 
 export type { ShikiLanguageRegistration };
-

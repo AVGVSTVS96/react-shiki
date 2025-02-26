@@ -1,9 +1,4 @@
-import {
-  useEffect,
-  useRef,
-  useState,
-  type ReactNode
-} from 'react';
+import { useEffect, useRef, useState, type ReactNode } from 'react';
 
 import parse from 'html-react-parser';
 
@@ -15,20 +10,20 @@ import {
 
 import type {
   LanguageRegistration,
-  ShikiLanguageRegistration
+  ShikiLanguageRegistration,
 } from './customTypes';
 
 import type {
   Language,
   Theme,
   HighlighterOptions,
-  TimeoutState
+  TimeoutState,
 } from './types';
 
 import {
   removeTabIndexFromPre,
   throttleHighlighting,
-  resolveLanguage
+  resolveLanguage,
 } from './utils';
 
 // Use Shiki managed singleton for bundled languages, create a fresh instance for custom languages
@@ -52,26 +47,33 @@ export const useShikiHighlighter = (
   theme: Theme,
   options: HighlighterOptions = {}
 ) => {
-  const [highlightedCode, setHighlightedCode] = useState<ReactNode | null>(null);
+  const [highlightedCode, setHighlightedCode] =
+    useState<ReactNode | null>(null);
 
   // Setup themeKey for highlighter caching, checks if theme is string (builtin) or object (custom)
   const themeKey = typeof theme === 'string' ? theme : theme.name;
 
-  const normalizedCustomLanguages: LanguageRegistration[] = options.customLanguages
-    ? Array.isArray(options.customLanguages)
-      ? options.customLanguages
-      : [options.customLanguages]
-    : [];
+  const normalizedCustomLanguages: LanguageRegistration[] =
+    options.customLanguages
+      ? Array.isArray(options.customLanguages)
+        ? options.customLanguages
+        : [options.customLanguages]
+      : [];
 
-  const { isCustom, languageId, customLanguage } = resolveLanguage(lang, normalizedCustomLanguages);
+  const { isCustom, languageId, resolvedLanguage } = resolveLanguage(
+    lang,
+    normalizedCustomLanguages
+  );
 
   const timeoutControl = useRef<TimeoutState>({
     nextAllowedTime: 0,
     timeoutId: undefined,
   });
 
-  // Retrieve or create a cached highlighter with customLang
-  const getCachedCustomHighlighter = async (cacheKey: string, customLang: LanguageRegistration | typeof lang) => {
+  const getCachedCustomHighlighter = async (
+    cacheKey: string,
+    customLang: LanguageRegistration | typeof lang
+  ) => {
     let instance = customHighlighterCache.get(cacheKey);
     if (!instance) {
       instance = createHighlighter({
@@ -85,17 +87,21 @@ export const useShikiHighlighter = (
 
   useEffect(() => {
     let isMounted = true;
-    // TODO: Consider retaining tabindex for WCAG 2.1 compliance
-    // https://github.com/shikijs/shiki/issues/428
-    // https://www.w3.org/WAI/standards-guidelines/act/rules/0ssw9k/proposed/
-    const transformers = [removeTabIndexFromPre, ...(options.transformers || [])];
+
+    const transformers = [
+      removeTabIndexFromPre,
+      ...(options.transformers || []),
+    ];
 
     const highlightCode = async () => {
-      const codeHighlighter = isCustom && customLanguage
-        ? await getCachedCustomHighlighter(`${customLanguage.name}--${themeKey}`, customLanguage)
-        : highlighter;
+      const codeHighlighter =
+        isCustom && resolvedLanguage
+          ? await getCachedCustomHighlighter(
+              `${resolvedLanguage.name}--${themeKey}`,
+              resolvedLanguage
+            )
+          : highlighter;
 
-      // Use the selected highlighter with consistent parameters
       const html = await codeHighlighter.codeToHtml(code, {
         lang: languageId,
         theme,
