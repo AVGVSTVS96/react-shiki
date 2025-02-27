@@ -123,7 +123,7 @@ export const useShikiHighlighter = (
       isMounted = false;
       clearTimeout(timeoutControl.current.timeoutId);
     };
-  }, [code, lang]);
+  }, [code, lang, theme]);
 
   return highlightedCode;
 };
