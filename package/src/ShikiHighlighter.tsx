@@ -3,9 +3,9 @@ import React from 'react';
 import { clsx } from 'clsx';
 import { useShikiHighlighter } from './useShiki';
 import type { Language, Theme, HighlighterOptions } from './types';
-import type { ShikiTransformer } from 'shiki';
+// import type { ShikiTransformer } from 'shiki';
 import { resolveLanguage } from './utils';
-import type { LanguageRegistration } from './customTypes';
+// import type { LanguageRegistration } from './customTypes';
 
 /**
  * Props for the ShikiHighlighter component
@@ -28,18 +28,6 @@ export interface ShikiHighlighterProps extends HighlighterOptions {
    * @see https://shiki.style/themes
    */
   theme: Theme;
-
-  /**
-   * The delay in milliseconds between streamed updates
-   * Use this when highlighting code being streamed on the client
-   * @default undefined (no delay)
-   */
-  delay?: number;
-
-  /**
-   * Pass custom Shiki transformers to the highlighter
-   */
-  transformers?: ShikiTransformer[];
 
   /**
    * Controls the application of default styles to the generated code blocks
@@ -80,13 +68,7 @@ export interface ShikiHighlighterProps extends HighlighterOptions {
    * @default 'pre'
    */
   as?: React.ElementType;
-
-  /**
-   * Custom languages to be preloaded for highlighting.
-   */
-  customLanguages?: LanguageRegistration[];
 }
-
 /**
  * ShikiHighlighter is a React component that provides syntax highlighting for code snippets.
  * It uses Shiki to render beautiful, theme-based syntax highlighting with optimized performance.
@@ -107,6 +89,9 @@ export const ShikiHighlighter = ({
   theme,
   delay,
   transformers,
+  themes,
+  defaultColor,
+  cssVariablePrefix,
   addDefaultStyles = true,
   style,
   langStyle,
@@ -116,11 +101,15 @@ export const ShikiHighlighter = ({
   children: code,
   as: Element = 'pre',
   customLanguages,
+
 }: ShikiHighlighterProps): React.ReactElement => {
   const options: HighlighterOptions = {
     delay,
     transformers,
     customLanguages,
+    themes,
+    defaultColor,
+    cssVariablePrefix,
   };
 
   const normalizedCustomLanguages = customLanguages
