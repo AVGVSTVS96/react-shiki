@@ -1,3 +1,4 @@
+// types.ts - Just add the multi-theme options
 import type {
   BundledLanguage,
   SpecialLanguage,
@@ -44,6 +45,24 @@ type HighlighterOptions = {
    * Custom textmate grammar to be preloaded for highlighting.
    */
   customLanguages?: LanguageRegistration | LanguageRegistration[];
+  
+  /**
+   * Multi-theme configuration for light/dark mode support
+   * @example { light: 'github-light', dark: 'github-dark' }
+   */
+  themes?: Record<string, Theme>;
+  
+  /**
+   * The default theme applied to the code (via inline `color` style).
+   * @default first theme key or 'light' if exists
+   */
+  defaultColor?: string | false;
+  
+  /**
+   * Prefix of CSS variables used to store the color of the other theme.
+   * @default '--shiki-'
+   */
+  cssVariablePrefix?: string;
 };
 
 /**
