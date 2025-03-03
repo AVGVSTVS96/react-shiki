@@ -30,6 +30,11 @@ import {
 const highlighter = createSingletonShorthands(createHighlighter);
 const customHighlighterCache = new Map<string, Promise<Highlighter>>();
 
+const isMultiThemeConfig = (value: any): value is Record<string, Theme> =>
+  typeof value === 'object' &&
+  !('name' in value) &&
+  Object.keys(value).length > 0;
+
 /**
  * A React hook that provides syntax highlighting using Shiki.
  * Supports single theme and multi-theme highlighting, custom themes
@@ -66,32 +71,26 @@ export const useShikiHighlighter = (
   const [highlightedCode, setHighlightedCode] =
     useState<ReactNode | null>(null);
 
-  // Check if we're using multi-theme by examining if themeOrThemes is a record object
-  const isMultiTheme =
-    typeof themeOrThemes === 'object' &&
-    !('name' in themeOrThemes) &&
-    Object.keys(themeOrThemes).length > 0;
-
-  // Extract values based on mode
-  const theme = isMultiTheme ? undefined : (themeOrThemes as Theme);
-  const themes = isMultiTheme
-    ? (themeOrThemes as Record<string, Theme>)
-    : undefined;
-  const { defaultColor, cssVariablePrefix } = options;
-
-  // Setup themeKey for highlighter caching
-  const themeKey = isMultiTheme
-    ? `multi-${Object.keys(themes || {}).join('-')}`
-    : typeof theme === 'string'
-      ? theme
-      : theme?.name || 'custom';
-
   const normalizedCustomLanguages: LanguageRegistration[] =
     options.customLanguages
       ? Array.isArray(options.customLanguages)
         ? options.customLanguages
         : [options.customLanguages]
       : [];
+
+  const isMultiTheme = isMultiThemeConfig(themeOrThemes);
+  const theme = isMultiTheme ? undefined : themeOrThemes;
+  const themes = isMultiTheme ? themeOrThemes : undefined;
+
+  const { defaultColor, cssVariablePrefix, delay, transformers } =
+    options;
+
+  const themeKey =
+    isMultiTheme && themes
+      ? `multi-${Object.keys(themes).join('-')}`
+      : typeof theme === 'string'
+        ? theme
+        : theme?.name || 'custom';
 
   const { isCustom, languageId, resolvedLanguage } = resolveLanguage(
     lang,
@@ -103,33 +102,32 @@ export const useShikiHighlighter = (
     timeoutId: undefined,
   });
 
-  const getCachedCustomHighlighter = async (
-    cacheKey: string,
-    customLang: LanguageRegistration
-  ): Promise<Highlighter> => {
-    let instance = customHighlighterCache.get(cacheKey);
-    if (!instance) {
-      // For custom languages, we need to preload themes
-      instance = createHighlighter({
-        langs: [customLang as ShikiLanguageRegistration],
-        themes:
-          isMultiTheme && themes
-            ? Object.values(themes)
-            : theme
-              ? [theme]
-              : [],
-      });
-      customHighlighterCache.set(cacheKey, instance);
-    }
-    return instance;
-  };
-
   useEffect(() => {
     let isMounted = true;
 
-    const transformers = [
+    const getCachedCustomHighlighter = async (
+      cacheKey: string,
+      customLang: LanguageRegistration
+    ): Promise<Highlighter> => {
+      let instance = customHighlighterCache.get(cacheKey);
+      if (!instance) {
+        instance = createHighlighter({
+          langs: [customLang as ShikiLanguageRegistration],
+          themes:
+            isMultiTheme && themes
+              ? Object.values(themes)
+              : theme
+                ? [theme]
+                : [],
+        });
+        customHighlighterCache.set(cacheKey, instance);
+      }
+      return instance;
+    };
+
+    const allTransformers = [
       removeTabIndexFromPre,
-      ...(options.transformers || []),
+      ...(transformers || []),
     ];
 
     const highlightCode = async () => {
@@ -144,22 +142,20 @@ export const useShikiHighlighter = (
       if (isMultiTheme && themes) {
         const html = await codeHighlighter.codeToHtml(code, {
           lang: languageId,
+          transformers: allTransformers,
           themes,
-          defaultColor,
-          cssVariablePrefix,
-          transformers,
+          ...(defaultColor !== undefined && { defaultColor }),
+          ...(cssVariablePrefix !== undefined && { cssVariablePrefix }),
         });
 
         if (isMounted) {
           setHighlightedCode(parse(html));
         }
-      }
-      // Otherwise use single theme
-      else if (theme) {
+      } else if (theme) {
         const html = await codeHighlighter.codeToHtml(code, {
           lang: languageId,
+          transformers: allTransformers,
           theme,
-          transformers,
         });
 
         if (isMounted) {
@@ -168,8 +164,8 @@ export const useShikiHighlighter = (
       }
     };
 
-    if (options.delay) {
-      throttleHighlighting(highlightCode, timeoutControl, options.delay);
+    if (delay) {
+      throttleHighlighting(highlightCode, timeoutControl, delay);
     } else {
       highlightCode().catch(console.error);
     }
@@ -185,11 +181,11 @@ export const useShikiHighlighter = (
     lang,
     isMultiTheme,
     theme,
-    themes ? JSON.stringify(themes) : null,
+    themes && JSON.stringify(themes),
     defaultColor,
     cssVariablePrefix,
-    options.delay,
-    options.transformers,
+    delay,
+    transformers,
   ]);
 
   return highlightedCode;
