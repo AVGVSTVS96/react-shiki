@@ -30,7 +30,7 @@ import {
 const highlighter = createSingletonShorthands(createHighlighter);
 const customHighlighterCache = new Map<string, Promise<Highlighter>>();
 
-const isMultiThemeConfig = (value: any): value is Record<string, Theme> =>
+const isMultiThemeConfig = (value: Theme): value is Record<string, Theme> =>
   typeof value === 'object' &&
   !('name' in value) &&
   Object.keys(value).length > 0;
