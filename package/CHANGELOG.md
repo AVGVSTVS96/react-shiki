@@ -1,5 +1,11 @@
 # react-shiki
 
+## 0.4.1
+
+### Patch Changes
+
+- 25ab014: fix: rerender when theme changes
+
 ## 0.4.0
 
 ### Minor Changes
