@@ -96,7 +96,7 @@ const getCachedCustomHighlighter = async (
 export const useShikiHighlighter = (
   code: string,
   lang: Language,
-  themeOrThemes: Theme | Record<string, Theme>,
+  themeInput: Theme | Record<string, Theme>,
   options: HighlighterOptions = {}
 ) => {
   const [highlightedCode, setHighlightedCode] =
@@ -109,9 +109,9 @@ export const useShikiHighlighter = (
         : [options.customLanguages]
       : [];
 
-  const isMultiTheme = isMultiThemeConfig(themeOrThemes);
-  const theme = isMultiTheme ? undefined : themeOrThemes;
-  const themes = isMultiTheme ? themeOrThemes : undefined;
+  const isMultiTheme = isMultiThemeConfig(themeInput);
+  const theme = isMultiTheme ? undefined : themeInput;
+  const themes = isMultiTheme ? themeInput : undefined;
 
   const { defaultColor, cssVariablePrefix, delay, transformers } =
     options;
