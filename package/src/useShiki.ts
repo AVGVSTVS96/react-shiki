@@ -158,8 +158,8 @@ export const useShikiHighlighter = (
           lang: languageId,
           transformers: allTransformers,
           themes,
-          ...(defaultColor !== undefined && { defaultColor }),
-          ...(cssVariablePrefix !== undefined && { cssVariablePrefix }),
+          defaultColor,
+          cssVariablePrefix,
         });
 
         if (isMounted) {
@@ -190,7 +190,7 @@ export const useShikiHighlighter = (
         clearTimeout(timeoutControl.current.timeoutId);
       }
     };
-  }, [code, lang, options, theme, themes]);
+  }, [code, lang, options, themeInput]);
 
   return highlightedCode;
 };
