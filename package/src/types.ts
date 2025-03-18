@@ -26,6 +26,13 @@ type Language =
 type Theme = ThemeRegistration | BundledTheme;
 
 /**
+ * Multi-theme configuration for light/dark theme support
+ * @see https://shiki.style/guide/dual-themes
+ */
+type Themes = Record<string, Theme>;
+
+
+/**
  * Configuration options for the syntax highlighter
  */
 type HighlighterOptions = {
@@ -49,7 +56,7 @@ type HighlighterOptions = {
    * Multi-theme configuration for light/dark mode support
    * @example { light: 'github-light', dark: 'github-dark' }
    */
-  themes?: Record<string, Theme>;
+  themes?: Themes;
   
   /**
    * The default theme applied to the code (via inline `color` style).
@@ -78,4 +85,4 @@ type TimeoutState = {
   nextAllowedTime: number;
 };
 
-export type { Language, Theme, HighlighterOptions, TimeoutState };
+export type { Language, Theme, Themes,  HighlighterOptions, TimeoutState };

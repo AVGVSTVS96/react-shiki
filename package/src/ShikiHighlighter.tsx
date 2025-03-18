@@ -1,8 +1,9 @@
 import './styles.css';
+// biome-ignore lint/style/useImportType: React import is needed
 import React from 'react';
 import { clsx } from 'clsx';
 import { useShikiHighlighter } from './useShiki';
-import type { Language, Theme, HighlighterOptions } from './types';
+import type { Language, Theme, HighlighterOptions, Themes } from './types';
 // import type { ShikiTransformer } from 'shiki';
 import { resolveLanguage } from './utils';
 // import type { LanguageRegistration } from './customTypes';
@@ -24,10 +25,10 @@ export interface ShikiHighlighterProps extends HighlighterOptions {
 
   /**
    * The color theme for syntax highlighting
-   * Supports Shiki and custom textmate themes
+   * Supports single theme or multi-theme configuration
    * @see https://shiki.style/themes
    */
-  theme: Theme;
+  theme: Theme | Themes;
 
   /**
    * Controls the application of default styles to the generated code blocks
