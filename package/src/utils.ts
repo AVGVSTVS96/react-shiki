@@ -2,7 +2,7 @@ import { visit } from 'unist-util-visit';
 import { bundledLanguages, isSpecialLang } from 'shiki';
 import type { ShikiTransformer } from 'shiki';
 import type { Element, Root } from 'hast';
-import type { Language, TimeoutState } from './types';
+import type { Language, Theme, Themes, TimeoutState } from './types';
 import type { LanguageRegistration } from './customTypes';
 
 /**
@@ -21,11 +21,11 @@ export type { Element };
  * <ReactMarkdown rehypePlugins={[rehypeInlineCodeProperty]} />
  */
 export function rehypeInlineCodeProperty() {
-  return function (tree: Root): undefined {
+  return (tree: Root): undefined => {
     visit(
       tree as any,
       'element',
-      function (node: Element, _index, parent: Element) {
+      (node: Element, _index, parent: Element) => {
         if (node.tagName === 'code' && parent.tagName !== 'pre') {
           node.properties.inline = true;
         }
@@ -170,3 +170,35 @@ export const resolveLanguage = (
     displayLanguageId: 'plaintext',
   };
 };
+
+export function resolveTheme(themeInput: Theme | Themes): {
+  isMultiTheme: boolean;
+  themeKey: string;
+  multiTheme: Themes;
+  singleTheme: Theme;
+} {
+  if (typeof themeInput === 'object' && !('name' in themeInput)) {
+    const keys = Object.keys(themeInput).sort();
+    const themeKey = `multi-${keys.join('-')}`;
+
+    return {
+      isMultiTheme: true,
+      themeKey,
+      multiTheme: themeInput as Themes,
+      singleTheme: undefined as any,
+    };
+  }
+
+  const singleTheme = themeInput as Theme;
+  const themeKey =
+    typeof singleTheme === 'string'
+      ? singleTheme
+      : singleTheme?.name || 'custom';
+
+  return {
+    isMultiTheme: false,
+    themeKey,
+    multiTheme: {} as Record<string, Theme>,
+    singleTheme,
+  };
+}

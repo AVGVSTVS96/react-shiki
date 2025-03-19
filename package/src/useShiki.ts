@@ -6,6 +6,7 @@ import {
   createHighlighter,
   createSingletonShorthands,
   type Highlighter,
+  type ThemeRegistration,
 } from 'shiki';
 
 import type {
@@ -24,16 +25,12 @@ import {
   removeTabIndexFromPre,
   throttleHighlighting,
   resolveLanguage,
+  resolveTheme,
 } from './utils';
 
 // Use Shiki managed singleton for bundled languages, create and cache a fresh instance for custom languages
 const highlighter = createSingletonShorthands(createHighlighter);
 const customLangHighlighter = new Map<string, Promise<Highlighter>>();
-
-const isMultiThemeConfig = (
-  value: Theme
-): value is Record<string, Theme> =>
-  typeof value === 'object' && Object.keys(value).length > 0;
 
 /**
  * A React hook that provides syntax highlighting using Shiki.
@@ -78,16 +75,8 @@ export const useShikiHighlighter = (
         : [options.customLanguages]
       : [];
 
-  const isMultiTheme = isMultiThemeConfig(themeInput);
-  const theme = isMultiTheme ? undefined : themeInput;
-  const themes = isMultiTheme ? themeInput : undefined;
-
-  const themeKey =
-    isMultiTheme && themes
-      ? `multi-${Object.keys(themes).join('-')}`
-      : typeof theme === 'string'
-        ? theme
-        : theme?.name || 'custom';
+  const { isMultiTheme, themeKey, multiTheme, singleTheme } =
+    resolveTheme(themeInput);
 
   const { isCustom, languageId, resolvedLanguage } = resolveLanguage(
     lang,
@@ -103,29 +92,29 @@ export const useShikiHighlighter = (
     cacheKey: string,
     customLang: LanguageRegistration
   ) => {
+    const themesToLoad = isMultiTheme
+      ? multiTheme
+      : [singleTheme as Theme];
+
     let instance = customLangHighlighter.get(cacheKey);
 
     if (!instance) {
-      const resolvedThemeInput = isMultiTheme && themes
-        ? Object.values(themes)
-        : [theme as Theme];
-      
       instance = createHighlighter({
         langs: [customLang as ShikiLanguageRegistration],
-        themes: resolvedThemeInput, // TODO: Add test for custom langs + multi-theme 
+        themes: themesToLoad as ThemeRegistration[],
       });
       customLangHighlighter.set(cacheKey, instance);
     }
     return instance;
   };
 
+  const transformers = [
+    removeTabIndexFromPre,
+    ...(options.transformers || []),
+  ];
+
   useEffect(() => {
     let isMounted = true;
-
-    const transformers = [
-      removeTabIndexFromPre,
-      ...(options.transformers || []),
-    ];
 
     const highlightCode = async () => {
       const codeHighlighter =
@@ -136,27 +125,31 @@ export const useShikiHighlighter = (
             )
           : highlighter;
 
-      const html = await codeHighlighter.codeToHtml(code, {
-        lang: languageId,
-        transformers,
-        ...(isMultiTheme && themes
-          ? {
-              themes,
-              defaultColor: options.defaultColor,
-              cssVariablePrefix: options.cssVariablePrefix, // TODO: add test
-            }
-          : { theme: theme || 'github-dark' }),
-      });
+      const highlightOptions = isMultiTheme
+        ? {
+            themes: multiTheme,
+            defaultColor: options.defaultColor,
+            cssVariablePrefix: options.cssVariablePrefix,
+            lang: languageId,
+            transformers,
+          }
+        : {
+            theme: singleTheme || 'github-dark',
+            lang: languageId,
+            transformers,
+          };
 
+      const html = await codeHighlighter.codeToHtml(
+        code,
+        highlightOptions
+      );
       if (isMounted) {
         setHighlightedCode(parse(html));
       }
     };
 
-    const { delay } = options;
-
-    if (delay) {
-      throttleHighlighting(highlightCode, timeoutControl, delay);
+    if (options.delay) {
+      throttleHighlighting(highlightCode, timeoutControl, options.delay);
     } else {
       highlightCode().catch(console.error);
     }
