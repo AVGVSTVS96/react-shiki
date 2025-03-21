@@ -177,9 +177,11 @@ export function resolveTheme(themeInput: Theme | Themes): {
   multiTheme: Themes;
   singleTheme?: Theme | undefined;
 } {
-  if (typeof themeInput === 'object' && !('name' in themeInput)) {
-    const values = Object.values(themeInput).sort();
-    const themeKey = `multi-${values.join('-')}`;
+  const isMultiTheme =
+    typeof themeInput === 'object' && !('name' in themeInput);
+
+  if (isMultiTheme) {
+    const themeKey = `multi-${Object.values(themeInput).sort()}`;
 
     return {
       isMultiTheme: true,
