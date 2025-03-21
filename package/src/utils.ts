@@ -175,7 +175,7 @@ export function resolveTheme(themeInput: Theme | Themes): {
   isMultiTheme: boolean;
   themeKey: string;
   multiTheme: Themes;
-  singleTheme: Theme;
+  singleTheme?: Theme | undefined;
 } {
   if (typeof themeInput === 'object' && !('name' in themeInput)) {
     const keys = Object.keys(themeInput).sort();
@@ -185,7 +185,6 @@ export function resolveTheme(themeInput: Theme | Themes): {
       isMultiTheme: true,
       themeKey,
       multiTheme: themeInput as Themes,
-      singleTheme: undefined as any,
     };
   }
 
@@ -198,7 +197,7 @@ export function resolveTheme(themeInput: Theme | Themes): {
   return {
     isMultiTheme: false,
     themeKey,
-    multiTheme: {} as Record<string, Theme>,
+    multiTheme: {},
     singleTheme,
   };
 }
