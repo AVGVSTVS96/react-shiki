@@ -178,8 +178,8 @@ export function resolveTheme(themeInput: Theme | Themes): {
   singleTheme?: Theme | undefined;
 } {
   if (typeof themeInput === 'object' && !('name' in themeInput)) {
-    const keys = Object.keys(themeInput).sort();
-    const themeKey = `multi-${keys.join('-')}`;
+    const values = Object.values(themeInput).sort();
+    const themeKey = `multi-${values.join('-')}`;
 
     return {
       isMultiTheme: true,
