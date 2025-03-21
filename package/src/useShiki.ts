@@ -19,6 +19,7 @@ import type {
   Theme,
   HighlighterOptions,
   TimeoutState,
+  Themes,
 } from './types';
 
 import {
@@ -62,7 +63,7 @@ const customLangHighlighter = new Map<string, Promise<Highlighter>>();
 export const useShikiHighlighter = (
   code: string,
   lang: Language,
-  themeInput: Theme | Record<string, Theme>,
+  themeInput: Theme | Themes,
   options: HighlighterOptions = {}
 ) => {
   const [highlightedCode, setHighlightedCode] =
@@ -75,8 +76,13 @@ export const useShikiHighlighter = (
         : [options.customLanguages]
       : [];
 
-  const { isMultiTheme, themeKey, multiTheme, singleTheme } =
-    resolveTheme(themeInput);
+  const {
+    isMultiTheme,
+    themeKey,
+    multiTheme,
+    singleTheme,
+    themesToLoad,
+  } = resolveTheme(themeInput);
 
   const { isCustom, languageId, resolvedLanguage } = resolveLanguage(
     lang,
@@ -92,10 +98,6 @@ export const useShikiHighlighter = (
     cacheKey: string,
     customLang: LanguageRegistration
   ) => {
-    const themesToLoad = isMultiTheme
-      ? multiTheme
-      : [singleTheme as Theme];
-
     let instance = customLangHighlighter.get(cacheKey);
 
     if (!instance) {

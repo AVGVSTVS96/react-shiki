@@ -6,6 +6,7 @@ import type {
   ShikiTransformer,
   StringLiteralUnion,
   ThemeRegistrationAny,
+  CodeOptionsMultipleThemes,
 } from 'shiki';
 
 import type { LanguageRegistration } from './customTypes';
@@ -31,12 +32,13 @@ type Theme = ThemeRegistration | BundledTheme;
  * Multi-theme configuration for light/dark theme support
  * @see https://shiki.style/guide/dual-themes
  */
-type Themes = Partial<
-  Record<
-    string,
-    ThemeRegistrationAny | StringLiteralUnion<BundledTheme, string>
-  >
->;
+type Themes = CodeOptionsMultipleThemes<BundledTheme>['themes'];
+// type Themes = Partial<
+//   Record<
+//     string,
+//     ThemeRegistrationAny | StringLiteralUnion<BundledTheme, string>
+//   >
+// >;
 
 /**
  * Configuration options for the syntax highlighter

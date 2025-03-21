@@ -176,30 +176,29 @@ export function resolveTheme(themeInput: Theme | Themes): {
   themeKey: string;
   multiTheme: Themes;
   singleTheme?: Theme | undefined;
+  themesToLoad: Theme[];
 } {
   const isMultiTheme =
     typeof themeInput === 'object' && !('name' in themeInput);
 
   if (isMultiTheme) {
-    const themeKey = `multi-${Object.values(themeInput).sort()}`;
-
     return {
       isMultiTheme: true,
-      themeKey,
+      themeKey: `multi-${Object.values(themeInput).join('-')}`,
       multiTheme: themeInput as Themes,
+      themesToLoad: Object.values(themeInput),
     };
   }
 
-  const singleTheme = themeInput as Theme;
-  const themeKey =
-    typeof singleTheme === 'string'
-      ? singleTheme
-      : singleTheme?.name || 'custom';
-
   return {
     isMultiTheme: false,
-    themeKey,
+    themeKey:
+      typeof themeInput === 'string'
+        ? themeInput
+        : (themeInput?.name as string) || 'custom',
+
     multiTheme: {},
-    singleTheme,
+    singleTheme: themeInput as Theme,
+    themesToLoad: [themeInput as Theme],
   };
 }
