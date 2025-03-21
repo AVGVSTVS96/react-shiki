@@ -4,6 +4,8 @@ import type {
   BundledTheme,
   ThemeRegistration,
   ShikiTransformer,
+  StringLiteralUnion,
+  ThemeRegistrationAny,
 } from 'shiki';
 
 import type { LanguageRegistration } from './customTypes';
@@ -29,8 +31,12 @@ type Theme = ThemeRegistration | BundledTheme;
  * Multi-theme configuration for light/dark theme support
  * @see https://shiki.style/guide/dual-themes
  */
-type Themes = Record<string, Theme>;
-
+type Themes = Partial<
+  Record<
+    string,
+    ThemeRegistrationAny | StringLiteralUnion<BundledTheme, string>
+  >
+>;
 
 /**
  * Configuration options for the syntax highlighter
@@ -51,19 +57,19 @@ type HighlighterOptions = {
    * Custom textmate grammar to be preloaded for highlighting.
    */
   customLanguages?: LanguageRegistration | LanguageRegistration[];
-  
+
   /**
    * Multi-theme configuration for light/dark mode support
    * @example { light: 'github-light', dark: 'github-dark' }
    */
   themes?: Themes;
-  
+
   /**
    * The default theme applied to the code (via inline `color` style).
    * @default first theme key or 'light' if exists
    */
   defaultColor?: string | false;
-  
+
   /**
    * Prefix of CSS variables used to store the color of the other theme.
    * @default '--shiki-'
@@ -85,4 +91,4 @@ type TimeoutState = {
   nextAllowedTime: number;
 };
 
-export type { Language, Theme, Themes,  HighlighterOptions, TimeoutState };
+export type { Language, Theme, Themes, HighlighterOptions, TimeoutState };
