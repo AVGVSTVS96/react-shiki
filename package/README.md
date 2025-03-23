@@ -18,6 +18,7 @@ for react built with [Shiki](https://shiki.matsu.io/)
   - [Usage](#usage)
     - [`react-markdown`](#react-markdown)
     - [Check if code is inline](#check-if-code-is-inline)
+    - [Multi-theme support](#multi-theme-support)
     - [Custom themes](#custom-themes)
     - [Custom languages](#custom-languages)
       - [Preloading custom languages](#preloading-custom-languages)
@@ -224,6 +225,33 @@ return !inline ? (
     {children}
   </code>
 );
+```
+
+### Multi-theme support
+
+```tsx
+    // component
+  <ShikiHighlighter
+    language="tsx"
+    theme={{
+      light: 'github-light',
+      dark: 'github-dark',
+      dim: 'github-dark-dimmed'
+    }}
+    defaultColor='dark'
+  >
+    {String(code).trim()}
+  </ShikiHighlighter>
+
+  // hook
+  const highlightedCode = useShikiHighlighter(
+    code,
+    'tsx',
+    { light: 'github-light', dark: 'github-dark' },
+    {
+      defaultColor: 'dark',
+    }
+  );
 ```
 
 ### Custom themes
