@@ -1,8 +1,8 @@
 # 🎨 [react-shiki](https://npmjs.com/react-shiki)
 
 > [!NOTE]
-> This library is still in development, more features will 
-> continue to be implemented, and API may change. 
+> This library is still in development, more features will
+> continue to be implemented, and API may change.
 > Contributions are welcome!
 
 Performant client side syntax highlighting component + hook
@@ -165,7 +165,7 @@ import { CodeHighlight } from "./CodeHighlight";
 ### Check if code is inline
 
 There are two built-in ways to check if a code block is inline, both provide the same result:
-`react-shiki` exports `isInlineCode` which parses the `node` 
+`react-shiki` exports `isInlineCode` which parses the `node`
 prop to determine if the code is inline based on the presence of line breaks:
 
 ```tsx
@@ -183,7 +183,7 @@ return !isInline ? (
 ```
 
 `react-shiki` also exports `rehypeInlineCodeProperty`, a rehype plugin that adds
-an `inline` property to `react-markdown` to determine if code is inline based on 
+an `inline` property to `react-markdown` to determine if code is inline based on
 the presence of a `<pre>` tag as a parent of `<code>`.
 It's passed as a rehype plugin to `react-markdown`:
 
@@ -230,28 +230,28 @@ return !inline ? (
 ### Multi-theme support
 
 ```tsx
-    // component
-  <ShikiHighlighter
-    language="tsx"
-    theme={{
-      light: 'github-light',
-      dark: 'github-dark',
-      dim: 'github-dark-dimmed'
-    }}
-    defaultColor='dark'
-  >
-    {String(code).trim()}
-  </ShikiHighlighter>
+// component
+<ShikiHighlighter
+  language="tsx"
+  theme={{
+    light: "github-light",
+    dark: "github-dark",
+    dim: "github-dark-dimmed",
+  }}
+  defaultColor="dark"
+>
+  {String(code).trim()}
+</ShikiHighlighter>;
 
-  // hook
-  const highlightedCode = useShikiHighlighter(
-    code,
-    'tsx',
-    { light: 'github-light', dark: 'github-dark' },
-    {
-      defaultColor: 'dark',
-    }
-  );
+// hook
+const highlightedCode = useShikiHighlighter(
+  code,
+  "tsx",
+  { light: "github-light", dark: "github-dark" },
+  {
+    defaultColor: "dark",
+  }
+);
 ```
 
 ### Custom themes
@@ -259,7 +259,7 @@ return !inline ? (
 Pass custom TextMate themes as a JSON object:
 
 ```tsx
-import tokyoNight from '../styles/tokyo-night.json';
+import tokyoNight from "../styles/tokyo-night.json";
 
 // component
 <ShikiHighlighter language="tsx" theme={tokyoNight}>
@@ -275,48 +275,54 @@ const highlightedCode = useShikiHighlighter(code, "tsx", tokyoNight);
 Pass custom TextMate languages as a JSON object:
 
 ```tsx
-import mcfunction from "../langs/mcfunction.tmLanguage.json"
+import mcfunction from "../langs/mcfunction.tmLanguage.json";
 
 // component
-<ShikiHighlighter language={mcfunction} theme="github-dark" >
+<ShikiHighlighter language={mcfunction} theme="github-dark">
   {String(code).trim()}
 </ShikiHighlighter>;
 
 // hook
 const highlightedCode = useShikiHighlighter(code, mcfunction, "github-dark");
 ```
+
 #### Preloading custom languages
 
 For dynamic highlighting scenarios (like LLM chat apps) where language selection happens at runtime, preload custom languages to make them available when needed:
 
 ```tsx
-import mcfunction from "../langs/mcfunction.tmLanguage.json"
-import bosque from "../langs/bosque.tmLanguage.json"
-
-// component
-<ShikiHighlighter language={mcfunction} theme="github-dark" customLanguages={[mcfunction, bosque]} >
-  {String(code).trim()}
-</ShikiHighlighter>;
-
-// hook
-const highlightedCode = useShikiHighlighter(code, mcfunction, "github-dark", { customLanguages: [mcfunction, bosque] });
-```
-
-### Custom transformers
-
-```tsx
-import { customTransformer } from '../utils/shikiTransformers';
+import mcfunction from "../langs/mcfunction.tmLanguage.json";
+import bosque from "../langs/bosque.tmLanguage.json";
 
 // component
 <ShikiHighlighter
-  language="tsx"
-  transformers={[customTransformer]}
+  language={mcfunction}
+  theme="github-dark"
+  customLanguages={[mcfunction, bosque]}
 >
   {String(code).trim()}
 </ShikiHighlighter>;
 
 // hook
-const highlightedCode = useShikiHighlighter(code, "tsx", "github-dark", [customTransformer]);
+const highlightedCode = useShikiHighlighter(code, mcfunction, "github-dark", {
+  customLanguages: [mcfunction, bosque],
+});
+```
+
+### Custom transformers
+
+```tsx
+import { customTransformer } from "../utils/shikiTransformers";
+
+// component
+<ShikiHighlighter language="tsx" transformers={[customTransformer]}>
+  {String(code).trim()}
+</ShikiHighlighter>;
+
+// hook
+const highlightedCode = useShikiHighlighter(code, "tsx", "github-dark", [
+  customTransformer,
+]);
 ```
 
 ## Performance
