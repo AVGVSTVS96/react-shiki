@@ -10,7 +10,7 @@ import type {
 import type { LanguageRegistration } from './customTypes';
 
 /**
- * A textmate grammar object or a Shiki BundledLanguage
+ * A Shiki BundledLanguage or a custom textmate grammar object
  * @see https://shiki.style/languages
  */
 type Language =
@@ -21,7 +21,7 @@ type Language =
   | undefined;
 
 /**
- * A textmate theme object or a Shiki BundledTheme
+ * A Shiki BundledTheme or a custom textmate theme object
  * @see https://shiki.style/themes
  */
 type Theme = CodeOptionsSingleTheme<BundledTheme>['theme'];
@@ -29,6 +29,7 @@ type Theme = CodeOptionsSingleTheme<BundledTheme>['theme'];
 /**
   * A map of color names to themes.
   * This allows you to specify multiple themes for the generated code.
+  * Supports custom textmate theme objects in addition to Shiki's bundled themes
   *
   * @example
   * ```ts
@@ -59,7 +60,7 @@ type CommonHighlightOptions = {
   transformers?: ShikiTransformer[];
 
   /**
-   * Custom textmate grammar to be preloaded for highlighting.
+   * Custom textmate grammars to be preloaded for highlighting.
    */
   customLanguages?: LanguageRegistration | LanguageRegistration[];
 };

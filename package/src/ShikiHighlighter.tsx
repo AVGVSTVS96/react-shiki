@@ -12,6 +12,7 @@ import { resolveLanguage } from './utils';
 export interface ShikiHighlighterProps extends HighlighterOptions {
   /**
    * The programming language for syntax highlighting
+   * Supports custom textmate grammar objects in addition to Shiki's bundled languages
    * @see https://shiki.style/languages
    */
   language: Language;
@@ -22,8 +23,9 @@ export interface ShikiHighlighterProps extends HighlighterOptions {
   children: string;
 
   /**
-   * The color theme for syntax highlighting
-   * Supports single theme or multi-theme configuration
+   * The color theme or themes for syntax highlighting
+   * Supports single, dual, or multiple themes
+   * Supports custom textmate theme objects in addition to Shiki's bundled themes
    *
    * @example
    * theme='github-dark' // single theme
