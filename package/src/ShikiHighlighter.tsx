@@ -24,6 +24,11 @@ export interface ShikiHighlighterProps extends HighlighterOptions {
   /**
    * The color theme for syntax highlighting
    * Supports single theme or multi-theme configuration
+   *
+   * @example
+   * theme='github-dark' // single theme
+   * theme={{ light: 'github-light', dark: 'github-dark' }} // multi-theme
+   *
    * @see https://shiki.style/themes
    */
   theme: Theme | Themes;

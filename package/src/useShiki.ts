@@ -57,25 +57,36 @@ const getCachedCustomHighlighter = async (
  * Supports single theme and multi-theme highlighting, custom themes
  * and languages, custom transformers, and optional throttling.
  *
- * @example Custom Languages and Transformers
+ * ```ts
+ * // Basic Usage
+ * const highlightedCode = useShikiHighlighter( code, 'typescript', 'github-dark');
+ * ```
+ *
+ * ```ts
+ * // Custom Languages, Transformers, and Delay
  * const highlightedCode = useShikiHighlighter(code, language, theme, {
  *   transformers: [customTransformer],
  *   delay: 150
  *   customLanguages: ['bosque', 'mcfunction']
  * });
- *
- * @example Single Theme Usage
- * ```tsx
- * const highlightedCode = useShikiHighlighter( code, 'typescript', 'github-dark');
  * ```
  *
- * @example Multi-Theme Usage
- * ```tsx
+ * ```ts
+ * // Multiple Themes, Custom Languages, Delay, and Custom Transformers
  * const highlightedCode = useShikiHighlighter(
  *   code,
- *   'typescript',
- *   { light: 'github-light', dark: 'github-dark' },
- *   { defaultColor: 'light' }
+ *   language,
+ *   {
+ *     light: 'github-light',
+ *     dark: 'github-dark',
+ *     dim: 'github-dark-dimmed'
+ *   },
+ *   {
+ *     delay: 150,
+ *     defaultColor: 'dim',
+ *     transformers: [customTransformer],
+ *     customLanguages: ['bosque', 'mcfunction']
+ *   }
  * );
  * ```
  */

@@ -2,15 +2,15 @@ import type {
   BundledLanguage,
   SpecialLanguage,
   BundledTheme,
-  ThemeRegistration,
   ShikiTransformer,
   CodeOptionsMultipleThemes,
+  CodeOptionsSingleTheme,
 } from 'shiki';
 
 import type { LanguageRegistration } from './customTypes';
 
 /**
- * Languages for syntax highlighting.
+ * A textmate grammar object or a Shiki BundledLanguage
  * @see https://shiki.style/languages
  */
 type Language =
@@ -24,19 +24,29 @@ type Language =
  * A textmate theme object or a Shiki BundledTheme
  * @see https://shiki.style/themes
  */
-type Theme = ThemeRegistration | BundledTheme;
+type Theme = CodeOptionsSingleTheme<BundledTheme>['theme'];
 
 /**
- * Multi-theme configuration for light/dark theme support
- * @see https://shiki.style/guide/dual-themes
- * @example { light: 'github-light', dark: 'github-dark' }
- */
+  * A map of color names to themes.
+  * This allows you to specify multiple themes for the generated code.
+  *
+  * @example
+  * ```ts
+  * useShikiHighlighter(code, language, {
+  *   light: 'github-light',
+  *   dark: 'github-dark',
+  *   dim: 'github-dark-dimmed'
+  * })
+  * ```
+  *
+  * @see https://shiki.style/guide/dual-themes
+  */
 type Themes = CodeOptionsMultipleThemes<BundledTheme>['themes'];
 
 /**
  * Configuration options for the syntax highlighter
  */
-type HighlighterOptions = {
+type CommonHighlightOptions = {
   /**
    * Minimum time (in milliseconds) between highlight operations.
    * @default undefined (no throttling)
@@ -52,19 +62,13 @@ type HighlighterOptions = {
    * Custom textmate grammar to be preloaded for highlighting.
    */
   customLanguages?: LanguageRegistration | LanguageRegistration[];
-
-  /**
-   * The default theme applied to the code (via inline `color` style).
-   * @default first theme key or 'light' if exists
-   */
-  defaultColor?: string | false;
-
-  /**
-   * Prefix of CSS variables used to store the color of the other theme.
-   * @default '--shiki-'
-   */
-  cssVariablePrefix?: string;
 };
+
+type HighlighterOptions = CommonHighlightOptions &
+  Pick<
+    CodeOptionsMultipleThemes<BundledTheme>,
+    'defaultColor' | 'cssVariablePrefix'
+  >;
 
 /**
  * State for the throttling logic
