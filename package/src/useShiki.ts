@@ -162,7 +162,16 @@ export const useShikiHighlighter = (
         clearTimeout(timeoutControl.current.timeoutId);
       }
     };
-  }, [code, lang, options, themeInput]);
+  }, [
+    code,
+    lang,
+    themeKey,
+    options.delay,
+    JSON.stringify(options.customLanguages),
+    JSON.stringify(options.transformers),
+    options.defaultColor,
+    options.cssVariablePrefix,
+  ]);
 
   return highlightedCode;
 };
