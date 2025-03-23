@@ -184,7 +184,12 @@ export function resolveTheme(themeInput: Theme | Themes): {
   if (isMultiTheme) {
     return {
       isMultiTheme: true,
-      themeKey: `multi-${Object.values(themeInput).join('-')}`,
+      themeKey: `multi-${Object.values(themeInput)
+        .map((theme) =>
+          typeof theme === 'string' ? theme : theme.name || 'custom'
+        )
+        .join('-')}`,
+
       multiTheme: themeInput as Themes,
       themesToLoad: Object.values(themeInput),
     };
