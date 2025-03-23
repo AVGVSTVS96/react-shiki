@@ -88,7 +88,6 @@ export const ShikiHighlighter = ({
   theme,
   delay,
   transformers,
-  themes,
   defaultColor,
   cssVariablePrefix,
   addDefaultStyles = true,
@@ -106,7 +105,6 @@ export const ShikiHighlighter = ({
     delay,
     transformers,
     customLanguages,
-    themes,
     defaultColor,
     cssVariablePrefix,
   };

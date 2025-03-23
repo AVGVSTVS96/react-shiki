@@ -54,12 +54,6 @@ type HighlighterOptions = {
   customLanguages?: LanguageRegistration | LanguageRegistration[];
 
   /**
-   * Multi-theme configuration for light/dark mode support
-   * @example { light: 'github-light', dark: 'github-dark' }
-   */
-  themes?: Themes;
-
-  /**
    * The default theme applied to the code (via inline `color` style).
    * @default first theme key or 'light' if exists
    */
