@@ -221,6 +221,38 @@ And can be accessed as a prop:
 `.trim()}
 </ShikiHighlighter>
 
+### Multi-theme support
+
+<ShikiHighlighter
+  language="tsx"
+  theme={{ light: "github-light", dark: "vitesse-dark" }}
+  defaultColor="dark"
+>
+  {`
+    // component
+  <ShikiHighlighter
+    language="tsx"
+    themes={{
+      light: 'github-light',
+      dark: 'github-dark'
+    }}
+    defaultColor='dark'
+  >
+    {String(code).trim()}
+  </ShikiHighlighter>
+
+  // hook
+  const highlightedCode = useShikiHighlighter(
+    code,
+    'tsx',
+    { light: 'github-light', dark: 'github-dark' },
+    {
+      defaultColor: 'dark',
+    }
+  );
+`.trim()}
+</ShikiHighlighter>
+
 ### Custom themes
 Pass custom TextMate themes as a JSON object:
 
@@ -261,12 +293,12 @@ const highlightedCode = useShikiHighlighter(code, mcfunction, "github-dark");
 <ShikiHighlighter language={mcfunction} theme="rose-pine-moon" >
   {`
     tag @e[tag=mcscriptTags] add isCool
-    tag @e[tag=mcscriptTags] remove isCool
-    execute if entity @e[tag=mcscriptTags,tag=isCool] run say he is cool
+  tag @e[tag=mcscriptTags] remove isCool
+  execute if entity @e[tag=mcscriptTags,tag=isCool] run say he is cool
 
-    tag @s add isBad
-    tag @s remove isBad
-    execute if entity @s[tag=isBad] run say he is bad
+  tag @s add isBad
+  tag @s remove isBad
+  execute if entity @s[tag=isBad] run say he is bad
   `.trim()}
 </ShikiHighlighter>
 
@@ -328,7 +360,7 @@ import { customTransformer } from '../utils/shikiTransformers';
 
 // hook
 const highlightedCode = useShikiHighlighter(code, "tsx", "github-dark", [customTransformer]);
-`}
+`.trim()}
 </ShikiHighlighter>
 
 ## Performance
