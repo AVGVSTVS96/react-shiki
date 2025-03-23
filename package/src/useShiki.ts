@@ -27,6 +27,7 @@ import {
   throttleHighlighting,
   resolveLanguage,
   resolveTheme,
+  resolveCustomLanguagesKey,
 } from './utils';
 
 // Use Shiki managed singleton for bundled languages, create and cache a fresh instance for custom languages
@@ -76,6 +77,13 @@ export const useShikiHighlighter = (
         : [options.customLanguages]
       : [];
 
+  const transformers = [
+    removeTabIndexFromPre,
+    ...(options.transformers || []),
+  ];
+
+  const transformersKey = transformers.length || 0;
+
   const {
     isMultiTheme,
     themeKey,
@@ -86,6 +94,10 @@ export const useShikiHighlighter = (
 
   const { isCustom, languageId, resolvedLanguage } = resolveLanguage(
     lang,
+    normalizedCustomLanguages
+  );
+
+  const customLangKey = resolveCustomLanguagesKey(
     normalizedCustomLanguages
   );
 
@@ -109,11 +121,6 @@ export const useShikiHighlighter = (
     }
     return instance;
   };
-
-  const transformers = [
-    removeTabIndexFromPre,
-    ...(options.transformers || []),
-  ];
 
   useEffect(() => {
     let isMounted = true;
@@ -166,9 +173,9 @@ export const useShikiHighlighter = (
     code,
     lang,
     themeKey,
+    customLangKey,
+    transformersKey,
     options.delay,
-    JSON.stringify(options.customLanguages),
-    JSON.stringify(options.transformers),
     options.defaultColor,
     options.cssVariablePrefix,
   ]);

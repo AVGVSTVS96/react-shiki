@@ -207,3 +207,10 @@ export function resolveTheme(themeInput: Theme | Themes): {
     themesToLoad: [themeInput as Theme],
   };
 }
+
+export function resolveCustomLanguagesKey(
+  customLanguages?: LanguageRegistration[]
+): string {
+  if (!customLanguages) return '';
+  return customLanguages.map((lang) => lang.name || '').join('-');
+}
