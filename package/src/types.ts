@@ -4,8 +4,6 @@ import type {
   BundledTheme,
   ThemeRegistration,
   ShikiTransformer,
-  StringLiteralUnion,
-  ThemeRegistrationAny,
   CodeOptionsMultipleThemes,
 } from 'shiki';
 
@@ -31,14 +29,9 @@ type Theme = ThemeRegistration | BundledTheme;
 /**
  * Multi-theme configuration for light/dark theme support
  * @see https://shiki.style/guide/dual-themes
+ * @example { light: 'github-light', dark: 'github-dark' }
  */
 type Themes = CodeOptionsMultipleThemes<BundledTheme>['themes'];
-// type Themes = Partial<
-//   Record<
-//     string,
-//     ThemeRegistrationAny | StringLiteralUnion<BundledTheme, string>
-//   >
-// >;
 
 /**
  * Configuration options for the syntax highlighter

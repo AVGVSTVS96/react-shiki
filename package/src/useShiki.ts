@@ -5,6 +5,7 @@ import parse from 'html-react-parser';
 import {
   createHighlighter,
   createSingletonShorthands,
+  type CodeToHastOptions,
   type Highlighter,
   type ThemeRegistration,
 } from 'shiki';
@@ -31,8 +32,25 @@ import {
 } from './utils';
 
 // Use Shiki managed singleton for bundled languages, create and cache a fresh instance for custom languages
-const highlighter = createSingletonShorthands(createHighlighter);
+const bundledHighlighter = createSingletonShorthands(createHighlighter);
 const customLangHighlighter = new Map<string, Promise<Highlighter>>();
+
+const getCachedCustomHighlighter = async (
+  cacheKey: string,
+  customLang: LanguageRegistration,
+  themesToLoad: Theme[]
+) => {
+  let instance = customLangHighlighter.get(cacheKey);
+
+  if (!instance) {
+    instance = createHighlighter({
+      langs: [customLang as ShikiLanguageRegistration],
+      themes: themesToLoad as ThemeRegistration[],
+    });
+    customLangHighlighter.set(cacheKey, instance);
+  }
+  return instance;
+};
 
 /**
  * A React hook that provides syntax highlighting using Shiki.
@@ -97,6 +115,8 @@ export const useShikiHighlighter = (
     normalizedCustomLanguages
   );
 
+  const cacheKey = `${resolvedLanguage?.name}-${themeKey}`;
+
   const customLangKey = resolveCustomLanguagesKey(
     normalizedCustomLanguages
   );
@@ -106,22 +126,6 @@ export const useShikiHighlighter = (
     timeoutId: undefined,
   });
 
-  const getCachedCustomHighlighter = async (
-    cacheKey: string,
-    customLang: LanguageRegistration
-  ) => {
-    let instance = customLangHighlighter.get(cacheKey);
-
-    if (!instance) {
-      instance = createHighlighter({
-        langs: [customLang as ShikiLanguageRegistration],
-        themes: themesToLoad as ThemeRegistration[],
-      });
-      customLangHighlighter.set(cacheKey, instance);
-    }
-    return instance;
-  };
-
   useEffect(() => {
     let isMounted = true;
 
@@ -129,12 +133,13 @@ export const useShikiHighlighter = (
       const codeHighlighter =
         isCustom && resolvedLanguage
           ? await getCachedCustomHighlighter(
-              `${resolvedLanguage.name}--${themeKey}`,
-              resolvedLanguage
+              cacheKey,
+              resolvedLanguage,
+              themesToLoad
             )
-          : highlighter;
+          : bundledHighlighter;
 
-      const highlightOptions = isMultiTheme
+      const highlightOptions: CodeToHastOptions = isMultiTheme
         ? {
             themes: multiTheme,
             defaultColor: options.defaultColor,

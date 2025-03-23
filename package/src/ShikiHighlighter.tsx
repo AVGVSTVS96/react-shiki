@@ -4,9 +4,7 @@ import React from 'react';
 import { clsx } from 'clsx';
 import { useShikiHighlighter } from './useShiki';
 import type { Language, Theme, HighlighterOptions, Themes } from './types';
-// import type { ShikiTransformer } from 'shiki';
 import { resolveLanguage } from './utils';
-// import type { LanguageRegistration } from './customTypes';
 
 /**
  * Props for the ShikiHighlighter component
