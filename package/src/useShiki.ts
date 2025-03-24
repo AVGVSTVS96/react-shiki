@@ -1,4 +1,10 @@
-import { useEffect, useRef, useState, type ReactNode } from 'react';
+import {
+  useEffect,
+  useMemo,
+  useRef,
+  useState,
+  type ReactNode,
+} from 'react';
 
 import parse from 'html-react-parser';
 
@@ -99,6 +105,7 @@ export const useShikiHighlighter = (
   const [highlightedCode, setHighlightedCode] =
     useState<ReactNode | null>(null);
 
+  console.log('useShikiHighlighter invoked');
   const normalizedCustomLanguages: LanguageRegistration[] =
     options.customLanguages
       ? Array.isArray(options.customLanguages)
@@ -106,12 +113,9 @@ export const useShikiHighlighter = (
         : [options.customLanguages]
       : [];
 
-  const transformers = [
-    removeTabIndexFromPre,
-    ...(options.transformers || []),
-  ];
-
-  const transformersKey = transformers.length || 0;
+  const transformers = useMemo(() => {
+    return [removeTabIndexFromPre, ...(options.transformers || [])];
+  }, [options.transformers]);
 
   const {
     isMultiTheme,
@@ -119,18 +123,18 @@ export const useShikiHighlighter = (
     multiTheme,
     singleTheme,
     themesToLoad,
-  } = resolveTheme(themeInput);
-
-  const { isCustom, languageId, resolvedLanguage } = resolveLanguage(
-    lang,
-    normalizedCustomLanguages
-  );
-
-  const cacheKey = `${resolvedLanguage?.name}-${themeKey}`;
+  } = useMemo(() => resolveTheme(themeInput), [themeInput]);
 
   const customLangKey = resolveCustomLanguagesKey(
     normalizedCustomLanguages
   );
+
+  const { isCustom, languageId, resolvedLanguage } = useMemo(
+    () => resolveLanguage(lang, normalizedCustomLanguages),
+    [lang, customLangKey]
+  );
+
+  const cacheKey = `${languageId}-${themeKey}`;
 
   const timeoutControl = useRef<TimeoutState>({
     nextAllowedTime: 0,
@@ -187,10 +191,10 @@ export const useShikiHighlighter = (
     };
   }, [
     code,
-    lang,
+    languageId,
     themeKey,
     customLangKey,
-    transformersKey,
+    transformers,
     options.delay,
     options.defaultColor,
     options.cssVariablePrefix,
