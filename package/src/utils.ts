@@ -173,7 +173,7 @@ export const resolveLanguage = (
 
 export function resolveTheme(themeInput: Theme | Themes): {
   isMultiTheme: boolean;
-  themeKey: string;
+  themeKey: Theme;
   multiTheme: Themes;
   singleTheme?: Theme | undefined;
   themesToLoad: Theme[];
@@ -200,7 +200,7 @@ export function resolveTheme(themeInput: Theme | Themes): {
     themeKey:
       typeof themeInput === 'string'
         ? themeInput
-        : (themeInput?.name as string) || 'custom',
+        : themeInput?.name || 'custom',
 
     multiTheme: {},
     singleTheme: themeInput as Theme,
