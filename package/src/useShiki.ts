@@ -34,7 +34,6 @@ import {
   throttleHighlighting,
   resolveLanguage,
   resolveTheme,
-  resolveCustomLanguagesKey,
 } from './utils';
 
 // Use Shiki managed singleton for bundled languages, create and cache a fresh instance for custom languages
@@ -105,13 +104,16 @@ export const useShikiHighlighter = (
   const [highlightedCode, setHighlightedCode] =
     useState<ReactNode | null>(null);
 
-  console.log('useShikiHighlighter invoked');
   const normalizedCustomLanguages: LanguageRegistration[] =
     options.customLanguages
       ? Array.isArray(options.customLanguages)
         ? options.customLanguages
         : [options.customLanguages]
       : [];
+
+  const customLangKey = normalizedCustomLanguages
+    .map((lang) => lang.name || '')
+    .join('-');
 
   const transformers = useMemo(() => {
     return [removeTabIndexFromPre, ...(options.transformers || [])];
@@ -124,10 +126,6 @@ export const useShikiHighlighter = (
     singleTheme,
     themesToLoad,
   } = useMemo(() => resolveTheme(themeInput), [themeInput]);
-
-  const customLangKey = resolveCustomLanguagesKey(
-    normalizedCustomLanguages
-  );
 
   const { isCustom, languageId, resolvedLanguage } = useMemo(
     () => resolveLanguage(lang, normalizedCustomLanguages),

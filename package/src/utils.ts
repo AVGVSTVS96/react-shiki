@@ -203,14 +203,7 @@ export function resolveTheme(themeInput: Theme | Themes): {
         : themeInput?.name || 'custom',
 
     multiTheme: {},
-    singleTheme: themeInput as Theme,
-    themesToLoad: [themeInput as Theme],
+    singleTheme: themeInput,
+    themesToLoad: [themeInput],
   };
-}
-
-export function resolveCustomLanguagesKey(
-  customLanguages?: LanguageRegistration[]
-): string {
-  if (!customLanguages) return '';
-  return customLanguages.map((lang) => lang.name || '').join('-');
 }
