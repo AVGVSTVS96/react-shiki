@@ -84,7 +84,13 @@ export interface ShikiHighlighterProps extends HighlighterOptions {
  * <ShikiHighlighter
  *   language="typescript"
  *   theme="github-dark"
- *   delay={100} // Optional throttling for streamed updates
+ *   delay={100}
+ *   transformers={[customTransformer]}
+ *   addDefaultStyles={false}
+ *   className="code-block"
+ *   langClassName="lang-label"
+ *   langStyle={{ color: 'blue' }},
+ *   style={{ fontSize: '1.2rem' }}
  * >
  *   {code}
  * </ShikiHighlighter>
