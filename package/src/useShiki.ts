@@ -11,9 +11,10 @@ import parse from 'html-react-parser';
 import {
   createHighlighter,
   createSingletonShorthands,
-  type CodeToHastOptions,
   type Highlighter,
-  type ThemeRegistration,
+  type CodeToHastOptions,
+  type CodeOptionsSingleTheme,
+  type CodeOptionsMultipleThemes,
 } from 'shiki';
 
 import type {
@@ -50,7 +51,7 @@ const getCachedCustomHighlighter = async (
   if (!instance) {
     instance = createHighlighter({
       langs: [customLang as ShikiLanguageRegistration],
-      themes: themesToLoad as ThemeRegistration[],
+      themes: themesToLoad,
     });
     customLangHighlighter.set(cacheKey, instance);
   }
@@ -139,6 +140,23 @@ export const useShikiHighlighter = (
     timeoutId: undefined,
   });
 
+  const buildShikiOptions = (): CodeToHastOptions => {
+    const { defaultColor, cssVariablePrefix } = options;
+    const commonOptions = { lang: languageId, transformers };
+
+    const themeOptions = isMultiTheme
+      ? ({
+          themes: multiTheme,
+          defaultColor,
+          cssVariablePrefix,
+        } as CodeOptionsMultipleThemes)
+      : ({
+          theme: singleTheme || 'github-dark',
+        } as CodeOptionsSingleTheme);
+
+    return { ...commonOptions, ...themeOptions };
+  };
+
   useEffect(() => {
     let isMounted = true;
 
@@ -152,23 +170,11 @@ export const useShikiHighlighter = (
             )
           : bundledHighlighter;
 
-      const highlightOptions: CodeToHastOptions = isMultiTheme
-        ? {
-            themes: multiTheme,
-            defaultColor: options.defaultColor,
-            cssVariablePrefix: options.cssVariablePrefix,
-            lang: languageId,
-            transformers,
-          }
-        : {
-            theme: singleTheme || 'github-dark',
-            lang: languageId,
-            transformers,
-          };
+      const highlighterOptions: CodeToHastOptions = buildShikiOptions();
 
       const html = await codeHighlighter.codeToHtml(
         code,
-        highlightOptions
+        highlighterOptions
       );
       if (isMounted) {
         setHighlightedCode(parse(html));
