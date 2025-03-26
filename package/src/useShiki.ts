@@ -122,7 +122,7 @@ export const useShikiHighlighter = (
 
   const {
     isMultiTheme,
-    themeKey,
+    themeId,
     multiTheme,
     singleTheme,
     themesToLoad,
@@ -133,7 +133,7 @@ export const useShikiHighlighter = (
     [lang, customLangKey]
   );
 
-  const cacheKey = `${languageId}-${themeKey}`;
+  const cacheKey = `${languageId}-${themeId}`;
 
   const timeoutControl = useRef<TimeoutState>({
     nextAllowedTime: 0,
@@ -196,7 +196,7 @@ export const useShikiHighlighter = (
   }, [
     code,
     languageId,
-    themeKey,
+    themeId,
     customLangKey,
     transformers,
     options.delay,

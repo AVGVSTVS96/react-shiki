@@ -167,9 +167,12 @@ export const resolveLanguage = (
   };
 };
 
+/**
+ * Resolves the theme input and returns an object with metadata
+ */
 export function resolveTheme(themeInput: Theme | Themes): {
   isMultiTheme: boolean;
-  themeKey: Theme;
+  themeId: Theme;
   multiTheme: Themes | ThemeRegistrationAny;
   singleTheme?: Theme | undefined;
   themesToLoad: Theme[];
@@ -184,7 +187,7 @@ export function resolveTheme(themeInput: Theme | Themes): {
   if (isMultiTheme) {
     return {
       isMultiTheme: true,
-      themeKey: `multi-${Object.values(themeInput)
+      themeId: `multi-${Object.values(themeInput)
         .map((theme) =>
           typeof theme === 'string' ? theme : theme.name || 'custom'
         )
@@ -197,7 +200,7 @@ export function resolveTheme(themeInput: Theme | Themes): {
 
   return {
     isMultiTheme: false,
-    themeKey:
+    themeId:
       typeof themeInput === 'string'
         ? themeInput
         : themeInput?.name || 'custom',
