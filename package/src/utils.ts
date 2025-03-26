@@ -1,7 +1,7 @@
 import { visit } from 'unist-util-visit';
 import { bundledLanguages, isSpecialLang } from 'shiki';
-import type { ShikiTransformer } from 'shiki';
-import type { Element, Root } from 'hast';
+import type { ShikiTransformer, ThemeRegistrationAny } from 'shiki';
+import type { Element } from 'hast';
 import type { Language, Theme, Themes, TimeoutState } from './types';
 import type { LanguageRegistration } from './customTypes';
 
@@ -21,16 +21,12 @@ export type { Element };
  * <ReactMarkdown rehypePlugins={[rehypeInlineCodeProperty]} />
  */
 export function rehypeInlineCodeProperty() {
-  return (tree: Root): undefined => {
-    visit(
-      tree as any,
-      'element',
-      (node: Element, _index, parent: Element) => {
-        if (node.tagName === 'code' && parent.tagName !== 'pre') {
-          node.properties.inline = true;
-        }
+  return (tree: any): undefined => {
+    visit(tree, 'element', (node: Element, _index, parent: Element) => {
+      if (node.tagName === 'code' && parent.tagName !== 'pre') {
+        node.properties.inline = true;
       }
-    );
+    });
   };
 }
 
@@ -174,7 +170,7 @@ export const resolveLanguage = (
 export function resolveTheme(themeInput: Theme | Themes): {
   isMultiTheme: boolean;
   themeKey: Theme;
-  multiTheme: Themes;
+  multiTheme: Themes | ThemeRegistrationAny;
   singleTheme?: Theme | undefined;
   themesToLoad: Theme[];
 } {
@@ -194,7 +190,7 @@ export function resolveTheme(themeInput: Theme | Themes): {
         )
         .join('-')}`,
 
-      multiTheme: themeInput as Themes,
+      multiTheme: themeInput,
       themesToLoad: Object.values(themeInput),
     };
   }
