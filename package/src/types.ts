@@ -4,7 +4,8 @@ import type {
   BundledTheme,
   ShikiTransformer,
   CodeOptionsMultipleThemes,
-  CodeOptionsSingleTheme,
+  ThemeRegistrationAny,
+  StringLiteralUnion,
 } from 'shiki';
 
 import type { LanguageRegistration } from './customTypes';
@@ -24,7 +25,7 @@ type Language =
  * A Shiki BundledTheme or a custom textmate theme object
  * @see https://shiki.style/themes
  */
-type Theme = CodeOptionsSingleTheme<BundledTheme>['theme'];
+type Theme = ThemeRegistrationAny | StringLiteralUnion<BundledTheme>;
 
 /**
  * A map of color names to themes.
@@ -42,7 +43,9 @@ type Theme = CodeOptionsSingleTheme<BundledTheme>['theme'];
  *
  * @see https://shiki.style/guide/dual-themes
  */
-type Themes = CodeOptionsMultipleThemes<BundledTheme>['themes'];
+type Themes = {
+  [key: string]: ThemeRegistrationAny | StringLiteralUnion<BundledTheme>;
+};
 
 /**
  * Configuration options for the syntax highlighter
