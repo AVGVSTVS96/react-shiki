@@ -112,7 +112,7 @@ export const useShikiHighlighter = (
         : [options.customLanguages]
       : [];
 
-  const customLangKey = normalizedCustomLanguages
+  const customLangId = normalizedCustomLanguages
     .map((lang) => lang.name || '')
     .join('-');
 
@@ -130,7 +130,7 @@ export const useShikiHighlighter = (
 
   const { isCustom, languageId, resolvedLanguage } = useMemo(
     () => resolveLanguage(lang, normalizedCustomLanguages),
-    [lang, customLangKey]
+    [lang, customLangId]
   );
 
   const cacheKey = `${languageId}-${themeId}`;
@@ -197,7 +197,7 @@ export const useShikiHighlighter = (
     code,
     languageId,
     themeId,
-    customLangKey,
+    customLangId,
     transformers,
     options.delay,
     options.defaultColor,
