@@ -3,7 +3,12 @@ import './styles.css';
 import React from 'react';
 import { clsx } from 'clsx';
 import { useShikiHighlighter } from './useShiki';
-import type { Language, Theme, HighlighterOptions, Themes } from './types';
+import type {
+  Language,
+  Theme,
+  HighlighterOptions,
+  Themes,
+} from './types';
 import { resolveLanguage } from './utils';
 
 /**
@@ -112,7 +117,6 @@ export const ShikiHighlighter = ({
   children: code,
   as: Element = 'pre',
   customLanguages,
-
 }: ShikiHighlighterProps): React.ReactElement => {
   const options: HighlighterOptions = {
     delay,

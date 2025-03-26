@@ -27,21 +27,21 @@ type Language =
 type Theme = CodeOptionsSingleTheme<BundledTheme>['theme'];
 
 /**
-  * A map of color names to themes.
-  * This allows you to specify multiple themes for the generated code.
-  * Supports custom textmate theme objects in addition to Shiki's bundled themes
-  *
-  * @example
-  * ```ts
-  * useShikiHighlighter(code, language, {
-  *   light: 'github-light',
-  *   dark: 'github-dark',
-  *   dim: 'github-dark-dimmed'
-  * })
-  * ```
-  *
-  * @see https://shiki.style/guide/dual-themes
-  */
+ * A map of color names to themes.
+ * This allows you to specify multiple themes for the generated code.
+ * Supports custom textmate theme objects in addition to Shiki's bundled themes
+ *
+ * @example
+ * ```ts
+ * useShikiHighlighter(code, language, {
+ *   light: 'github-light',
+ *   dark: 'github-dark',
+ *   dim: 'github-dark-dimmed'
+ * })
+ * ```
+ *
+ * @see https://shiki.style/guide/dual-themes
+ */
 type Themes = CodeOptionsMultipleThemes<BundledTheme>['themes'];
 
 /**
