@@ -179,7 +179,9 @@ export function resolveTheme(themeInput: Theme | Themes): {
   themesToLoad: Theme[];
 } {
   const isMultiTheme =
-    typeof themeInput === 'object' && !('name' in themeInput);
+    typeof themeInput === 'object' &&
+    themeInput !== null &&
+    !('tokenColors' in themeInput);
 
   if (isMultiTheme) {
     return {
