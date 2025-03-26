@@ -120,13 +120,8 @@ export const useShikiHighlighter = (
     return [removeTabIndexFromPre, ...(options.transformers || [])];
   }, [options.transformers]);
 
-  const {
-    isMultiTheme,
-    themeId,
-    multiTheme,
-    singleTheme,
-    themesToLoad,
-  } = useMemo(() => resolveTheme(themeInput), [themeInput]);
+  const { isMultiTheme, themeId, multiTheme, singleTheme, themesToLoad } =
+    useMemo(() => resolveTheme(themeInput), [themeInput]);
 
   const { isCustom, languageId, resolvedLanguage } = useMemo(
     () => resolveLanguage(lang, normalizedCustomLanguages),
@@ -189,9 +184,7 @@ export const useShikiHighlighter = (
 
     return () => {
       isMounted = false;
-      if (timeoutControl.current.timeoutId) {
-        clearTimeout(timeoutControl.current.timeoutId);
-      }
+      clearTimeout(timeoutControl.current.timeoutId);
     };
   }, [
     code,
