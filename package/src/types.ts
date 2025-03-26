@@ -4,6 +4,7 @@ import type {
   BundledTheme,
   ShikiTransformer,
   CodeOptionsMultipleThemes,
+  CodeToHastOptionsCommon,
   ThemeRegistrationAny,
   StringLiteralUnion,
 } from 'shiki';
@@ -50,7 +51,7 @@ type Themes = {
 /**
  * Configuration options for the syntax highlighter
  */
-type CommonHighlightOptions = {
+type ReactShikiOptions = {
   /**
    * Minimum time (in milliseconds) between highlight operations.
    * @default undefined (no throttling)
@@ -58,21 +59,17 @@ type CommonHighlightOptions = {
   delay?: number;
 
   /**
-   * Custom Shiki transformers to apply to the highlighted code.
-   */
-  transformers?: ShikiTransformer[];
-
-  /**
    * Custom textmate grammars to be preloaded for highlighting.
    */
   customLanguages?: LanguageRegistration | LanguageRegistration[];
 };
 
-type HighlighterOptions = CommonHighlightOptions &
+type HighlighterOptions = ReactShikiOptions &
   Pick<
     CodeOptionsMultipleThemes<BundledTheme>,
     'defaultColor' | 'cssVariablePrefix'
-  >;
+  > &
+  Pick<CodeToHastOptionsCommon, 'transformers'>;
 
 /**
  * State for the throttling logic
