@@ -102,7 +102,7 @@ function CustomCodeBlock({ code, language }) {
 | Param | Type | Description |
 |------|------|---------|
 | `code` | `string` | The code to be highlighted |
-| `language` | `string \| object` | The language of the code to be highlighted |
+| `language` | `string \| object` | The language for highlighting |
 | `themeInput` | `string \| object` | The theme or themes to be used for highlighting |
 | `options` | `object` | Optional configuration options |
 
@@ -110,7 +110,7 @@ function CustomCodeBlock({ code, language }) {
 | Param | Type | Default | Description |
 |------|------|---------|-------------|
 | `delay` | `number` | `0` (disabled) | The delay between highlights in milliseconds |
-| `transformers` | `array` | `[]` | Custom Shiki transformers |
+| `transformers` | `array` | `[]` | Transformers for the Shiki pipeline |
 | `customLanguages` | `array` | `[]` | Custom languages to preload |
 | `cssVariablePrefix` | `string` | `'--shiki'` | Prefix of CSS variables used to store theme colors |
 | `defaultColor` | `string` | `'light'` | The default theme mode when using multiple themes. Can be set to `false` to disable the default theme |
