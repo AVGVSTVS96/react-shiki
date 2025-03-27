@@ -97,7 +97,7 @@ type ResolvedLanguage = {
 
 /**
  * Determines whether a language is custom or built-in, normalizes
- * the language identifier and returns an object with metadata
+ * the language identifier and returns the resolved language with metadata
  *
  * @param lang - The language identifier, either as a string name or language object
  * @param customLanguages - Optional array of custom language definitions
@@ -168,27 +168,47 @@ export const resolveLanguage = (
 };
 
 /**
- * Resolves the theme input and returns an object with metadata
+ * Determines theme configuration and returns the resolved theme with metadata
+ * @param themeInput - The theme input, either as a string name or theme object
+ * @returns Object containing:
+ *   - isMultiTheme: If theme input is a multi-theme configuration
+ *   - themeId: Theme reference identifier
+ *   - multiTheme: The multi-theme config if it exists
+ *   - singleTheme: The single theme if it exists
+ *   - themesToLoad: The themes to load when creating the highlighter
  */
 export function resolveTheme(themeInput: Theme | Themes): {
   isMultiTheme: boolean;
   themeId: Theme;
-  multiTheme: Themes | ThemeRegistrationAny | null;
+  multiTheme?: Themes | ThemeRegistrationAny | null;
   singleTheme?: Theme | undefined;
   themesToLoad: Theme[];
 } {
-  const isMultiTheme =
+  const isTextmateTheme =
+    typeof themeInput === 'object' &&
+    'tokenColors' in themeInput &&
+    Array.isArray(themeInput.tokenColors);
+
+  // Assume non textmate objects are multi theme configs
+  const isMultiThemeConfig =
     typeof themeInput === 'object' &&
     themeInput !== null &&
-    !(
-      'tokenColors' in themeInput && Array.isArray(themeInput.tokenColors)
+    !isTextmateTheme;
+
+  const validMultiThemeObj =
+    typeof themeInput === 'object' &&
+    themeInput !== null &&
+    !isTextmateTheme &&
+    Object.entries(themeInput).some(
+      ([key, value]) =>
+        key &&
+        value &&
+        key.trim() !== '' &&
+        value !== '' &&
+        (typeof value === 'string' || isTextmateTheme)
     );
 
-  if (isMultiTheme) {
-    const validMultiThemeObj = Object.entries(themeInput).some(
-      ([key, value]) => key && key.trim() !== '' && value && value !== ''
-    );
-
+  if (isMultiThemeConfig) {
     const themeId = validMultiThemeObj
       ? `multi-${Object.values(themeInput)
           .map(
@@ -199,7 +219,7 @@ export function resolveTheme(themeInput: Theme | Themes): {
           .join('-')}`
       : 'multi-default';
 
-    // If invalid return null to handle fallback in `buildShikiOptions()`
+    // If config is invalid, return null to handle fallback in `buildShikiOptions()`
     return {
       isMultiTheme: true,
       themeId,
@@ -207,14 +227,13 @@ export function resolveTheme(themeInput: Theme | Themes): {
       themesToLoad: validMultiThemeObj ? Object.values(themeInput) : [],
     };
   }
+
   return {
     isMultiTheme: false,
     themeId:
       typeof themeInput === 'string'
         ? themeInput
         : themeInput?.name || 'custom',
-
-    multiTheme: {},
     singleTheme: themeInput,
     themesToLoad: [themeInput],
   };
