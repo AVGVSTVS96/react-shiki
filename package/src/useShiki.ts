@@ -141,7 +141,10 @@ export const useShikiHighlighter = (
 
     const themeOptions = isMultiTheme
       ? ({
-          themes: multiTheme,
+          themes: multiTheme || {
+            light: 'github-light',
+            dark: 'github-dark',
+          },
           defaultColor,
           cssVariablePrefix,
         } as CodeOptionsMultipleThemes)

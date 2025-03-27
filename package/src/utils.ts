@@ -173,7 +173,7 @@ export const resolveLanguage = (
 export function resolveTheme(themeInput: Theme | Themes): {
   isMultiTheme: boolean;
   themeId: Theme;
-  multiTheme: Themes | ThemeRegistrationAny;
+  multiTheme: Themes | ThemeRegistrationAny | null;
   singleTheme?: Theme | undefined;
   themesToLoad: Theme[];
 } {
@@ -185,19 +185,28 @@ export function resolveTheme(themeInput: Theme | Themes): {
     );
 
   if (isMultiTheme) {
+    const validMultiThemeObj = Object.entries(themeInput).some(
+      ([key, value]) => key && key.trim() !== '' && value && value !== ''
+    );
+
+    const themeId = validMultiThemeObj
+      ? `multi-${Object.values(themeInput)
+          .map(
+            (theme) =>
+              (typeof theme === 'string' ? theme : theme?.name) ||
+              'custom'
+          )
+          .join('-')}`
+      : 'multi-default';
+
+    // If invalid return null to handle fallback in `buildShikiOptions()`
     return {
       isMultiTheme: true,
-      themeId: `multi-${Object.values(themeInput)
-        .map((theme) =>
-          typeof theme === 'string' ? theme : theme.name || 'custom'
-        )
-        .join('-')}`,
-
-      multiTheme: themeInput,
-      themesToLoad: Object.values(themeInput),
+      themeId,
+      multiTheme: validMultiThemeObj ? themeInput : null,
+      themesToLoad: validMultiThemeObj ? Object.values(themeInput) : [],
     };
   }
-
   return {
     isMultiTheme: false,
     themeId:
