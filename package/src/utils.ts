@@ -216,6 +216,7 @@ export function resolveTheme(themeInput: Theme | Themes): {
               (typeof theme === 'string' ? theme : theme?.name) ||
               'custom'
           )
+          .sort()
           .join('-')}`
       : 'multi-default';
 

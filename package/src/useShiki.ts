@@ -114,6 +114,7 @@ export const useShikiHighlighter = (
 
   const customLangId = normalizedCustomLanguages
     .map((lang) => lang.name || '')
+    .sort()
     .join('-');
 
   const transformers = useMemo(() => {
