@@ -1,5 +1,5 @@
-export { ShikiHighlighter as default } from './ShikiHighlighter';
-export { useShikiHighlighter } from './useShiki';
+export { ShikiHighlighter as default } from './component';
+export { useShikiHighlighter } from './hook';
 
 export {
   isInlineCode,

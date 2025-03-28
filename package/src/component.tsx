@@ -2,7 +2,7 @@ import './styles.css';
 // biome-ignore lint/style/useImportType: React import is needed
 import React from 'react';
 import { clsx } from 'clsx';
-import { useShikiHighlighter } from './useShiki';
+import { useShikiHighlighter } from './hook';
 import type {
   Language,
   Theme,
