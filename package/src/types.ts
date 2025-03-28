@@ -49,7 +49,7 @@ type Themes = {
 };
 
 /**
- * Configuration options for the syntax highlighter
+ * Configuration options specific to react-shiki
  */
 type ReactShikiOptions = {
   /**
@@ -64,6 +64,9 @@ type ReactShikiOptions = {
   customLanguages?: LanguageRegistration | LanguageRegistration[];
 };
 
+/**
+ * Configuration options for the syntax highlighter
+ */
 type HighlighterOptions = ReactShikiOptions &
   Pick<
     CodeOptionsMultipleThemes<BundledTheme>,
