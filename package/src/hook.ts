@@ -20,7 +20,7 @@ import {
 import type {
   LanguageRegistration,
   ShikiLanguageRegistration,
-} from './customTypes';
+} from './extended-types';
 
 import type {
   Language,
