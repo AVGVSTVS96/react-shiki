@@ -1,11 +1,15 @@
 import './styles.css';
+// biome-ignore lint/style/useImportType: React import is needed
 import React from 'react';
 import { clsx } from 'clsx';
 import { useShikiHighlighter } from './useShiki';
-import type { Language, Theme, HighlighterOptions } from './types';
-import type { ShikiTransformer } from 'shiki';
+import type {
+  Language,
+  Theme,
+  HighlighterOptions,
+  Themes,
+} from './types';
 import { resolveLanguage } from './utils';
-import type { LanguageRegistration } from './customTypes';
 
 /**
  * Props for the ShikiHighlighter component
@@ -13,6 +17,7 @@ import type { LanguageRegistration } from './customTypes';
 export interface ShikiHighlighterProps extends HighlighterOptions {
   /**
    * The programming language for syntax highlighting
+   * Supports custom textmate grammar objects in addition to Shiki's bundled languages
    * @see https://shiki.style/languages
    */
   language: Language;
@@ -23,23 +28,17 @@ export interface ShikiHighlighterProps extends HighlighterOptions {
   children: string;
 
   /**
-   * The color theme for syntax highlighting
-   * Supports Shiki and custom textmate themes
+   * The color theme or themes for syntax highlighting
+   * Supports single, dual, or multiple themes
+   * Supports custom textmate theme objects in addition to Shiki's bundled themes
+   *
+   * @example
+   * theme='github-dark' // single theme
+   * theme={{ light: 'github-light', dark: 'github-dark' }} // multi-theme
+   *
    * @see https://shiki.style/themes
    */
-  theme: Theme;
-
-  /**
-   * The delay in milliseconds between streamed updates
-   * Use this when highlighting code being streamed on the client
-   * @default undefined (no delay)
-   */
-  delay?: number;
-
-  /**
-   * Pass custom Shiki transformers to the highlighter
-   */
-  transformers?: ShikiTransformer[];
+  theme: Theme | Themes;
 
   /**
    * Controls the application of default styles to the generated code blocks
@@ -80,13 +79,7 @@ export interface ShikiHighlighterProps extends HighlighterOptions {
    * @default 'pre'
    */
   as?: React.ElementType;
-
-  /**
-   * Custom languages to be preloaded for highlighting.
-   */
-  customLanguages?: LanguageRegistration[];
 }
-
 /**
  * ShikiHighlighter is a React component that provides syntax highlighting for code snippets.
  * It uses Shiki to render beautiful, theme-based syntax highlighting with optimized performance.
@@ -96,7 +89,13 @@ export interface ShikiHighlighterProps extends HighlighterOptions {
  * <ShikiHighlighter
  *   language="typescript"
  *   theme="github-dark"
- *   delay={100} // Optional throttling for streamed updates
+ *   delay={100}
+ *   transformers={[customTransformer]}
+ *   addDefaultStyles={false}
+ *   className="code-block"
+ *   langClassName="lang-label"
+ *   langStyle={{ color: 'blue' }},
+ *   style={{ fontSize: '1.2rem' }}
  * >
  *   {code}
  * </ShikiHighlighter>
@@ -107,6 +106,8 @@ export const ShikiHighlighter = ({
   theme,
   delay,
   transformers,
+  defaultColor,
+  cssVariablePrefix,
   addDefaultStyles = true,
   style,
   langStyle,
@@ -121,6 +122,8 @@ export const ShikiHighlighter = ({
     delay,
     transformers,
     customLanguages,
+    defaultColor,
+    cssVariablePrefix,
   };
 
   const normalizedCustomLanguages = customLanguages

@@ -1,8 +1,8 @@
 import { visit } from 'unist-util-visit';
 import { bundledLanguages, isSpecialLang } from 'shiki';
-import type { ShikiTransformer } from 'shiki';
-import type { Element, Root } from 'hast';
-import type { Language, TimeoutState } from './types';
+import type { ShikiTransformer, ThemeRegistrationAny } from 'shiki';
+import type { Element } from 'hast';
+import type { Language, Theme, Themes, TimeoutState } from './types';
 import type { LanguageRegistration } from './customTypes';
 
 /**
@@ -21,16 +21,12 @@ export type { Element };
  * <ReactMarkdown rehypePlugins={[rehypeInlineCodeProperty]} />
  */
 export function rehypeInlineCodeProperty() {
-  return function (tree: Root): undefined {
-    visit(
-      tree as any,
-      'element',
-      function (node: Element, _index, parent: Element) {
-        if (node.tagName === 'code' && parent.tagName !== 'pre') {
-          node.properties.inline = true;
-        }
+  return (tree: any): undefined => {
+    visit(tree, 'element', (node: Element, _index, parent: Element) => {
+      if (node.tagName === 'code' && parent.tagName !== 'pre') {
+        node.properties.inline = true;
       }
-    );
+    });
   };
 }
 
@@ -101,7 +97,7 @@ type ResolvedLanguage = {
 
 /**
  * Determines whether a language is custom or built-in, normalizes
- * the language identifier and returns an object with metadata
+ * the language identifier and returns the resolved language with metadata
  *
  * @param lang - The language identifier, either as a string name or language object
  * @param customLanguages - Optional array of custom language definitions
@@ -170,3 +166,76 @@ export const resolveLanguage = (
     displayLanguageId: 'plaintext',
   };
 };
+
+/**
+ * Determines theme configuration and returns the resolved theme with metadata
+ * @param themeInput - The theme input, either as a string name or theme object
+ * @returns Object containing:
+ *   - isMultiTheme: If theme input is a multi-theme configuration
+ *   - themeId: Theme reference identifier
+ *   - multiTheme: The multi-theme config if it exists
+ *   - singleTheme: The single theme if it exists
+ *   - themesToLoad: The themes to load when creating the highlighter
+ */
+export function resolveTheme(themeInput: Theme | Themes): {
+  isMultiTheme: boolean;
+  themeId: Theme;
+  multiTheme?: Themes | ThemeRegistrationAny | null;
+  singleTheme?: Theme | undefined;
+  themesToLoad: Theme[];
+} {
+  const isTextmateTheme =
+    typeof themeInput === 'object' &&
+    'tokenColors' in themeInput &&
+    Array.isArray(themeInput.tokenColors);
+
+  // Assume non textmate objects are multi theme configs
+  const isMultiThemeConfig =
+    typeof themeInput === 'object' &&
+    themeInput !== null &&
+    !isTextmateTheme;
+
+  const validMultiThemeObj =
+    typeof themeInput === 'object' &&
+    themeInput !== null &&
+    !isTextmateTheme &&
+    Object.entries(themeInput).some(
+      ([key, value]) =>
+        key &&
+        value &&
+        key.trim() !== '' &&
+        value !== '' &&
+        (typeof value === 'string' || isTextmateTheme)
+    );
+
+  if (isMultiThemeConfig) {
+    const themeId = validMultiThemeObj
+      ? `multi-${Object.values(themeInput)
+          .map(
+            (theme) =>
+              (typeof theme === 'string' ? theme : theme?.name) ||
+              'custom'
+          )
+          .sort()
+          .join('-')}`
+      : 'multi-default';
+
+    // If config is invalid, return null to handle fallback in `buildShikiOptions()`
+    return {
+      isMultiTheme: true,
+      themeId,
+      multiTheme: validMultiThemeObj ? themeInput : null,
+      themesToLoad: validMultiThemeObj ? Object.values(themeInput) : [],
+    };
+  }
+
+  return {
+    isMultiTheme: false,
+    themeId:
+      typeof themeInput === 'string'
+        ? themeInput
+        : themeInput?.name || 'custom',
+    singleTheme: themeInput,
+    themesToLoad: [themeInput],
+  };
+}

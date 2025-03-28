@@ -9,7 +9,7 @@ export default defineConfig((options) => {
     target: 'es2022',
     dts: true,
     sourcemap: true,
-    clean: true,
+    clean: !dev,
     minify: !dev,
     injectStyle: true,
     external: [...Object.keys(peerDependencies)],

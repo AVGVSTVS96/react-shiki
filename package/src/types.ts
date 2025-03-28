@@ -2,14 +2,17 @@ import type {
   BundledLanguage,
   SpecialLanguage,
   BundledTheme,
-  ThemeRegistration,
   ShikiTransformer,
+  CodeOptionsMultipleThemes,
+  CodeToHastOptionsCommon,
+  ThemeRegistrationAny,
+  StringLiteralUnion,
 } from 'shiki';
 
 import type { LanguageRegistration } from './customTypes';
 
 /**
- * Languages for syntax highlighting.
+ * A Shiki BundledLanguage or a custom textmate grammar object
  * @see https://shiki.style/languages
  */
 type Language =
@@ -20,15 +23,35 @@ type Language =
   | undefined;
 
 /**
- * A textmate theme object or a Shiki BundledTheme
+ * A Shiki BundledTheme or a custom textmate theme object
  * @see https://shiki.style/themes
  */
-type Theme = ThemeRegistration | BundledTheme;
+type Theme = ThemeRegistrationAny | StringLiteralUnion<BundledTheme>;
+
+/**
+ * A map of color names to themes.
+ * This allows you to specify multiple themes for the generated code.
+ * Supports custom textmate theme objects in addition to Shiki's bundled themes
+ *
+ * @example
+ * ```ts
+ * useShikiHighlighter(code, language, {
+ *   light: 'github-light',
+ *   dark: 'github-dark',
+ *   dim: 'github-dark-dimmed'
+ * })
+ * ```
+ *
+ * @see https://shiki.style/guide/dual-themes
+ */
+type Themes = {
+  [key: string]: ThemeRegistrationAny | StringLiteralUnion<BundledTheme>;
+};
 
 /**
  * Configuration options for the syntax highlighter
  */
-type HighlighterOptions = {
+type ReactShikiOptions = {
   /**
    * Minimum time (in milliseconds) between highlight operations.
    * @default undefined (no throttling)
@@ -36,15 +59,17 @@ type HighlighterOptions = {
   delay?: number;
 
   /**
-   * Custom Shiki transformers to apply to the highlighted code.
-   */
-  transformers?: ShikiTransformer[];
-
-  /**
-   * Custom textmate grammar to be preloaded for highlighting.
+   * Custom textmate grammars to be preloaded for highlighting.
    */
   customLanguages?: LanguageRegistration | LanguageRegistration[];
 };
+
+type HighlighterOptions = ReactShikiOptions &
+  Pick<
+    CodeOptionsMultipleThemes<BundledTheme>,
+    'defaultColor' | 'cssVariablePrefix'
+  > &
+  Pick<CodeToHastOptionsCommon, 'transformers'>;
 
 /**
  * State for the throttling logic
@@ -60,4 +85,4 @@ type TimeoutState = {
   nextAllowedTime: number;
 };
 
-export type { Language, Theme, HighlighterOptions, TimeoutState };
+export type { Language, Theme, Themes, HighlighterOptions, TimeoutState };
