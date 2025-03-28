@@ -37,6 +37,11 @@ import {
   resolveTheme,
 } from './utils';
 
+const DEFAULT_THEMES = {
+  light: 'github-light',
+  dark: 'github-dark',
+};
+
 // Use Shiki managed singleton for bundled languages, create and cache a fresh instance for custom languages
 const bundledHighlighter = createSingletonShorthands(createHighlighter);
 const customLangHighlighter = new Map<string, Promise<Highlighter>>();
@@ -142,15 +147,12 @@ export const useShikiHighlighter = (
 
     const themeOptions = isMultiTheme
       ? ({
-          themes: multiTheme || {
-            light: 'github-light',
-            dark: 'github-dark',
-          },
+          themes: multiTheme || DEFAULT_THEMES,
           defaultColor,
           cssVariablePrefix,
         } as CodeOptionsMultipleThemes)
       : ({
-          theme: singleTheme || 'github-dark',
+          theme: singleTheme || DEFAULT_THEMES.dark,
         } as CodeOptionsSingleTheme);
 
     return { ...commonOptions, ...themeOptions };
