@@ -23,7 +23,9 @@ A performant client-side syntax highlighting component and hook for React, built
     - [Custom Languages](#custom-languages)
       - [Preloading Custom Languages](#preloading-custom-languages)
     - [Custom Transformers](#custom-transformers)
-  - [Performance](#performance) - [Throttling Real-time Highlighting](#throttling-real-time-highlighting) - [Streaming and LLM Chat UI](#streaming-and-llm-chat-ui)
+  - [Performance](#performance) 
+  - [Throttling Real-time Highlighting](#throttling-real-time-highlighting)
+  - [Streaming and LLM Chat UI](#streaming-and-llm-chat-ui)
   <!--toc:end-->
 
 ## Features
