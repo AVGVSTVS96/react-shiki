@@ -1,5 +1,11 @@
 # react-shiki
 
+## 0.5.0
+
+### Minor Changes
+
+- 5449efe: Add dual/multi theme support
+
 ## 0.4.1
 
 ### Patch Changes
