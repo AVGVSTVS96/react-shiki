@@ -14,7 +14,8 @@ A performant client-side syntax highlighting component and hook for React, built
   - [Features](#features)
   - [Installation](#installation)
   - [Usage](#usage)
-    - [Basic Usage](#basic-usage)
+    - [Common Configuration Options](#common-configuration-options)
+    - [Component-specific Props](#component-specific-props)
     - [Integration with react-markdown](#integration-with-react-markdown)
     - [Handling Inline Code](#handling-inline-code)
     - [Multi-theme Support](#multi-theme-support)
@@ -22,10 +23,8 @@ A performant client-side syntax highlighting component and hook for React, built
     - [Custom Languages](#custom-languages)
       - [Preloading Custom Languages](#preloading-custom-languages)
     - [Custom Transformers](#custom-transformers)
-  - [Performance](#performance)
-    - [Throttling Real-time Highlighting](#throttling-real-time-highlighting)
-    - [Streaming and LLM Chat UI](#streaming-and-llm-chat-ui)
-<!--toc:end-->
+  - [Performance](#performance) - [Throttling Real-time Highlighting](#throttling-real-time-highlighting) - [Streaming and LLM Chat UI](#streaming-and-llm-chat-ui)
+  <!--toc:end-->
 
 ## Features
 
@@ -44,19 +43,17 @@ A performant client-side syntax highlighting component and hook for React, built
 ## Installation
 
 ```bash
-npm install react-shiki
+npm i react-shiki
 ```
 
 ## Usage
-
-### Basic Usage
 
 You can use either the `ShikiHighlighter` component or the `useShikiHighlighter` hook to highlight code.
 
 **Using the Component:**
 
 ```tsx
-import { ShikiHighlighter } from 'react-shiki';
+import { ShikiHighlighter } from "react-shiki";
 
 function CodeBlock() {
   return (
@@ -67,57 +64,49 @@ function CodeBlock() {
 }
 ```
 
-The `ShikiHighlighter` component accepts the following props:
-
-| Prop | Type | Default | Description |
-|------|------|---------|-------------|
-| `language` | `string` | - | Language of the code to highlight |
-| `theme` | `string \| object` | 'github-dark' | Shiki theme to use |
-| `showLanguage` | `boolean` | true | Shows the language name in the top right corner |
-| `addDefaultStyles` | `boolean` | true | Adds default styling to the code block |
-| `as` | `string` | 'pre' | Root element to render |
-| `delay` | `number` | 0 | Delay between highlights in milliseconds |
-| `customLanguages` | `array` | - | Custom languages to preload |
-| `transformers` | `array` | - | Custom Shiki transformers |
-| `className` | `string` | - | Custom class names for the component |
-| `langClassName` | `string` | - | Class names for the language label |
-| `style` | `object` | - | Inline style object for the component |
-| `langStyle` | `object` | - | Inline style object for the language label |
-
-
 **Using the Hook:**
 
 ```tsx
-import { useShikiHighlighter } from 'react-shiki';
+import { useShikiHighlighter } from "react-shiki";
 
-function CustomCodeBlock({ code, language }) {
-  const highlightedCode = useShikiHighlighter(code, language, 'github-dark');
-  
-  return <div className="custom-code-block">{highlightedCode}</div>;
+function CodeBlock({ code, language }) {
+  const highlightedCode = useShikiHighlighter(code, language, "github-dark");
+
+  return <div className="code-block">{highlightedCode}</div>;
 }
 ```
 
-**The hook accepts the following parameters:**
+### Common Configuration Options
 
-| Param | Type | Description |
-|------|------|---------|
-| `code` | `string` | The code to be highlighted |
-| `language` | `string \| object` | The language for highlighting |
-| `themeInput` | `string \| object` | The theme or themes to be used for highlighting |
-| `options` | `object` | Optional configuration options |
+| Option              | Type               | Default         | Description                                                               |
+| ------------------- | ------------------ | --------------- | ------------------------------------------------------------------------- |
+| `code`            | `string`           | -               | Code to highlight                                                          |
+| `language`          | `string \| object` | -               | Language to highlight, built-in or custom textmate grammer object                                                         |
+| `theme`             | `string \| object` | `'github-dark'` | Single or multi-theme configuration, built-in or custom textmate theme object |
+| `delay`             | `number`           | `0`             | Delay between highlights (in milliseconds)                                    |
+| `transformers`      | `array`            | `[]`            | Custom Shiki transformers for modifying the highlighting output               |
+| `customLanguages`   | `array`            | `[]`            | Array of custom languages to preload                                          |
+| `cssVariablePrefix` | `string`           | `'--shiki'`     | Prefix for CSS variables storing theme colors                                 |
+| `defaultColor`      | `string \| false`  | `'light'`       | Default theme mode when using multiple themes, can also disable default theme |
 
-**`options`:**
-| Param | Type | Default | Description |
-|------|------|---------|-------------|
-| `delay` | `number` | `0` (disabled) | The delay between highlights in milliseconds |
-| `transformers` | `array` | `[]` | Transformers for the Shiki pipeline |
-| `customLanguages` | `array` | `[]` | Custom languages to preload |
-| `cssVariablePrefix` | `string` | `'--shiki'` | Prefix of CSS variables used to store theme colors |
-| `defaultColor` | `string` | `'light'` | The default theme mode when using multiple themes. Can be set to `false` to disable the default theme |
+### Component-specific Props
+
+The `ShikiHighlighter` component offers minimal built-in styling and customization options out-of-the-box:
+
+| Prop               | Type      | Default | Description                                                |
+| ------------------ | --------- | ------- | ---------------------------------------------------------- |
+| `showLanguage`     | `boolean` | `true`  | Displays language label in top-right corner                |
+| `addDefaultStyles` | `boolean` | `true`  | Adds minimal default styling to the highlighted code block |
+| `as`               | `string`  | `'pre'` | Component's Root HTML element                              |
+| `className`        | `string`  | -       | Custom class name for the code block                       |
+| `langClassName`    | `string`  | -       | Class name for styling the language label                  |
+| `style`            | `object`  | -       | Inline style object for the code block                     |
+| `langStyle`        | `object`  | -       | Inline style object for the language label                 |
 
 ### Integration with react-markdown
 
 Create a component to handle syntax highlighting:
+
 ```tsx
 import ReactMarkdown from "react-markdown";
 import { ShikiHighlighter, isInlineCode } from "react-shiki";
@@ -141,6 +130,7 @@ const CodeHighlight = ({ className, children, node, ...props }) => {
 ```
 
 Pass the component to react-markdown as a code component:
+
 ```tsx
 <ReactMarkdown
   components={{
@@ -251,10 +241,10 @@ Or, when using the hook, pass it to the `theme` parameter:
 const highlightedCode = useShikiHighlighter(
   code,
   "tsx",
-  { 
+  {
     light: "github-light",
     dark: "github-dark",
-    dim: "github-dark-dimmed"
+    dim: "github-dark-dimmed",
   },
   {
     defaultColor: "dark",
@@ -265,7 +255,7 @@ const highlightedCode = useShikiHighlighter(
 See [shiki's documentation](https://shiki.matsu.io/docs/themes) for more information on dual and multi theme support, and for the CSS needed to make the themes reactive to your site's theme.
 
 ### Custom Themes
-  
+
 Custom themes can be passed as a TextMate theme in JavaScript object. For example, [it should look like this](https://github.com/antfu/textmate-grammars-themes/blob/main/packages/tm-themes/themes/dark-plus.json).
 
 ```tsx
