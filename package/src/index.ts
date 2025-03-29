@@ -1,5 +1,6 @@
 export { ShikiHighlighter as default } from './component';
 export { useShikiHighlighter } from './hook';
+export type { ShikiHighlighterProps } from './component';
 
 export {
   isInlineCode,
