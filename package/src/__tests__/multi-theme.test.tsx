@@ -1,6 +1,6 @@
 import React from 'react';
 import { render, waitFor } from '@testing-library/react';
-import { useShikiHighlighter } from '../useShiki';
+import { useShikiHighlighter } from '../hook';
 
 // Test component with configurable options
 const TestComponent = ({
