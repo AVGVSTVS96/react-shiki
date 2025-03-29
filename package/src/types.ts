@@ -22,10 +22,8 @@ type Element = HastElement;
  * @see https://shiki.style/languages
  */
 type Language =
-  | BundledLanguage
   | LanguageRegistration
-  | SpecialLanguage
-  | (string & {})
+  | StringLiteralUnion<BundledLanguage | SpecialLanguage>
   | undefined;
 
 /**
@@ -57,7 +55,7 @@ type Themes = {
 /**
  * Configuration options specific to react-shiki
  */
-type ReactShikiOptions = {
+interface ReactShikiOptions {
   /**
    * Minimum time (in milliseconds) between highlight operations.
    * @default undefined (no throttling)
@@ -68,22 +66,23 @@ type ReactShikiOptions = {
    * Custom textmate grammars to be preloaded for highlighting.
    */
   customLanguages?: LanguageRegistration | LanguageRegistration[];
-};
+}
 
 /**
  * Configuration options for the syntax highlighter
  */
-type HighlighterOptions = ReactShikiOptions &
-  Pick<
-    CodeOptionsMultipleThemes<BundledTheme>,
-    'defaultColor' | 'cssVariablePrefix'
-  > &
-  Pick<CodeToHastOptionsCommon, 'transformers'>;
+interface HighlighterOptions
+  extends ReactShikiOptions,
+    Pick<
+      CodeOptionsMultipleThemes<BundledTheme>,
+      'defaultColor' | 'cssVariablePrefix'
+    >,
+    Pick<CodeToHastOptionsCommon, 'transformers'> {}
 
 /**
  * Props for the ShikiHighlighter component
  */
-export interface ShikiHighlighterProps extends HighlighterOptions {
+interface ShikiHighlighterProps extends HighlighterOptions {
   /**
    * The programming language for syntax highlighting
    * Supports custom textmate grammar objects in addition to Shiki's bundled languages
@@ -150,11 +149,10 @@ export interface ShikiHighlighterProps extends HighlighterOptions {
   as?: React.ElementType;
 }
 
-
 /**
  * State for the throttling logic
  */
-type TimeoutState = {
+interface TimeoutState {
   /**
    * Id of the timeout that is currently scheduled
    */
@@ -163,6 +161,14 @@ type TimeoutState = {
    * Next time when the timeout can be scheduled
    */
   nextAllowedTime: number;
-};
+}
 
-export type { Language, Theme, Themes, HighlighterOptions, TimeoutState, Element };
+export type {
+  Language,
+  Theme,
+  Themes,
+  Element,
+  TimeoutState,
+  HighlighterOptions,
+  ShikiHighlighterProps,
+};
