@@ -48,9 +48,10 @@ type Theme = ThemeRegistrationAny | StringLiteralUnion<BundledTheme>;
  *
  * @see https://shiki.style/guide/dual-themes
  */
-type Themes = {
-  [key: string]: ThemeRegistrationAny | StringLiteralUnion<BundledTheme>;
-};
+type Themes = Record<
+  string,
+  ThemeRegistrationAny | StringLiteralUnion<BundledTheme>
+>;
 
 /**
  * Configuration options specific to react-shiki
