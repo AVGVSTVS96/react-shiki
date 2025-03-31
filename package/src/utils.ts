@@ -89,82 +89,87 @@ export const throttleHighlighting = (
   }, delay);
 };
 
-type ResolvedLanguage = {
-  isCustom: boolean;
+/**
+ * Resolved language information
+ */
+type LanguageResult = {
   languageId: string;
-  displayLanguageId?: string;
   resolvedLanguage?: LanguageRegistration;
+  displayLanguageId: string | null;
 };
 
 /**
- * Determines whether a language is custom or built-in, normalizes
- * the language identifier and returns the resolved language with metadata
- *
- * @param lang - The language identifier, either as a string name or language object
- * @param customLanguages - Optional array of custom language definitions
- * @returns Object containing:
- *   - isCustom: Whether the language requires custom highlighting
- *   - languageId: The normalized language identifier
- *   - displayLanguageId: The display name for language label
- *   - resolvedLanguage: The full language definition if custom
+ * Resolves the language input to standardized IDs and objects for Shiki and UI display
+ * @param lang The language input from props (string, object, or null/undefined)
+ * @param customLanguages An array of custom textmate grammar objects
+ * @returns A LanguageResult object containing:
+ *   - languageId: The resolved language ID
+ *   - displayLanguageId: The resolved language ID
+ *   - resolvedLanguage: The resolved language object
  */
 export const resolveLanguage = (
   lang: Language,
   customLanguages: LanguageRegistration[] = []
-): ResolvedLanguage => {
-  // Language is custom but not preloaded
-  if (lang && typeof lang === 'object') {
+): LanguageResult => {
+  const knownBundledLanguageIds = new Set(
+    Object.keys(bundledLanguages).map((id) => id.toLowerCase())
+  );
+  if (lang == null || (typeof lang === 'string' && !lang.trim())) {
     return {
-      isCustom: true,
+      languageId: 'plaintext',
+      displayLanguageId: 'plaintext',
+      resolvedLanguage: undefined,
+    };
+  }
+
+  // Language is custom
+  if (typeof lang === 'object') {
+    return {
       languageId: lang.name,
-      displayLanguageId: lang.name,
+      displayLanguageId: lang.name || null,
       resolvedLanguage: lang,
     };
   }
 
-  // Language is a string
-  if (typeof lang === 'string') {
-    const displayLanguageId = lang;
+  // Language is string
+  const matches = (str: string | undefined): boolean =>
+    str?.toLowerCase() === lang.toLowerCase();
 
-    // Check if its built-in
-    if (lang in bundledLanguages || isSpecialLang(lang)) {
-      return {
-        isCustom: false,
-        languageId: lang,
-        displayLanguageId,
-      };
-    }
+  // Check if the string identifies a provided custom language
+  const customMatch = customLanguages.find(
+    (cl) =>
+      matches(cl.name) ||
+      cl.aliases?.some(matches) ||
+      matches(cl.scopeName) ||
+      matches(cl.scopeName?.split('.').pop())
+  );
 
-    // Check if it matches a preloaded custom language
-    const customMatch = customLanguages.find(
-      (cl) =>
-        cl.fileTypes?.includes(lang) ||
-        cl.scopeName?.split('.')[1] === lang ||
-        cl.name?.toLowerCase() === lang.toLowerCase()
-    );
-
-    if (customMatch) {
-      return {
-        isCustom: true,
-        languageId: customMatch.name,
-        displayLanguageId,
-        resolvedLanguage: customMatch,
-      };
-    }
-
-    // If unknown, highlight in plaintext but display unknown language
+  if (customMatch) {
     return {
-      isCustom: false,
-      languageId: 'plaintext',
-      displayLanguageId,
+      languageId: customMatch.name || lang,
+      displayLanguageId: lang,
+      resolvedLanguage: customMatch,
     };
   }
 
-  // Fallback
+  // Language is Built-in/Special
+  if (
+    (knownBundledLanguageIds.has(lang.toLowerCase()) ||
+      isSpecialLang(lang)) &&
+    !customMatch
+  ) {
+    return {
+      languageId: lang,
+      displayLanguageId: lang,
+      resolvedLanguage: undefined,
+    };
+  }
+
+  // Language is not supported
   return {
-    isCustom: false,
     languageId: 'plaintext',
-    displayLanguageId: 'plaintext',
+    displayLanguageId: lang,
+    resolvedLanguage: undefined,
   };
 };
 

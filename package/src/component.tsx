@@ -134,7 +134,7 @@ export const ShikiHighlighter = ({
       : [customLanguages]
     : [];
 
-  const { isCustom, languageId, displayLanguageId, resolvedLanguage } =
+  const { displayLanguageId } =
     resolveLanguage(language, normalizedCustomLanguages);
 
   const highlightedCode = useShikiHighlighter(
@@ -156,15 +156,13 @@ export const ShikiHighlighter = ({
       style={style}
       id="shiki-container"
     >
-      {showLanguage && language ? (
+      {showLanguage && displayLanguageId ? (
         <span
           className={clsx('languageLabel', langClassName)}
           style={langStyle}
           id="language-label"
         >
-          {isCustom
-            ? `${resolvedLanguage?.scopeName.split('.')[1]}`
-            : displayLanguageId || languageId}
+          {displayLanguageId}
         </span>
       ) : null}
       {highlightedCode}
