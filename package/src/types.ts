@@ -9,7 +9,7 @@ import type {
   StringLiteralUnion,
 } from 'shiki';
 
-import type { LanguageRegistration } from './customTypes';
+import type { LanguageRegistration } from './extended-types';
 
 /**
  * A Shiki BundledLanguage or a custom textmate grammar object

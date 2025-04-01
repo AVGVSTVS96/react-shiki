@@ -3,7 +3,7 @@ import { bundledLanguages, isSpecialLang } from 'shiki';
 import type { ShikiTransformer, ThemeRegistrationAny } from 'shiki';
 import type { Element } from 'hast';
 import type { Language, Theme, Themes, TimeoutState } from './types';
-import type { LanguageRegistration } from './customTypes';
+import type { LanguageRegistration } from './extended-types';
 
 /**
  * Type for the HAST node, use to type `node` from react-markdown
