@@ -2,7 +2,10 @@ import { visit } from 'unist-util-visit';
 import { bundledLanguages, isSpecialLang } from 'shiki';
 
 import type { ShikiTransformer, ThemeRegistrationAny } from 'shiki';
-import type { LanguageRegistration } from './extended-types';
+import type {
+  LanguageRegistration,
+  ShikiLanguageRegistration,
+} from './extended-types';
 import type {
   Language,
   Theme,
@@ -96,29 +99,32 @@ type LanguageResult = {
   languageId: string;
   resolvedLanguage?: LanguageRegistration;
   displayLanguageId: string | null;
+  langsToLoad: string | LanguageRegistration | undefined;
 };
 
 /**
  * Resolves the language input to standardized IDs and objects for Shiki and UI display
- * @param lang The language input from props (string, object, or null/undefined)
+ * @param lang The language input from props
  * @param customLanguages An array of custom textmate grammar objects
  * @returns A LanguageResult object containing:
  *   - languageId: The resolved language ID
- *   - displayLanguageId: The resolved language ID
+ *   - displayLanguageId: The display language ID
  *   - resolvedLanguage: The resolved language object
+ *   - langToLoad: The language object or string id to load
  */
 export const resolveLanguage = (
   lang: Language,
   customLanguages: LanguageRegistration[] = []
 ): LanguageResult => {
-  const knownBundledLanguageIds = new Set(
+  const bundledLangs = new Set(
     Object.keys(bundledLanguages).map((id) => id.toLowerCase())
   );
+
   if (lang == null || (typeof lang === 'string' && !lang.trim())) {
     return {
       languageId: 'plaintext',
       displayLanguageId: 'plaintext',
-      resolvedLanguage: undefined,
+      langsToLoad: undefined,
     };
   }
 
@@ -127,13 +133,15 @@ export const resolveLanguage = (
     return {
       languageId: lang.name,
       displayLanguageId: lang.name || null,
-      resolvedLanguage: lang,
+      langsToLoad: lang,
     };
   }
 
+  const lowerLang = lang.toLowerCase();
+
   // Language is string
   const matches = (str: string | undefined): boolean =>
-    str?.toLowerCase() === lang.toLowerCase();
+    str?.toLowerCase() === lowerLang;
 
   // Check if the string identifies a provided custom language
   const customMatch = customLanguages.find(
@@ -148,20 +156,19 @@ export const resolveLanguage = (
     return {
       languageId: customMatch.name || lang,
       displayLanguageId: lang,
-      resolvedLanguage: customMatch,
+      langsToLoad: customMatch,
     };
   }
 
   // Language is Built-in/Special
   if (
-    (knownBundledLanguageIds.has(lang.toLowerCase()) ||
-      isSpecialLang(lang)) &&
+    (bundledLangs.has(lowerLang) || isSpecialLang(lowerLang)) &&
     !customMatch
   ) {
     return {
       languageId: lang,
       displayLanguageId: lang,
-      resolvedLanguage: undefined,
+      langsToLoad: lang,
     };
   }
 
@@ -169,7 +176,7 @@ export const resolveLanguage = (
   return {
     languageId: 'plaintext',
     displayLanguageId: lang,
-    resolvedLanguage: undefined,
+    langsToLoad: undefined,
   };
 };
 

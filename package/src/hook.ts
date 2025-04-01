@@ -106,7 +106,7 @@ export const useShikiHighlighter = (
   const { isMultiTheme, themeId, multiTheme, singleTheme, themesToLoad } =
     useMemo(() => resolveTheme(themeInput), [themeInput]);
 
-  const { languageId, resolvedLanguage } = useMemo(
+  const { languageId, langsToLoad } = useMemo(
     () => resolveLanguage(lang, normalizedCustomLanguages),
     [lang, customLangId]
   );
@@ -139,9 +139,7 @@ export const useShikiHighlighter = (
     const highlightCode = async () => {
       if (!languageId) return;
       const codeHighlighter = await getSingletonHighlighter({
-        langs: [
-          (resolvedLanguage as ShikiLanguageRegistration) || languageId,
-        ],
+        langs: [langsToLoad as ShikiLanguageRegistration],
         themes: themesToLoad,
       });
 
