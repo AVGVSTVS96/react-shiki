@@ -1,5 +1,11 @@
 # react-shiki
 
+## 0.5.1
+
+### Patch Changes
+
+- 9c5d0dd: export language, theme, and options types
+
 ## 0.5.0
 
 ### Minor Changes
