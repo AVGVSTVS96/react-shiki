@@ -1,6 +1,9 @@
 {
   "$schema": "https://unpkg.com/@changesets/config@3.0.2/schema.json",
-  "changelog": "@changesets/cli/changelog",
+  "changelog": [
+    "changesets-changelog-clean",
+    { "repo": "avgvstvs96/react-shiki" }
+  ],
   "commit": false,
   "fixed": [],
   "linked": [],
