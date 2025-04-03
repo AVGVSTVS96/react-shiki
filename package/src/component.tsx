@@ -3,13 +3,14 @@ import './styles.css';
 import React from 'react';
 import { clsx } from 'clsx';
 import { useShikiHighlighter } from './hook';
+import { resolveLanguage } from './utils';
+
 import type {
+  HighlighterOptions,
   Language,
   Theme,
-  HighlighterOptions,
   Themes,
 } from './types';
-import { resolveLanguage } from './utils';
 
 /**
  * Props for the ShikiHighlighter component
@@ -80,6 +81,7 @@ export interface ShikiHighlighterProps extends HighlighterOptions {
    */
   as?: React.ElementType;
 }
+
 /**
  * ShikiHighlighter is a React component that provides syntax highlighting for code snippets.
  * It uses Shiki to render beautiful, theme-based syntax highlighting with optimized performance.
