@@ -1,7 +1,10 @@
 export { useShikiHighlighter } from './hook';
-export { ShikiHighlighter as default } from './component';
-
 export { isInlineCode, rehypeInlineCodeProperty } from './utils';
+
+export {
+  ShikiHighlighter as default,
+  type ShikiHighlighterProps,
+} from './component';
 
 export type {
   Language,
@@ -9,5 +12,4 @@ export type {
   Themes,
   Element,
   HighlighterOptions,
-  ShikiHighlighterProps,
 } from './types';
