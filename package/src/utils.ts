@@ -2,10 +2,7 @@ import { visit } from 'unist-util-visit';
 import { bundledLanguages, isSpecialLang } from 'shiki';
 
 import type { ShikiTransformer, ThemeRegistrationAny } from 'shiki';
-import type {
-  LanguageRegistration,
-  ShikiLanguageRegistration,
-} from './extended-types';
+import type { LanguageRegistration } from './extended-types';
 import type {
   Language,
   Theme,
@@ -99,7 +96,7 @@ type LanguageResult = {
   languageId: string;
   resolvedLanguage?: LanguageRegistration;
   displayLanguageId: string | null;
-  langsToLoad: string | LanguageRegistration | undefined;
+  langsToLoad: Language;
 };
 
 /**
