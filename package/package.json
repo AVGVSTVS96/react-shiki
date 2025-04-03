@@ -47,8 +47,8 @@
   "dependencies": {
     "@types/jest": "^29.5.14",
     "clsx": "^2.1.1",
-    "html-react-parser": "^5.1.12",
-    "shiki": "^3.0.0",
+    "html-react-parser": "^5.2.3",
+    "shiki": "^3.2.1",
     "unist-util-visit": "^5.0.0"
   },
   "devDependencies": {
