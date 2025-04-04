@@ -9,8 +9,7 @@ import {
 import parse from 'html-react-parser';
 
 import {
-  createHighlighter,
-  createSingletonShorthands,
+  getSingletonHighlighter,
   type Highlighter,
   type CodeToHastOptions,
   type CodeOptionsSingleTheme,
@@ -40,27 +39,6 @@ import {
 const DEFAULT_THEMES = {
   light: 'github-light',
   dark: 'github-dark',
-};
-
-// Use Shiki managed singleton for bundled languages, create and cache a fresh instance for custom languages
-const bundledHighlighter = createSingletonShorthands(createHighlighter);
-const customLangHighlighter = new Map<string, Promise<Highlighter>>();
-
-const getCachedCustomHighlighter = async (
-  cacheKey: string,
-  customLang: LanguageRegistration,
-  themesToLoad: Theme[]
-) => {
-  let instance = customLangHighlighter.get(cacheKey);
-
-  if (!instance) {
-    instance = createHighlighter({
-      langs: [customLang as ShikiLanguageRegistration],
-      themes: themesToLoad,
-    });
-    customLangHighlighter.set(cacheKey, instance);
-  }
-  return instance;
 };
 
 /**
@@ -129,12 +107,10 @@ export const useShikiHighlighter = (
   const { isMultiTheme, themeId, multiTheme, singleTheme, themesToLoad } =
     useMemo(() => resolveTheme(themeInput), [themeInput]);
 
-  const { isCustom, languageId, resolvedLanguage } = useMemo(
+  const { languageId, langsToLoad } = useMemo(
     () => resolveLanguage(lang, normalizedCustomLanguages),
     [lang, customLangId]
   );
-
-  const cacheKey = `${languageId}-${themeId}`;
 
   const timeoutControl = useRef<TimeoutState>({
     nextAllowedTime: 0,
@@ -162,21 +138,16 @@ export const useShikiHighlighter = (
     let isMounted = true;
 
     const highlightCode = async () => {
-      const codeHighlighter =
-        isCustom && resolvedLanguage
-          ? await getCachedCustomHighlighter(
-              cacheKey,
-              resolvedLanguage,
-              themesToLoad
-            )
-          : bundledHighlighter;
+      if (!languageId) return;
+      const highlighter = await getSingletonHighlighter({
+        langs: [langsToLoad as ShikiLanguageRegistration],
+        themes: themesToLoad,
+      });
 
       const highlighterOptions: CodeToHastOptions = buildShikiOptions();
 
-      const html = await codeHighlighter.codeToHtml(
-        code,
-        highlighterOptions
-      );
+      const html = highlighter.codeToHtml(code, highlighterOptions);
+
       if (isMounted) {
         setHighlightedCode(parse(html));
       }
