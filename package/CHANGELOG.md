@@ -1,5 +1,14 @@
 # react-shiki
 
+## 0.5.2
+
+### Patch Changes
+
+- Refactor types and add changesets github integration with `changesets-changelog-clean` _[`#37`](https://github.com/AVGVSTVS96/react-shiki/pull/37) [`5b73031`](https://github.com/avgvstvs96/react-shiki/commit/5b73031a7cfb63312354b05a74ef2a19880f5c46) [@AVGVSTVS96](https://github.com/AVGVSTVS96)_
+- Bump Shiki to 3.2.1, html-react-parser to 5.2.3 _[`#39`](https://github.com/AVGVSTVS96/react-shiki/pull/39) [`f5e2fea`](https://github.com/avgvstvs96/react-shiki/commit/f5e2fea1e960254fb33419dbd283c6ecb9a15815) [@renovate](https://github.com/apps/renovate)_
+- Simplify code by using Shiki managed singleton instance, adapt logic _[`#38`](https://github.com/AVGVSTVS96/react-shiki/pull/38) [`daef424`](https://github.com/avgvstvs96/react-shiki/commit/daef424f21ba78a6fdecb9608fa7276b3ff578a9) [@AVGVSTVS96](https://github.com/AVGVSTVS96)_
+- Update dev-dependencies _[`#40`](https://github.com/AVGVSTVS96/react-shiki/pull/40) [`b832131`](https://github.com/avgvstvs96/react-shiki/commit/b83213107992cdd03c44ead954c65043b9897bcf) [@renovate](https://github.com/apps/renovate)_
+
 ## 0.5.1
 
 ### Patch Changes
