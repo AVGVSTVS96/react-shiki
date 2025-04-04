@@ -10,6 +10,7 @@ import parse from 'html-react-parser';
 
 import {
   getSingletonHighlighter,
+  type Highlighter,
   type CodeToHastOptions,
   type CodeOptionsSingleTheme,
   type CodeOptionsMultipleThemes,
@@ -138,14 +139,14 @@ export const useShikiHighlighter = (
 
     const highlightCode = async () => {
       if (!languageId) return;
-      const codeHighlighter = await getSingletonHighlighter({
+      const highlighter = await getSingletonHighlighter({
         langs: [langsToLoad as ShikiLanguageRegistration],
         themes: themesToLoad,
       });
 
       const highlighterOptions: CodeToHastOptions = buildShikiOptions();
 
-      const html = codeHighlighter.codeToHtml(code, highlighterOptions);
+      const html = highlighter.codeToHtml(code, highlighterOptions);
 
       if (isMounted) {
         setHighlightedCode(parse(html));
