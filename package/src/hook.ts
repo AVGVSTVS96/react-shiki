@@ -9,10 +9,10 @@ import {
 import parse from 'html-react-parser';
 
 import {
+  getSingletonHighlighter,
   type CodeToHastOptions,
   type CodeOptionsSingleTheme,
   type CodeOptionsMultipleThemes,
-  getSingletonHighlighter,
 } from 'shiki';
 
 import type {
