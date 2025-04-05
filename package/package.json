@@ -52,7 +52,9 @@
     "@types/jest": "^29.5.14",
     "clsx": "^2.1.1",
     "html-react-parser": "^5.2.3",
+    "rehype-react": "^8.0.0",
     "shiki": "^3.2.1",
+    "unified": "^11.0.5",
     "unist-util-visit": "^5.0.0"
   },
   "devDependencies": {
