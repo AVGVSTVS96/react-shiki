@@ -52,7 +52,6 @@
     "@types/jest": "^29.5.14",
     "clsx": "^2.1.1",
     "hast-util-to-jsx-runtime": "^2.3.6",
-    "html-react-parser": "^5.2.3",
     "shiki": "^3.2.1",
     "unist-util-visit": "^5.0.0"
   },
@@ -64,6 +63,8 @@
     "@types/react": "^19.1.0",
     "@vitejs/plugin-react": "^4.3.4",
     "jsdom": "^26.0.0",
+    "benny": "^3.7.1",
+    "html-react-parser": "^5.2.3",
     "tsup": "^8.4.0",
     "vitest": "^3.1.1"
   }
