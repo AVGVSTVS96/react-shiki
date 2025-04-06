@@ -23,7 +23,6 @@
   "schedule": [
     "every 2 weeks on friday at 8pm"
   ],
-  "transitiveRemediation": true,
   "packageRules": [
     {
       "matchDepTypes": [
