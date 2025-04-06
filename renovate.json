@@ -9,40 +9,41 @@
     "group:definitelyTyped",
     "group:monorepos",
     "group:recommended",
+    "schedule:monthly",
     "replacements:all",
     "workarounds:all"
   ],
   "prHourlyLimit": 10,
   "rangeStrategy": "bump",
-  "labels": [
-    "dependencies"
-  ],
+  "labels": ["dependencies"],
   "commitMessageTopic": "{{depName}}",
   "commitBodyTable": true,
   "timezone": "America/New_York",
-  "schedule": [
-    "every 2 weeks on friday at 8pm"
-  ],
   "packageRules": [
     {
-      "matchDepTypes": [
-        "peerDependencies"
-      ],
+      "matchDepTypes": ["peerDependencies"],
       "enabled": false
     },
     {
-      "groupName": "dev-dependencies",
-      "semanticCommitScope": "dev-deps",
-      "matchDepTypes": [
-        "devDependencies"
-      ]
+      "groupName": "playground dependencies",
+      "matchFileNames": ["playground/**"]
     },
     {
-      "groupName": "syntax highlighting dependencies",
-      "matchPackageNames": [
-        "shiki",
-        "html-react-parser"
-      ]
+      "groupName": "package dev-dependencies",
+      "semanticCommitScope": "dev-deps",
+      "matchDepTypes": ["devDependencies"],
+      "matchFileNames": ["package/**"]
+    },
+    {
+      "groupName": "package core dependencies",
+      "matchDepTypes": ["dependencies"],
+      "matchFileNames": ["package/**"]
+    },
+    {
+      "groupName": "root dev-dependencies",
+      "semanticCommitScope": "dev-deps",
+      "matchDepTypes": ["devDependencies"],
+      "matchFileNames": ["package.json"]
     }
   ]
 }
