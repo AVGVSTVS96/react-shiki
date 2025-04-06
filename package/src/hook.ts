@@ -6,9 +6,8 @@ import {
   type ReactNode,
 } from 'react';
 
-import { unified } from 'unified';
-import rehypeReact from 'rehype-react';
 import { jsx, jsxs, Fragment } from 'react/jsx-runtime';
+import { toJsxRuntime } from 'hast-util-to-jsx-runtime';
 
 import {
   getSingletonHighlighter,
@@ -36,6 +35,7 @@ import {
   resolveLanguage,
   resolveTheme,
 } from './utils';
+import type { Root } from 'hast';
 
 const DEFAULT_THEMES: Themes = {
   light: 'github-light',
@@ -135,15 +135,13 @@ export const useShikiHighlighter = (
     return { ...commonOptions, ...themeOptions };
   };
 
-  const hastToReact = useMemo(
-    () =>
-      unified().use(rehypeReact, {
-        jsx,
-        jsxs,
-        Fragment,
-      }),
-    []
-  );
+  // const hastToReact = useMemo(
+  //   () => ({
+  //     stringify: (hast: Root) =>
+  //       toJsxRuntime(hast, { jsx, jsxs, Fragment }),
+  //   }),
+  //   []
+  // );
 
   useEffect(() => {
     let isMounted = true;
@@ -160,7 +158,7 @@ export const useShikiHighlighter = (
       const hast = highlighter.codeToHast(code, highlighterOptions);
 
       if (isMounted) {
-        setHighlightedCode(hastToReact.stringify(hast));
+        setHighlightedCode(toJsxRuntime(hast, { jsx, jsxs, Fragment }));
       }
     };
 
