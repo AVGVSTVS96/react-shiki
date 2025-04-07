@@ -35,7 +35,6 @@ import {
   resolveLanguage,
   resolveTheme,
 } from './utils';
-import type { Root } from 'hast';
 
 const DEFAULT_THEMES: Themes = {
   light: 'github-light',
@@ -134,14 +133,6 @@ export const useShikiHighlighter = (
 
     return { ...commonOptions, ...themeOptions };
   };
-
-  // const hastToReact = useMemo(
-  //   () => ({
-  //     stringify: (hast: Root) =>
-  //       toJsxRuntime(hast, { jsx, jsxs, Fragment }),
-  //   }),
-  //   []
-  // );
 
   useEffect(() => {
     let isMounted = true;
