@@ -17,7 +17,7 @@
         "useNamingConvention": {
           "level": "info",
           "options": {
-            "strictCase": true
+            "strictCase": false
           }
         }
       },
@@ -27,7 +27,7 @@
         "noLabelWithoutControl": "warn"
       },
       "suspicious": {
-        "noExplicitAny": "info"
+        "noExplicitAny": "off"
       }
     }
   },

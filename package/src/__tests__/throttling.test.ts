@@ -14,7 +14,7 @@ describe('throttleHighlighting', () => {
   test('throttles function calls based on timing', () => {
     // Mock date to have a consistent starting point
     const originalDateNow = Date.now;
-    let mockTime = 1000;
+    const mockTime = 1000;
     Date.now = vi.fn(() => mockTime);
 
     // Mock the perform highlight function

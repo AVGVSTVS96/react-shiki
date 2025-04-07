@@ -76,7 +76,7 @@ export const removeTabIndexFromPre: ShikiTransformer = {
  */
 export const throttleHighlighting = (
   performHighlight: () => Promise<void>,
-  timeoutControl: React.MutableRefObject<TimeoutState>,
+  timeoutControl: React.RefObject<TimeoutState>,
   throttleMs: number
 ) => {
   const now = Date.now();
