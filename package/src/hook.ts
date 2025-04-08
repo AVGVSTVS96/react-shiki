@@ -10,7 +10,6 @@ import parse from 'html-react-parser';
 
 import {
   getSingletonHighlighter,
-  type Highlighter,
   type CodeToHastOptions,
   type CodeOptionsSingleTheme,
   type CodeOptionsMultipleThemes,
