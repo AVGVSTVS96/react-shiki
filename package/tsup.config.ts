@@ -13,5 +13,11 @@ export default defineConfig((options) => {
     minify: !dev,
     injectStyle: true,
     external: [...Object.keys(peerDependencies)],
+
+    // fixes: React is not defined / JSX runtime not automatically injected
+    // https://github.com/egoist/tsup/issues/792#issuecomment-2443773071
+    esbuildOptions(options) {
+      options.jsx = 'automatic';
+    },
   };
 });
