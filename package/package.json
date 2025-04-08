@@ -38,7 +38,11 @@
   "scripts": {
     "dev": "tsup --watch",
     "build": "tsup",
-    "test": "vitest"
+    "test": "vitest",
+    "lint": "biome lint .",
+    "lint:fix": "biome lint --write .",
+    "format": "biome format --write .",
+    "check": "tsc && biome check ."
   },
   "peerDependencies": {
     "react": ">= 16.8.0",
