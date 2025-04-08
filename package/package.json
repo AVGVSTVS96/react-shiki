@@ -41,8 +41,8 @@
     "test": "vitest"
   },
   "peerDependencies": {
-    "react": ">= 15.0.0",
-    "react-dom": ">= 15.0.0"
+    "react": ">= 16.8.0",
+    "react-dom": ">= 16.8.0"
   },
   "dependencies": {
     "@types/jest": "^29.5.14",
