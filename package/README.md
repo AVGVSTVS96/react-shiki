@@ -152,8 +152,7 @@ For your convenience, `react-shiki` exports a couple functions to help determine
 
 **Method 1: Using the `isInlineCode` helper:**
 
-`isInlineCode` parses the `node` prop from `react-markdown`, it works by checking for `/n` characters indicating a line break.
-
+`isInlineCode` parses the `node` prop from `react-markdown`, it works by checking for `\n` characters indicating a line break.
 ```tsx
 import { isInlineCode, ShikiHighlighter } from "react-shiki";
 
