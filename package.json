@@ -10,9 +10,10 @@
     "playground:dev": "pnpm --filter playground dev",
     "playground:build": "pnpm --filter playground build",
     "test": "pnpm --filter react-shiki test",
-    "lint": "tsc && biome check .",
-    "lint:fix": "biome check --write .",
-    "format": "biome format --write .",
+    "lint": "pnpm --filter react-shiki lint",
+    "lint:fix": "pnpm --filter react-shiki lint:fix",
+    "check": "pnpm --filter react-shiki check",
+    "format": "pnpm --filter react-shiki format",
     "changeset": "changeset",
     "release": "node scripts/release.mjs"
   },
