@@ -152,7 +152,8 @@ ways to replicate this functionality and API.
 
 **Method 1: Using the `isInlineCode` helper:**
 
-`isInlineCode` parses the `node` prop from `react-markdown`, it works by checking for `\n` characters indicating a line break.
+`react-shiki` exports `isInlineCode` which parses the `node` prop from `react-markdown` and identifies inline code by checking for the absence of newline characters:
+
 ```tsx
 import { isInlineCode, ShikiHighlighter } from "react-shiki";
 
