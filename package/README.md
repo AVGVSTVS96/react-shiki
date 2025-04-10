@@ -177,9 +177,8 @@ const CodeHighlight = ({ className, children, node, ...props }) => {
 
 `react-shiki` also exports `rehypeInlineCodeProperty`, a rehype plugin that 
 provides the same API as `react-markdown` prior to `9.0.0`. It reintroduces the 
-`inline` prop by checking the parent element of each `<code>` element: `<code>` 
-elements directly nested within <pre> elements are treated as code blocks, and 
-all other `<code>` elements are treated as inline code. 
+`inline` prop which works by checking if `<code>` is nested within a `<pre>` tag, 
+if not, it's considered inline code and the `inline` prop is set to `true`.
 
 It's passed as a `rehypePlugin` to `react-markdown`:
 
