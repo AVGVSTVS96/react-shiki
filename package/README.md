@@ -145,10 +145,10 @@ Pass the component to react-markdown as a code component:
 
 ### Handling Inline Code
 
-For your convenience, `react-shiki` exports a couple functions to help determine if code is inline. 
 
-> [!NOTE]
-> `react-markdown` pre `9.0.0` used to expose the `inline` prop on `code` components to help determine if code is inline. This functionality was removed in `9.0.0`, so I built these solutions for my own use and thought it would be helpful to export them.
+`react-markdown` prior to `9.0.0` used to expose the `inline` prop on `code` components to help determine if code is inline. This functionality was removed in `9.0.0`.
+ 
+For your convenience, `react-shiki` exports a couple functions to help determine if code is inline.
 
 **Method 1: Using the `isInlineCode` helper:**
 
@@ -175,9 +175,7 @@ const CodeHighlight = ({ className, children, node, ...props }) => {
 
 **Method 2: Using the `rehypeInlineCodeProperty` plugin:**
 
-`react-shiki` also exports `rehypeInlineCodeProperty`, a rehype plugin that adds
-an `inline` property to `react-markdown` to determine if code is inline based on
-the presence of a `<pre>` tag as a parent of `<code>`.
+`react-shiki` also exports `rehypeInlineCodeProperty`, a rehype plugin that provides the same functionality and API as the original `inline` prop from `react-markdown` prior to `9.0.0`. It determines if code is inline based on the presence of a `<pre>` tag as a parent of `<code>`.
 
 It's passed as a `rehypePlugin` to `react-markdown`:
 
