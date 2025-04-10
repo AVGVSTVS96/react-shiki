@@ -160,6 +160,7 @@ import { isInlineCode, ShikiHighlighter } from "react-shiki";
 const CodeHighlight = ({ className, children, node, ...props }) => {
   const match = className?.match(/language-(\w+)/);
   const language = match ? match[1] : undefined;
+
   const isInline = node ? isInlineCode(node) : undefined;
 
   return !isInline ? (
