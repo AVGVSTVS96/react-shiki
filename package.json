@@ -10,6 +10,7 @@
     "playground:dev": "pnpm --filter playground dev",
     "playground:build": "pnpm --filter playground build",
     "test": "pnpm --filter react-shiki test",
+    "bench": "pnpm --filter react-shiki bench",
     "lint": "pnpm --filter react-shiki lint",
     "lint:fix": "pnpm --filter react-shiki lint:fix",
     "check": "pnpm --filter react-shiki check",
