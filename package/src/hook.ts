@@ -118,7 +118,7 @@ export const useShikiHighlighter = (
   });
 
   const buildShikiOptions = (): CodeToHastOptions => {
-    const { defaultColor, cssVariablePrefix } = options;
+    const { defaultColor, cssVariablePrefix, ...rest } = options;
     const commonOptions = { lang: languageId, transformers };
 
     const themeOptions = isMultiTheme
@@ -131,7 +131,7 @@ export const useShikiHighlighter = (
           theme: singleTheme || DEFAULT_THEMES.dark,
         } as CodeOptionsSingleTheme);
 
-    return { ...commonOptions, ...themeOptions };
+    return { ...commonOptions, ...themeOptions, ...rest };
   };
 
   useEffect(() => {

@@ -6,6 +6,7 @@ import type {
   CodeToHastOptionsCommon,
   ThemeRegistrationAny,
   StringLiteralUnion,
+  CodeToHastOptions,
 } from 'shiki';
 
 import type { LanguageRegistration } from './extended-types';
@@ -70,6 +71,7 @@ interface ReactShikiOptions {
 
 /**
  * Configuration options for the syntax highlighter
+ * Extends CodeToHastOptions to allow passing any Shiki options directly
  */
 interface HighlighterOptions
   extends ReactShikiOptions,
@@ -77,7 +79,8 @@ interface HighlighterOptions
       CodeOptionsMultipleThemes<BundledTheme>,
       'defaultColor' | 'cssVariablePrefix'
     >,
-    Pick<CodeToHastOptionsCommon, 'transformers'> {}
+    Pick<CodeToHastOptionsCommon, 'transformers'>,
+    Omit<CodeToHastOptions, 'lang' | 'theme' | 'themes'> {}
 
 
 /**
