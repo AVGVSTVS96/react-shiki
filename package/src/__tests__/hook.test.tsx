@@ -3,12 +3,14 @@ import { render, waitFor } from '@testing-library/react';
 import { useShikiHighlighter } from '../hook';
 import type { Language, Theme } from '../types';
 import type { ShikiTransformer } from 'shiki';
+import { removeTabIndexFromPre } from '../utils';
 
 interface TestComponentProps {
   code: string;
   language: Language;
   theme: Theme;
   transformers?: ShikiTransformer[];
+  tabindex?: string;
 }
 
 const TestComponent = ({ code, language, theme, transformers }: TestComponentProps) => {
@@ -22,7 +24,7 @@ describe('useShikiHighlighter Hook', () => {
       code: '<div>Hello World</div>',
       language: 'html',
       theme: 'github-light',
-      transformers: [],
+      transformers: [removeTabIndexFromPre],
       ...props,
     };
     return render(<TestComponent {...defaultProps} />);
