@@ -1,5 +1,11 @@
 # react-shiki
 
+## 0.5.3
+
+### Patch Changes
+
+- Ensure custom languages can be identified by their filetypes _[`#51`](https://github.com/AVGVSTVS96/react-shiki/pull/51) [`ff16138`](https://github.com/avgvstvs96/react-shiki/commit/ff16138151a7faba61489c41934a670dbbce5daa) [@AVGVSTVS96](https://github.com/AVGVSTVS96)_
+
 ## 0.5.2
 
 ### Patch Changes
