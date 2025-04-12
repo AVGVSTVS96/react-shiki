@@ -3,7 +3,6 @@ import type {
   SpecialLanguage,
   BundledTheme,
   CodeOptionsMultipleThemes,
-  CodeToHastOptionsCommon,
   ThemeRegistrationAny,
   StringLiteralUnion,
   CodeToHastOptions,
@@ -79,9 +78,7 @@ interface HighlighterOptions
       CodeOptionsMultipleThemes<BundledTheme>,
       'defaultColor' | 'cssVariablePrefix'
     >,
-    Pick<CodeToHastOptionsCommon, 'transformers'>,
     Omit<CodeToHastOptions, 'lang' | 'theme' | 'themes'> {}
-
 
 /**
  * State for the throttling logic
