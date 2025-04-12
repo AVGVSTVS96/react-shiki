@@ -134,9 +134,8 @@ export const resolveLanguage = (
     };
   }
 
-  const lowerLang = lang.toLowerCase();
-
   // Language is string
+  const lowerLang = lang.toLowerCase();
   const matches = (str: string | undefined): boolean =>
     str?.toLowerCase() === lowerLang;
 
@@ -144,9 +143,10 @@ export const resolveLanguage = (
   const customMatch = customLanguages.find(
     (cl) =>
       matches(cl.name) ||
-      cl.aliases?.some(matches) ||
       matches(cl.scopeName) ||
-      matches(cl.scopeName?.split('.').pop())
+      matches(cl.scopeName?.split('.').pop()) ||
+      cl.aliases?.includes(lowerLang) ||
+      cl.fileTypes?.includes(lowerLang)
   );
 
   if (customMatch) {
