@@ -145,8 +145,8 @@ export const resolveLanguage = (
       matches(cl.name) ||
       matches(cl.scopeName) ||
       matches(cl.scopeName?.split('.').pop()) ||
-      cl.aliases?.includes(lowerLang) ||
-      cl.fileTypes?.includes(lowerLang)
+      cl.aliases?.some(matches) ||
+      cl.fileTypes?.some(matches)
   );
 
   if (customMatch) {
