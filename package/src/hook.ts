@@ -6,6 +6,8 @@ import {
   type ReactNode,
 } from 'react';
 
+import { useDeepCompareEffect } from 'use-deep-compare';
+
 import { jsx, jsxs, Fragment } from 'react/jsx-runtime';
 import { toJsxRuntime } from 'hast-util-to-jsx-runtime';
 
@@ -30,7 +32,6 @@ import type {
 } from './types';
 
 import {
-  removeTabIndexFromPre,
   throttleHighlighting,
   resolveLanguage,
   resolveTheme,
@@ -100,10 +101,6 @@ export const useShikiHighlighter = (
     .sort()
     .join('-');
 
-  const transformers = useMemo(() => {
-    return [removeTabIndexFromPre, ...(options.transformers || [])];
-  }, [options.transformers]);
-
   const { isMultiTheme, themeId, multiTheme, singleTheme, themesToLoad } =
     useMemo(() => resolveTheme(themeInput), [themeInput]);
 
@@ -118,8 +115,8 @@ export const useShikiHighlighter = (
   });
 
   const buildShikiOptions = (): CodeToHastOptions => {
-    const { defaultColor, cssVariablePrefix } = options;
-    const commonOptions = { lang: languageId, transformers };
+    const { defaultColor, cssVariablePrefix, ...shikiOptions } = options;
+    const languageOption = { lang: languageId };
 
     const themeOptions = isMultiTheme
       ? ({
@@ -131,10 +128,10 @@ export const useShikiHighlighter = (
           theme: singleTheme || DEFAULT_THEMES.dark,
         } as CodeOptionsSingleTheme);
 
-    return { ...commonOptions, ...themeOptions };
+    return { ...languageOption, ...themeOptions, ...shikiOptions };
   };
 
-  useEffect(() => {
+  useDeepCompareEffect(() => {
     let isMounted = true;
 
     const highlightCode = async () => {
@@ -163,16 +160,7 @@ export const useShikiHighlighter = (
       isMounted = false;
       clearTimeout(timeoutControl.current.timeoutId);
     };
-  }, [
-    code,
-    languageId,
-    themeId,
-    customLangId,
-    transformers,
-    options.delay,
-    options.defaultColor,
-    options.cssVariablePrefix,
-  ]);
+  }, [code, languageId, themeId, customLangId, options]);
 
   return highlightedCode;
 };
