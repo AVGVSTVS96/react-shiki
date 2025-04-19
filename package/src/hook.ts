@@ -6,6 +6,8 @@ import {
   type ReactNode,
 } from 'react';
 
+import { useDeepCompareEffect } from 'use-deep-compare';
+
 import { jsx, jsxs, Fragment } from 'react/jsx-runtime';
 import { toJsxRuntime } from 'hast-util-to-jsx-runtime';
 
@@ -129,7 +131,7 @@ export const useShikiHighlighter = (
     return { ...languageOption, ...themeOptions, ...shikiOptions };
   };
 
-  useEffect(() => {
+  useDeepCompareEffect(() => {
     let isMounted = true;
 
     const highlightCode = async () => {
@@ -158,7 +160,7 @@ export const useShikiHighlighter = (
       isMounted = false;
       clearTimeout(timeoutControl.current.timeoutId);
     };
-  }, [code, languageId, themeId, customLangId, JSON.stringify(options)]);
+  }, [code, languageId, themeId, customLangId, options]);
 
   return highlightedCode;
 };
