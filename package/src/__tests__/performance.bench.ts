@@ -1,5 +1,14 @@
-// attribution: ai written test
-import { describe, bench, beforeAll, afterAll } from 'vitest';
+/**
+ * Attribution: Benchmark written by AI.
+ * 
+ * This benchmark measures the performance of the two main transformation approaches:
+ * - codeToHast -> toJsxRuntime: Used in the useShikiHighlighter hook
+ * - codeToHtml -> html-react-parser: An alternative approach
+ *
+ * Each benchmark is run with different code sizes and configurations to provide
+ * a comprehensive view of performance characteristics.
+ */
+import { describe, bench, beforeAll, afterAll, beforeEach } from 'vitest';
 
 import {
   getSingletonHighlighter,
@@ -14,9 +23,7 @@ import type {
   Language,
   Theme,
   Themes,
-  HighlighterOptions,
 } from '../types';
-
 import {
   removeTabIndexFromPre,
   resolveLanguage,
@@ -25,7 +32,16 @@ import {
 
 // --- Test Data ---
 
-const sampleCodeJS = `
+// Small code sample (few lines)
+const smallCodeJS = `
+function hello(name) {
+  console.log('Hello, ' + name + '!');
+  return name;
+}
+`.trim();
+
+// Medium code sample (original JS sample)
+const mediumCodeJS = `
 function hello(name) {
   console.log('Hello, ' + name + '!');
   const arr = [1, 2, 3, 4, 5];
@@ -37,7 +53,8 @@ const result = hello('Developer');
 console.log(result);
 `.trim();
 
-const sampleCodeTSX = `
+// Large code sample (original TSX sample)
+const largeCodeTSX = `
 import React, { useState, useEffect } from 'react';
 
 interface MyComponentProps {
@@ -86,36 +103,61 @@ export const MyComponent: React.FC<MyComponentProps> = ({ initialTitle, items })
 };
 `.trim();
 
+// Very large code sample (for stress testing)
+const veryLargeCodeJS = Array(10).fill(mediumCodeJS).join('\n\n');
+
 // --- Test Configurations ---
 
-const configs = [
+// Base configurations for raw transformation benchmarks
+const rawTransformConfigs = [
   {
-    name: 'JS Single Theme',
-    code: sampleCodeJS,
+    name: 'Small JS - Single Theme',
+    code: smallCodeJS,
     lang: 'javascript',
     theme: 'github-dark',
+    size: 'small',
   },
   {
-    name: 'TSX Single Theme',
-    code: sampleCodeTSX,
+    name: 'Medium JS - Single Theme',
+    code: mediumCodeJS,
+    lang: 'javascript',
+    theme: 'github-dark',
+    size: 'medium',
+  },
+  {
+    name: 'Large TSX - Single Theme',
+    code: largeCodeTSX,
     lang: 'tsx',
     theme: 'github-dark',
+    size: 'large',
   },
   {
-    name: 'JS Multi Theme',
-    code: sampleCodeJS,
+    name: 'Very Large JS - Single Theme',
+    code: veryLargeCodeJS,
+    lang: 'javascript',
+    theme: 'github-dark',
+    size: 'very-large',
+  },
+  {
+    name: 'Medium JS - Multi Theme',
+    code: mediumCodeJS,
     lang: 'javascript',
     theme: { light: 'github-light', dark: 'github-dark' },
+    size: 'medium',
   },
   {
-    name: 'TSX Multi Theme',
-    code: sampleCodeTSX,
+    name: 'Large TSX - Multi Theme',
+    code: largeCodeTSX,
     lang: 'tsx',
     theme: { light: 'github-light', dark: 'github-dark' },
+    size: 'large',
   },
 ];
 
-const shikiOptionsBase: Partial<HighlighterOptions> = {
+
+
+// Base options for Shiki
+const shikiOptionsBase = {
   transformers: [removeTabIndexFromPre],
 };
 
@@ -167,20 +209,27 @@ async function runApproachB(
   return reactNodes;
 }
 
+
+
 // --- Vitest Benchmark Suite ---
 
 let highlighterInstance: Highlighter | null = null;
 
+// Initialize highlighter once before all tests
 beforeAll(async () => {
   console.log('Initializing Shiki highlighter for benchmarks...');
   try {
+    // Use raw transformation configs for all tests
+    const allConfigs = rawTransformConfigs;
+
     const languagesToLoad = new Set(
-      configs
+      allConfigs
         .map((c) => resolveLanguage(c.lang).langsToLoad)
         .filter(Boolean)
     );
+
     const themesToLoad = new Set(
-      configs
+      allConfigs
         .flatMap((c) => resolveTheme(c.theme).themesToLoad)
         .filter(Boolean)
     );
@@ -189,10 +238,10 @@ beforeAll(async () => {
       langs: Array.from(languagesToLoad) as any[],
       themes: Array.from(themesToLoad) as Theme[],
     });
+
     console.log('Highlighter initialized successfully.');
   } catch (error) {
     console.error('Failed to initialize Shiki highlighter:', error);
-    // Optionally re-throw or handle the error to prevent tests from running without the instance
     throw new Error(`Shiki initialization failed in beforeAll: ${error}`);
   }
 }, 30000);
@@ -204,42 +253,64 @@ afterAll(() => {
   console.log('Benchmark suite finished.');
 });
 
-// Loop through configurations and create describe blocks
-// biome-ignore lint/complexity/noForEach: <explanation>
-configs.forEach((config) => {
-  // Use .concurrent here if benchmarks are independent and you want potential speedup
-  // Note: Concurrency might slightly affect stability if resource contention is high.
-  describe(`Scenario: ${config.name}`, () => {
-    // Benchmark Approach A for this config
-    bench(
-      'codeToHast -> toJsxRuntime',
-      async () => {
-        if (!highlighterInstance)
-          throw new Error('Highlighter not initialized in bench A'); // Add safeguard anyway
-        await runApproachA(
-          highlighterInstance,
-          config.code,
-          config.lang,
-          config.theme
-        );
-      },
-      { time: 1000, iterations: 10 }
-    );
+// Warm-up phase before each benchmark group
+beforeEach(() => {
+  // Run a few iterations to warm up the JIT
+  if (highlighterInstance) {
+    for (let i = 0; i < 3; i++) {
+      highlighterInstance.codeToHast('console.log("warm-up");', {
+        lang: 'javascript',
+        theme: 'github-dark',
+      });
+    }
+  }
+});
 
-    // Benchmark Approach B for this config
-    bench(
-      'codeToHtml -> html-react-parser',
-      async () => {
-        if (!highlighterInstance)
-          throw new Error('Highlighter not initialized in bench B'); // Add safeguard anyway
-        await runApproachB(
-          highlighterInstance,
-          config.code,
-          config.lang,
-          config.theme
-        );
-      },
-      { time: 1000, iterations: 10 }
-    );
+// --- 1. Raw Transformation Benchmarks ---
+describe('1. Raw Transformation Performance', () => {
+  rawTransformConfigs.forEach((config) => {
+    describe(`Scenario: ${config.name}`, () => {
+      // Benchmark Approach A (codeToHast -> toJsxRuntime)
+      bench(
+        'codeToHast -> toJsxRuntime',
+        async () => {
+          if (!highlighterInstance)
+            throw new Error('Highlighter not initialized');
+          await runApproachA(
+            highlighterInstance,
+            config.code,
+            config.lang,
+            config.theme
+          );
+        },
+        {
+          time: 2000,  // 2 seconds per benchmark
+          iterations: config.size === 'very-large' ? 5 : 20,  // Fewer iterations for large code
+          warmupIterations: 3,  // Warm up before measuring
+        }
+      );
+
+      // Benchmark Approach B (codeToHtml -> htmlReactParser)
+      bench(
+        'codeToHtml -> html-react-parser',
+        async () => {
+          if (!highlighterInstance)
+            throw new Error('Highlighter not initialized');
+          await runApproachB(
+            highlighterInstance,
+            config.code,
+            config.lang,
+            config.theme
+          );
+        },
+        {
+          time: 2000,
+          iterations: config.size === 'very-large' ? 5 : 20,
+          warmupIterations: 3,
+        }
+      );
+    });
   });
 });
+
+
