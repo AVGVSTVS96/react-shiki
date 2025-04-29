@@ -55,8 +55,7 @@
     "dequal": "^2.0.3",
     "hast-util-to-jsx-runtime": "^2.3.6",
     "shiki": "^3.2.1",
-    "unist-util-visit": "^5.0.0",
-    "use-deep-compare": "^1.3.0"
+    "unist-util-visit": "^5.0.0"
   },
   "devDependencies": {
     "@testing-library/jest-dom": "^6.6.3",
