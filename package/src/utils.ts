@@ -94,7 +94,6 @@ export const throttleHighlighting = (
  */
 type LanguageResult = {
   languageId: string;
-  resolvedLanguage?: LanguageRegistration;
   displayLanguageId: string | null;
   langsToLoad: Language;
 };
@@ -106,7 +105,6 @@ type LanguageResult = {
  * @returns A LanguageResult object containing:
  *   - languageId: The resolved language ID
  *   - displayLanguageId: The display language ID
- *   - resolvedLanguage: The resolved language object
  *   - langToLoad: The language object or string id to load
  */
 export const resolveLanguage = (
