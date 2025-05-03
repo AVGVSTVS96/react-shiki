@@ -31,11 +31,8 @@ import type {
   Themes,
 } from './types';
 
-import {
-  throttleHighlighting,
-  resolveLanguage,
-  resolveTheme,
-} from './utils';
+import { throttleHighlighting } from './utils';
+import { resolveLanguage, resolveTheme } from './utils/resolvers';
 
 const DEFAULT_THEMES: Themes = {
   light: 'github-light',

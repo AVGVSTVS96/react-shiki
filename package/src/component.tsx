@@ -1,7 +1,7 @@
 import './styles.css';
 import { clsx } from 'clsx';
 import { useShikiHighlighter } from './hook';
-import { resolveLanguage } from './utils';
+import { resolveLanguage } from './utils/resolvers';
 
 import type {
   HighlighterOptions,
