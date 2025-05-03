@@ -5,7 +5,7 @@ import {
   isSpecialLang,
 } from 'shiki';
 
-import type { LanguageRegistration } from '../extended-types';
+import type { LanguageRegistration } from './extended-types';
 
 /**
  * Resolved languages and metadate

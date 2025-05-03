@@ -32,7 +32,7 @@ import type {
 } from './types';
 
 import { throttleHighlighting } from './utils';
-import { resolveLanguage, resolveTheme } from './utils/resolvers';
+import { resolveLanguage, resolveTheme } from './resolvers';
 
 const DEFAULT_THEMES: Themes = {
   light: 'github-light',

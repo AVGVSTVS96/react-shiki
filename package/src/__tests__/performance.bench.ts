@@ -22,7 +22,7 @@ import htmlReactParser from 'html-react-parser';
 import type { Language, Theme, Themes } from '../types';
 import { removeTabIndexFromPre } from '../utils';
 
-import { resolveLanguage, resolveTheme } from '../utils/resolvers';
+import { resolveLanguage, resolveTheme } from '../resolvers';
 // --- Test Data ---
 
 // Small code sample (few lines)
