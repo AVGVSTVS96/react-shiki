@@ -6,7 +6,8 @@ import {
   type ReactNode,
 } from 'react';
 
-import parse from 'html-react-parser';
+import { jsx, jsxs, Fragment } from 'react/jsx-runtime';
+import { toJsxRuntime } from 'hast-util-to-jsx-runtime';
 
 import {
   getSingletonHighlighter,
@@ -35,7 +36,7 @@ import {
   resolveTheme,
 } from './utils';
 
-const DEFAULT_THEMES = {
+const DEFAULT_THEMES: Themes = {
   light: 'github-light',
   dark: 'github-dark',
 };
@@ -145,10 +146,10 @@ export const useShikiHighlighter = (
 
       const highlighterOptions: CodeToHastOptions = buildShikiOptions();
 
-      const html = highlighter.codeToHtml(code, highlighterOptions);
+      const hast = highlighter.codeToHast(code, highlighterOptions);
 
       if (isMounted) {
-        setHighlightedCode(parse(html));
+        setHighlightedCode(toJsxRuntime(hast, { jsx, jsxs, Fragment }));
       }
     };
 
