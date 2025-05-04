@@ -20,7 +20,6 @@ import { toJsxRuntime } from 'hast-util-to-jsx-runtime';
 import htmlReactParser from 'html-react-parser';
 
 import type { Language, Theme, Themes } from '../types';
-import { removeTabIndexFromPre } from '../utils';
 
 import { resolveLanguage, resolveTheme } from '../resolvers';
 // --- Test Data ---
@@ -148,9 +147,7 @@ const rawTransformConfigs = [
 ];
 
 // Base options for Shiki
-const shikiOptionsBase = {
-  transformers: [removeTabIndexFromPre],
-};
+const shikiOptionsBase = {};
 
 // --- Benchmark Functions ---
 

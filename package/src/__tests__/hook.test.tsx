@@ -3,7 +3,6 @@ import { render, waitFor } from '@testing-library/react';
 import { useShikiHighlighter } from '../hook';
 import type { Language, Theme } from '../types';
 import type { ShikiTransformer } from 'shiki';
-import { removeTabIndexFromPre } from '../utils';
 
 interface TestComponentProps {
   code: string;
@@ -24,7 +23,7 @@ describe('useShikiHighlighter Hook', () => {
       code: '<div>Hello World</div>',
       language: 'html',
       theme: 'github-light',
-      transformers: [removeTabIndexFromPre],
+      transformers: [],
       ...props,
     };
     return render(<TestComponent {...defaultProps} />);
@@ -36,15 +35,6 @@ describe('useShikiHighlighter Hook', () => {
       const container = getByTestId('highlighted');
       const preElement = container.querySelector('pre.shiki.github-light');
       expect(preElement).toBeInTheDocument();
-    });
-  });
-
-  test('sets tabindex=-1 on pre element', async () => {
-    const { getByTestId } = renderComponent();
-    await waitFor(() => {
-      const container = getByTestId('highlighted');
-      const preElement = container.querySelector('pre.shiki.github-light');
-      expect(preElement).toHaveAttribute('tabindex', '-1');
     });
   });
 

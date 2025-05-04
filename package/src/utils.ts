@@ -39,22 +39,6 @@ export const isInlineCode = (node: Element): boolean => {
 };
 
 /**
- * Shiki transformer to remove tabindex from <pre> elements
- *
- * Consider retaining tabindex for WCAG 3.1 compliance, scrollable code blocks should be focusable
- *   https://github.com/shikijs/shiki/issues/428
- *   https://www.w3.org/WAI/standards-guidelines/act/rules/0ssw9k/proposed/
- */
-export const removeTabIndexFromPre: ShikiTransformer = {
-  pre(node) {
-    if ('properties' in node) {
-      node.properties.tabindex = '-1';
-    }
-    return node;
-  },
-};
-
-/**
  * Optionally throttles rapid sequential highlighting operations
  * Exported for testing in __tests__/throttleHighlighting.test.ts
  *
