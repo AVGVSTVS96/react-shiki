@@ -9,6 +9,7 @@ interface TestComponentProps {
   language: Language;
   theme: Theme;
   transformers?: ShikiTransformer[];
+  tabindex?: string;
 }
 
 const TestComponent = ({ code, language, theme, transformers }: TestComponentProps) => {
@@ -34,15 +35,6 @@ describe('useShikiHighlighter Hook', () => {
       const container = getByTestId('highlighted');
       const preElement = container.querySelector('pre.shiki.github-light');
       expect(preElement).toBeInTheDocument();
-    });
-  });
-
-  test('sets tabindex=-1 on pre element', async () => {
-    const { getByTestId } = renderComponent();
-    await waitFor(() => {
-      const container = getByTestId('highlighted');
-      const preElement = container.querySelector('pre.shiki.github-light');
-      expect(preElement).toHaveAttribute('tabindex', '-1');
     });
   });
 

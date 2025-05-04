@@ -6,6 +6,8 @@ import {
   type ReactNode,
 } from 'react';
 
+import { dequal } from 'dequal/lite';
+
 import { jsx, jsxs, Fragment } from 'react/jsx-runtime';
 import { toJsxRuntime } from 'hast-util-to-jsx-runtime';
 
@@ -16,10 +18,7 @@ import {
   type CodeOptionsMultipleThemes,
 } from 'shiki';
 
-import type {
-  LanguageRegistration,
-  ShikiLanguageRegistration,
-} from './extended-types';
+import type { ShikiLanguageRegistration } from './extended-types';
 
 import type {
   Language,
@@ -29,16 +28,40 @@ import type {
   Themes,
 } from './types';
 
-import {
-  removeTabIndexFromPre,
-  throttleHighlighting,
-  resolveLanguage,
-  resolveTheme,
-} from './utils';
+import { throttleHighlighting } from './utils';
+import { resolveLanguage, resolveTheme } from './resolvers';
 
 const DEFAULT_THEMES: Themes = {
   light: 'github-light',
   dark: 'github-dark',
+};
+
+/**
+ * Returns a deep-stable reference and a version counter that only changes when content changes.
+ * Includes optimizations for primitive values and reference equality.
+ */
+const useStableOptions = <T>(value: T) => {
+  const ref = useRef(value);
+  const revision = useRef(0);
+
+  // Fast-path for primitive values
+  if (typeof value !== 'object' || value === null) {
+    if (value !== ref.current) {
+      ref.current = value;
+      revision.current += 1;
+    }
+    return [value, revision.current] as const;
+  }
+
+  // Reference equality check before expensive deep comparison
+  if (value !== ref.current) {
+    if (!dequal(value, ref.current)) {
+      ref.current = value;
+      revision.current += 1;
+    }
+  }
+
+  return [ref.current, revision.current] as const;
 };
 
 /**
@@ -88,38 +111,29 @@ export const useShikiHighlighter = (
   const [highlightedCode, setHighlightedCode] =
     useState<ReactNode | null>(null);
 
-  const normalizedCustomLanguages: LanguageRegistration[] =
-    options.customLanguages
-      ? Array.isArray(options.customLanguages)
-        ? options.customLanguages
-        : [options.customLanguages]
-      : [];
-
-  const customLangId = normalizedCustomLanguages
-    .map((lang) => lang.name || '')
-    .sort()
-    .join('-');
-
-  const transformers = useMemo(() => {
-    return [removeTabIndexFromPre, ...(options.transformers || [])];
-  }, [options.transformers]);
-
-  const { isMultiTheme, themeId, multiTheme, singleTheme, themesToLoad } =
-    useMemo(() => resolveTheme(themeInput), [themeInput]);
+  // Stabilize options, language and theme inputs to prevent unnecessary
+  // re-renders or recalculations when object references change
+  const [stableLang, langRev] = useStableOptions(lang);
+  const [stableTheme, themeRev] = useStableOptions(themeInput);
+  const [stableOpts, optsRev] = useStableOptions(options);
 
   const { languageId, langsToLoad } = useMemo(
-    () => resolveLanguage(lang, normalizedCustomLanguages),
-    [lang, customLangId]
+    () => resolveLanguage(stableLang, stableOpts.customLanguages),
+    [stableLang, stableOpts.customLanguages]
   );
+
+  const { isMultiTheme, themeId, multiTheme, singleTheme, themesToLoad } =
+    useMemo(() => resolveTheme(stableTheme), [stableTheme]);
 
   const timeoutControl = useRef<TimeoutState>({
     nextAllowedTime: 0,
     timeoutId: undefined,
   });
 
-  const buildShikiOptions = (): CodeToHastOptions => {
-    const { defaultColor, cssVariablePrefix } = options;
-    const commonOptions = { lang: languageId, transformers };
+  const shikiOptions = useMemo<CodeToHastOptions>(() => {
+    const { defaultColor, cssVariablePrefix, ...restOptions } =
+      stableOpts;
+    const languageOption = { lang: languageId };
 
     const themeOptions = isMultiTheme
       ? ({
@@ -131,8 +145,8 @@ export const useShikiHighlighter = (
           theme: singleTheme || DEFAULT_THEMES.dark,
         } as CodeOptionsSingleTheme);
 
-    return { ...commonOptions, ...themeOptions };
-  };
+    return { ...languageOption, ...themeOptions, ...restOptions };
+  }, [languageId, themeId, langRev, themeRev, optsRev]);
 
   useEffect(() => {
     let isMounted = true;
@@ -144,17 +158,17 @@ export const useShikiHighlighter = (
         themes: themesToLoad,
       });
 
-      const highlighterOptions: CodeToHastOptions = buildShikiOptions();
-
-      const hast = highlighter.codeToHast(code, highlighterOptions);
+      const hast = highlighter.codeToHast(code, shikiOptions);
 
       if (isMounted) {
         setHighlightedCode(toJsxRuntime(hast, { jsx, jsxs, Fragment }));
       }
     };
 
-    if (options.delay) {
-      throttleHighlighting(highlightCode, timeoutControl, options.delay);
+    const { delay } = stableOpts;
+
+    if (delay) {
+      throttleHighlighting(highlightCode, timeoutControl, delay);
     } else {
       highlightCode().catch(console.error);
     }
@@ -163,16 +177,7 @@ export const useShikiHighlighter = (
       isMounted = false;
       clearTimeout(timeoutControl.current.timeoutId);
     };
-  }, [
-    code,
-    languageId,
-    themeId,
-    customLangId,
-    transformers,
-    options.delay,
-    options.defaultColor,
-    options.cssVariablePrefix,
-  ]);
+  }, [code, shikiOptions, stableOpts.delay]);
 
   return highlightedCode;
 };

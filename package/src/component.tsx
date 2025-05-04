@@ -1,7 +1,7 @@
 import './styles.css';
 import { clsx } from 'clsx';
 import { useShikiHighlighter } from './hook';
-import { resolveLanguage } from './utils';
+import { resolveLanguage } from './resolvers';
 
 import type {
   HighlighterOptions,
@@ -117,6 +117,7 @@ export const ShikiHighlighter = ({
   children: code,
   as: Element = 'pre',
   customLanguages,
+  ...shikiOptions
 }: ShikiHighlighterProps): React.ReactElement => {
   const options: HighlighterOptions = {
     delay,
@@ -124,16 +125,14 @@ export const ShikiHighlighter = ({
     customLanguages,
     defaultColor,
     cssVariablePrefix,
+    ...shikiOptions,
   };
 
-  const normalizedCustomLanguages = customLanguages
-    ? Array.isArray(customLanguages)
-      ? customLanguages
-      : [customLanguages]
-    : [];
-
-  const { displayLanguageId } =
-    resolveLanguage(language, normalizedCustomLanguages);
+  // Use resolveLanguage to get displayLanguageId directly
+  const { displayLanguageId } = resolveLanguage(
+    language,
+    customLanguages
+  );
 
   const highlightedCode = useShikiHighlighter(
     code,

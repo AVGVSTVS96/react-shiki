@@ -1,6 +1,6 @@
 /**
  * Attribution: Benchmark written by AI.
- * 
+ *
  * This benchmark measures the performance of the two main transformation approaches:
  * - codeToHast -> toJsxRuntime: Used in the useShikiHighlighter hook
  * - codeToHtml -> html-react-parser: An alternative approach
@@ -19,17 +19,9 @@ import { jsx, jsxs, Fragment } from 'react/jsx-runtime';
 import { toJsxRuntime } from 'hast-util-to-jsx-runtime';
 import htmlReactParser from 'html-react-parser';
 
-import type {
-  Language,
-  Theme,
-  Themes,
-} from '../types';
-import {
-  removeTabIndexFromPre,
-  resolveLanguage,
-  resolveTheme,
-} from '../utils';
+import type { Language, Theme, Themes } from '../types';
 
+import { resolveLanguage, resolveTheme } from '../resolvers';
 // --- Test Data ---
 
 // Small code sample (few lines)
@@ -154,12 +146,8 @@ const rawTransformConfigs = [
   },
 ];
 
-
-
 // Base options for Shiki
-const shikiOptionsBase = {
-  transformers: [removeTabIndexFromPre],
-};
+const shikiOptionsBase = {};
 
 // --- Benchmark Functions ---
 
@@ -208,8 +196,6 @@ async function runApproachB(
   const reactNodes = htmlReactParser(html);
   return reactNodes;
 }
-
-
 
 // --- Vitest Benchmark Suite ---
 
@@ -268,7 +254,7 @@ beforeEach(() => {
 
 // --- 1. Raw Transformation Benchmarks ---
 describe('1. Raw Transformation Performance', () => {
-  rawTransformConfigs.forEach((config) => {
+  for (const config of rawTransformConfigs) {
     describe(`Scenario: ${config.name}`, () => {
       // Benchmark Approach A (codeToHast -> toJsxRuntime)
       bench(
@@ -284,9 +270,9 @@ describe('1. Raw Transformation Performance', () => {
           );
         },
         {
-          time: 2000,  // 2 seconds per benchmark
-          iterations: config.size === 'very-large' ? 5 : 20,  // Fewer iterations for large code
-          warmupIterations: 3,  // Warm up before measuring
+          time: 2000, // 2 seconds per benchmark
+          iterations: config.size === 'very-large' ? 5 : 20, // Fewer iterations for large code
+          warmupIterations: 3, // Warm up before measuring
         }
       );
 
@@ -310,7 +296,5 @@ describe('1. Raw Transformation Performance', () => {
         }
       );
     });
-  });
+  }
 });
-
-
