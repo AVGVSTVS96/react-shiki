@@ -31,10 +31,10 @@ A performant client-side syntax highlighting component and hook for React, built
 ## Features
 
 - 🖼️ Provides both a `ShikiHighlighter` component and a `useShikiHighlighter` hook for more flexibility
-- 🔐 No `dangerouslySetInnerHTML` - output from Shiki is parsed using `html-react-parser`
+- 🔐 Shiki output is processed from HAST directly into React elements, no `dangerouslySetInnerHTML` required
 - 📦 Supports all built-in Shiki languages and themes
 - 🖌️ Full support for custom TextMate themes and languages
-- 🔧 Supports passing custom Shiki transformers to the highlighter
+- 🔧 Supports passing custom Shiki transformers to the highlighter, in addition to all other options supported by `codeToHast`
 - 🚰 Performant highlighting of streamed code, with optional throttling
 - 📚 Includes minimal default styles for code blocks
 - 🚀 Shiki dynamically imports only the languages and themes used on a page for optimal performance
@@ -79,6 +79,9 @@ function CodeBlock({ code, language }) {
 ```
 
 ### Common Configuration Options
+
+> [!IMPORTANT]
+> `react-shiki` now supports all options that [`codeToHast`](https://github.com/shikijs/shiki/blob/main/packages/types/src/options.ts#L121) supports, this table has not yet been updated to reflect this.
 
 | Option              | Type               | Default         | Description                                                               |
 | ------------------- | ------------------ | --------------- | ------------------------------------------------------------------------- |
@@ -447,7 +450,7 @@ export const CodeHighlight = ({
 };
 ```
 
-Passed to `react-markdown` as a `code` component in memo-ized chat messages:
+Passed to `react-markdown` as a `code` component in memoized chat messages:
 
 ```tsx
 const RenderedMessage = React.memo(({ message }: { message: Message }) => (
