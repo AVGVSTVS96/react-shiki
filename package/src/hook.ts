@@ -117,7 +117,6 @@ export const useShikiHighlighter = (
   const [stableTheme, themeRev] = useStableOptions(themeInput);
   const [stableOpts, optsRev] = useStableOptions(options);
 
-  // Use the updated resolveLanguage function that handles normalization internally
   const { languageId, langsToLoad } = useMemo(
     () => resolveLanguage(stableLang, stableOpts.customLanguages),
     [stableLang, stableOpts.customLanguages]
