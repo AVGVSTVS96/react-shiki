@@ -8,7 +8,7 @@ import {
 import type { LanguageRegistration } from './extended-types';
 
 /**
- * Resolved languages and metadate
+ * Resolved languages and metadata
  */
 type LanguageResult = {
   languageId: string;
