@@ -128,15 +128,10 @@ export const ShikiHighlighter = ({
     ...shikiOptions,
   };
 
-  const normalizedCustomLanguages = customLanguages
-    ? Array.isArray(customLanguages)
-      ? customLanguages
-      : [customLanguages]
-    : [];
-
+  // Use resolveLanguage to get displayLanguageId directly
   const { displayLanguageId } = resolveLanguage(
     language,
-    normalizedCustomLanguages
+    customLanguages
   );
 
   const highlightedCode = useShikiHighlighter(

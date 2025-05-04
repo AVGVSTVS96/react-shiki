@@ -18,10 +18,7 @@ import {
   type CodeOptionsMultipleThemes,
 } from 'shiki';
 
-import type {
-  LanguageRegistration,
-  ShikiLanguageRegistration,
-} from './extended-types';
+import type { ShikiLanguageRegistration } from './extended-types';
 
 import type {
   Language,
@@ -120,28 +117,10 @@ export const useShikiHighlighter = (
   const [stableTheme, themeRev] = useStableOptions(themeInput);
   const [stableOpts, optsRev] = useStableOptions(options);
 
-  const normalizedCustomLanguages = useMemo<LanguageRegistration[]>(
-    () =>
-      stableOpts.customLanguages
-        ? Array.isArray(stableOpts.customLanguages)
-          ? stableOpts.customLanguages
-          : [stableOpts.customLanguages]
-        : [],
-    [stableOpts.customLanguages]
-  );
-
-  const customLangId = useMemo(
-    () =>
-      normalizedCustomLanguages
-        .map((lang) => lang.name || '')
-        .sort()
-        .join('-'),
-    [normalizedCustomLanguages]
-  );
-
+  // Use the updated resolveLanguage function that handles normalization internally
   const { languageId, langsToLoad } = useMemo(
-    () => resolveLanguage(stableLang, normalizedCustomLanguages),
-    [stableLang, customLangId]
+    () => resolveLanguage(stableLang, stableOpts.customLanguages),
+    [stableLang, stableOpts.customLanguages]
   );
 
   const { isMultiTheme, themeId, multiTheme, singleTheme, themesToLoad } =

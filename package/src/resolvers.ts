@@ -19,7 +19,7 @@ type LanguageResult = {
 /**
  * Resolves the language input to standardized IDs and objects for Shiki and UI display
  * @param lang The language input from props
- * @param customLanguages An array of custom textmate grammar objects
+ * @param customLanguages An array of custom textmate grammar objects or a single grammar object
  * @returns A LanguageResult object containing:
  *   - languageId: The resolved language ID
  *   - displayLanguageId: The display language ID
@@ -27,8 +27,14 @@ type LanguageResult = {
  */
 export const resolveLanguage = (
   lang: Language,
-  customLanguages: LanguageRegistration[] = []
+  customLanguages?: LanguageRegistration | LanguageRegistration[]
 ): LanguageResult => {
+  const normalizedCustomLangs = customLanguages
+    ? Array.isArray(customLanguages)
+      ? customLanguages
+      : [customLanguages]
+    : [];
+
   const bundledLangs = new Set(
     Object.keys(bundledLanguages).map((id) => id.toLowerCase())
   );
@@ -56,7 +62,7 @@ export const resolveLanguage = (
     str?.toLowerCase() === lowerLang;
 
   // Check if the string identifies a provided custom language
-  const customMatch = customLanguages.find(
+  const customMatch = normalizedCustomLangs.find(
     (cl) =>
       matches(cl.name) ||
       matches(cl.scopeName) ||
