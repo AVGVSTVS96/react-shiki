@@ -1,5 +1,20 @@
 # react-shiki
 
+## 0.6.0
+
+### Minor Changes
+
+- - Full support for all Shiki options is now available. _[`#50`](https://github.com/AVGVSTVS96/react-shiki/pull/50) [`b28a1ac`](https://github.com/avgvstvs96/react-shiki/commit/b28a1ac15c3a1f512e44aa44d2b95759c75e3886) [@AVGVSTVS96](https://github.com/AVGVSTVS96)_
+
+  - **Breaking change:** Built-in removal of `tabindex` from code blocks has been removed. By default, code blocks will now be focusable (`tabindex="0"`), aligning with Shiki’s upstream default and WCAG accessibility guidelines. If you want to restore the previous non-focusable behavior, explicitly set `tabindex: -1` in your options. For more details and accessibility context, see References below.
+
+  **References:**
+
+  - WCAG 3.1 compliance: scrollable `<pre>` elements should be focusable ([WCAG rule](https://www.w3.org/WAI/standards-guidelines/act/rules/0ssw9k/proposed/))
+  - Rationale and discussion: [shikijs/shiki#428](https://github.com/shikijs/shiki/issues/428)
+
+- Improve performance by 5-10% _[`3d81842`](https://github.com/avgvstvs96/react-shiki/commit/3d818426b71e5d8638ed6d6c6fc761dcd02cacbc) [@AVGVSTVS96](https://github.com/AVGVSTVS96)_
+
 ## 0.5.3
 
 ### Patch Changes
