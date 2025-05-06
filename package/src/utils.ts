@@ -1,6 +1,5 @@
 import { visit } from 'unist-util-visit';
 
-import type { ShikiTransformer } from 'shiki';
 import type { TimeoutState, Element } from './types';
 
 /**

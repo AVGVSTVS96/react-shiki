@@ -55,7 +55,7 @@ You can use either the `ShikiHighlighter` component or the `useShikiHighlighter`
 **Using the Component:**
 
 ```tsx
-import { ShikiHighlighter } from "react-shiki";
+import ShikiHighlighter from "react-shiki";
 
 function CodeBlock() {
   return (
@@ -114,7 +114,7 @@ Create a component to handle syntax highlighting:
 
 ```tsx
 import ReactMarkdown from "react-markdown";
-import { ShikiHighlighter, isInlineCode } from "react-shiki";
+import ShikiHighlighter, { isInlineCode } from "react-shiki";
 
 const CodeHighlight = ({ className, children, node, ...props }) => {
   const code = String(children).trim();
@@ -158,7 +158,7 @@ ways to replicate this functionality and API.
 `react-shiki` exports `isInlineCode` which parses the `node` prop from `react-markdown` and identifies inline code by checking for the absence of newline characters:
 
 ```tsx
-import { isInlineCode, ShikiHighlighter } from "react-shiki";
+import ShikiHighlighter, { isInlineCode } from "react-shiki";
 
 const CodeHighlight = ({ className, children, node, ...props }) => {
   const match = className?.match(/language-(\w+)/);
