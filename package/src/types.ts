@@ -6,11 +6,11 @@ import type {
   ThemeRegistrationAny,
   StringLiteralUnion,
   CodeToHastOptions,
-} from 'shiki';
+} from "shiki";
 
-import type { LanguageRegistration } from './extended-types';
+import type { LanguageRegistration } from "./extended-types";
 
-import type { Element as HastElement } from 'hast';
+import type { Element as HastElement } from "hast";
 
 /**
  * HTML Element, use to type `node` from react-markdown
@@ -31,6 +31,36 @@ type Language =
  * @see https://shiki.style/themes
  */
 type Theme = ThemeRegistrationAny | StringLiteralUnion<BundledTheme>;
+
+/**
+ * Fine-grained bundle options.
+ */
+interface FineGrainedBundleOptions {
+  /**
+   * The languages to bundle, specified by their string identifiers.
+   * @example ['typescript', 'javascript', 'vue']
+   */
+  langs: readonly BundledLanguage[];
+
+  /**
+   * The themes to bundle, specified by their string identifiers.
+   * @example ['github-dark', 'github-light']
+   */
+  themes: readonly BundledTheme[];
+
+  /**
+   * The engine to use for syntax highlighting.
+   * @default 'javascript'
+   */
+  engine?: "oniguruma" | "javascript" | "javascript-raw";
+
+  /**
+   * Use precompiled grammars.
+   * Only available when `engine` is set to `javascript` or `javascript-raw`.
+   * @default false
+   */
+  precompiled?: boolean;
+}
 
 /**
  * A map of color names to themes.
@@ -76,9 +106,15 @@ interface HighlighterOptions
   extends ReactShikiOptions,
     Pick<
       CodeOptionsMultipleThemes<BundledTheme>,
-      'defaultColor' | 'cssVariablePrefix'
+      "defaultColor" | "cssVariablePrefix"
     >,
-    Omit<CodeToHastOptions, 'lang' | 'theme' | 'themes'> {}
+    Omit<CodeToHastOptions, "lang" | "theme" | "themes"> {
+  /**
+   * Fine-grained bundle options to reduce bundle size.
+   * When provided, only specified languages and themes will be included.
+   */
+  fineGrainedBundle?: FineGrainedBundleOptions;
+}
 
 /**
  * State for the throttling logic
@@ -101,4 +137,5 @@ export type {
   Element,
   TimeoutState,
   HighlighterOptions,
+  FineGrainedBundleOptions,
 };
