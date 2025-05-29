@@ -10,7 +10,6 @@ export default defineConfig((options) => {
     dts: true,
     sourcemap: true,
     clean: !dev,
-    minify: !dev,
     injectStyle: true,
     external: [...Object.keys(peerDependencies)],
 
