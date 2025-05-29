@@ -19,7 +19,9 @@ import {
 } from 'shiki';
 
 import type { ShikiLanguageRegistration } from './extended-types';
+import { createFineGrainedBundle } from './bundle';
 
+import type { Root } from 'hast';
 import type {
   Language,
   Theme,
@@ -130,9 +132,48 @@ export const useShikiHighlighter = (
     timeoutId: undefined,
   });
 
+  const useFineGrainedBundle = !!stableOpts.fineGrainedBundle;
+
+  const bundleCache = useRef<Map<string, Promise<any>>>(new Map());
+
+  const bundle = useMemo(() => {
+    if (!useFineGrainedBundle) return null;
+
+    const {
+      langs,
+      themes,
+      engine = 'javascript',
+      precompiled = false,
+      // biome-ignore lint/style/noNonNullAssertion: will fix
+    } = stableOpts.fineGrainedBundle!; // TODO: Fix types
+
+    const cacheKey = `${[...langs].sort().join(',')}|${[...themes]
+      .sort()
+      .join(',')}|${engine}|${precompiled}`;
+
+    if (bundleCache.current.has(cacheKey)) {
+      return bundleCache.current.get(cacheKey);
+    }
+
+    const bundlePromise = createFineGrainedBundle({
+      langs,
+      themes,
+      engine,
+      precompiled,
+    });
+
+    bundleCache.current.set(cacheKey, bundlePromise);
+
+    return bundlePromise;
+  }, [useFineGrainedBundle, stableOpts.fineGrainedBundle]);
+
   const shikiOptions = useMemo<CodeToHastOptions>(() => {
-    const { defaultColor, cssVariablePrefix, ...restOptions } =
-      stableOpts;
+    const {
+      defaultColor,
+      cssVariablePrefix,
+      fineGrainedBundle,
+      ...restOptions
+    } = stableOpts;
     const languageOption = { lang: languageId };
 
     const themeOptions = isMultiTheme
@@ -153,12 +194,17 @@ export const useShikiHighlighter = (
 
     const highlightCode = async () => {
       if (!languageId) return;
-      const highlighter = await getSingletonHighlighter({
-        langs: [langsToLoad as ShikiLanguageRegistration],
-        themes: themesToLoad,
-      });
-
-      const hast = highlighter.codeToHast(code, shikiOptions);
+      let hast: Root;
+      if (useFineGrainedBundle && bundle) {
+        const resolvedBundle = await bundle;
+        hast = await resolvedBundle.codeToHast(code, shikiOptions);
+      } else {
+        const highlighter = await getSingletonHighlighter({
+          langs: [langsToLoad as ShikiLanguageRegistration],
+          themes: themesToLoad,
+        });
+        hast = highlighter.codeToHast(code, shikiOptions);
+      }
 
       if (isMounted) {
         setHighlightedCode(toJsxRuntime(hast, { jsx, jsxs, Fragment }));
@@ -177,7 +223,13 @@ export const useShikiHighlighter = (
       isMounted = false;
       clearTimeout(timeoutControl.current.timeoutId);
     };
-  }, [code, shikiOptions, stableOpts.delay]);
+  }, [
+    code,
+    shikiOptions,
+    stableOpts.delay,
+    stableOpts.fineGrainedBundle,
+    useFineGrainedBundle,
+  ]);
 
   return highlightedCode;
 };

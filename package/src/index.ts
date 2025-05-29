@@ -1,10 +1,11 @@
-export { useShikiHighlighter } from './hook';
-export { isInlineCode, rehypeInlineCodeProperty } from './utils';
+export { useShikiHighlighter } from "./hook";
+export { isInlineCode, rehypeInlineCodeProperty } from "./utils";
+export { createFineGrainedBundle } from "./bundle";
 
 export {
   ShikiHighlighter as default,
   type ShikiHighlighterProps,
-} from './component';
+} from "./component";
 
 export type {
   Language,
@@ -12,4 +13,5 @@ export type {
   Themes,
   Element,
   HighlighterOptions,
-} from './types';
+  FineGrainedBundleOptions,
+} from "./types";

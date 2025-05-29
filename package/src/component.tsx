@@ -1,14 +1,9 @@
-import './styles.css';
-import { clsx } from 'clsx';
-import { useShikiHighlighter } from './hook';
-import { resolveLanguage } from './resolvers';
+import "./styles.css";
+import { clsx } from "clsx";
+import { useShikiHighlighter } from "./hook";
+import { resolveLanguage } from "./resolvers";
 
-import type {
-  HighlighterOptions,
-  Language,
-  Theme,
-  Themes,
-} from './types';
+import type { HighlighterOptions, Language, Theme, Themes } from "./types";
 
 /**
  * Props for the ShikiHighlighter component
@@ -115,8 +110,9 @@ export const ShikiHighlighter = ({
   langClassName,
   showLanguage = true,
   children: code,
-  as: Element = 'pre',
+  as: Element = "pre",
   customLanguages,
+  fineGrainedBundle,
   ...shikiOptions
 }: ShikiHighlighterProps): React.ReactElement => {
   const options: HighlighterOptions = {
@@ -125,29 +121,21 @@ export const ShikiHighlighter = ({
     customLanguages,
     defaultColor,
     cssVariablePrefix,
+    fineGrainedBundle,
     ...shikiOptions,
   };
 
-  // Use resolveLanguage to get displayLanguageId directly
-  const { displayLanguageId } = resolveLanguage(
-    language,
-    customLanguages
-  );
+  const { displayLanguageId } = resolveLanguage(language, customLanguages);
 
-  const highlightedCode = useShikiHighlighter(
-    code,
-    language,
-    theme,
-    options
-  );
+  const highlightedCode = useShikiHighlighter(code, language, theme, options);
 
   return (
     <Element
       data-testid="shiki-container"
       className={clsx(
-        'relative',
-        'not-prose',
-        addDefaultStyles && 'defaultStyles',
+        "relative",
+        "not-prose",
+        addDefaultStyles && "defaultStyles",
         className
       )}
       style={style}
@@ -155,7 +143,7 @@ export const ShikiHighlighter = ({
     >
       {showLanguage && displayLanguageId ? (
         <span
-          className={clsx('languageLabel', langClassName)}
+          className={clsx("languageLabel", langClassName)}
           style={langStyle}
           id="language-label"
         >
