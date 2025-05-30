@@ -82,14 +82,7 @@ function CodeBlock({ code, language }) {
 ```
 
 ## Bundle Options
-`react-shiki`, like `shiki`, supports fine-grained bundles as well as `web` and `core` entry points to optimize your bundle size.
-
-**📦 Choose your bundle strategy:**
-- `react-shiki` - Full bundle (~1.2MB gzipped) with all languages
-- `react-shiki/web` - Web bundle (~695KB gzipped) with web languages  
-- `react-shiki/core` - Minimal bundle with custom highlighter control
-
-React-shiki offers three entry points to balance convenience and bundle optimization:
+`react-shiki`, like `shiki`, offers three entry points to balance convenience and bundle optimization:
 
 ### `react-shiki` (Full Bundle)
 ```tsx
@@ -97,7 +90,7 @@ import ShikiHighlighter from 'react-shiki';
 ```
 - **Size**: ~6.4MB minified, 1.2MB gzipped
 - **Languages**: All Shiki languages and themes
-- **Use case**: Demos, prototyping, unknown language requirements
+- **Use case**: Unknown language requirements, maximum language support
 - **Setup**: Zero configuration required
 
 ### `react-shiki/web` (Web Bundle)  
@@ -107,7 +100,7 @@ import ShikiHighlighter from 'react-shiki/web';
 - **Size**: ~3.8MB minified, 695KB gzipped
 - **Languages**: Web-focused languages (HTML, CSS, JS, TS, JSON, Markdown, Vue, JSX, Svelte)
 - **Use case**: Web applications with balanced size/functionality
-- **Setup**: Drop-in replacement for main entry
+- **Setup**: Drop-in replacement for main entry point
 
 ### `react-shiki/core` (Minimal Bundle)
 ```tsx
