@@ -1,12 +1,12 @@
-import type { Highlighter, HighlighterCore } from 'shiki';
+import type { HighlighterCore } from 'shiki';
 
 /**
  * Validates that a highlighter is provided for the core bundle.
  * The core bundle requires users to provide their own highlighter instance.
  */
 export function validateCoreHighlighter(
-  highlighter: Highlighter | HighlighterCore | undefined
-): Highlighter | HighlighterCore {
+  highlighter: HighlighterCore | undefined
+): HighlighterCore {
   if (!highlighter) {
     throw new Error(
       'react-shiki/core requires a custom highlighter. ' +
