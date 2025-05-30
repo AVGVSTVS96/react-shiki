@@ -1,5 +1,6 @@
 import { useShikiHighlighter as useBaseHook } from './lib/hook';
 import { createWebHighlighter } from './bundles/web';
+import type { UseShikiHighlighter } from './lib/types';
 
 export { isInlineCode, rehypeInlineCodeProperty } from './lib/utils';
 
@@ -8,6 +9,7 @@ import { createShikiHighlighterComponent, type ShikiHighlighterProps } from './l
 export type { ShikiHighlighterProps };
 
 export type {
+  UseShikiHighlighter,
   Language,
   Theme,
   Themes,
@@ -25,11 +27,11 @@ export type {
  * - `react-shiki` for full shiki bundle (~6.4MB minified, 1.2MB gzipped)
  * - `react-shiki/core` for custom fine-grained bundle
  */
-export const useShikiHighlighter = (
-  code: string,
-  lang: Parameters<typeof useBaseHook>[1],
-  themeInput: Parameters<typeof useBaseHook>[2],
-  options: Parameters<typeof useBaseHook>[4] = {}
+export const useShikiHighlighter: UseShikiHighlighter = (
+  code,
+  lang,
+  themeInput,
+  options = {}
 ) => {
   return useBaseHook(
     code,

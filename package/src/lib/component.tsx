@@ -1,4 +1,4 @@
-import '../styles.css';
+import './styles.css';
 import { clsx } from 'clsx';
 import { resolveLanguage } from './resolvers';
 

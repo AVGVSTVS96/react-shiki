@@ -10,6 +10,8 @@ import type {
   HighlighterCore,
 } from 'shiki';
 
+import type { ReactNode } from 'react';
+
 import type { LanguageRegistration } from './extended-types';
 
 import type { Element as HastElement } from 'hast';
@@ -124,6 +126,17 @@ interface TimeoutState {
    */
   nextAllowedTime: number;
 }
+
+/**
+ * Public API signature for the useShikiHighlighter hook.
+ * This ensures all entry points have consistent signatures.
+ */
+export type UseShikiHighlighter = (
+  code: string,
+  lang: Language,
+  themeInput: Theme | Themes,
+  options?: HighlighterOptions
+) => ReactNode;
 
 export type {
   Language,
