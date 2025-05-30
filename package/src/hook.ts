@@ -11,11 +11,12 @@ import { dequal } from 'dequal/lite';
 import { jsx, jsxs, Fragment } from 'react/jsx-runtime';
 import { toJsxRuntime } from 'hast-util-to-jsx-runtime';
 
-import {
-  getSingletonHighlighter,
-  type CodeToHastOptions,
-  type CodeOptionsSingleTheme,
-  type CodeOptionsMultipleThemes,
+import type {
+  CodeToHastOptions,
+  CodeOptionsSingleTheme,
+  CodeOptionsMultipleThemes,
+  Highlighter,
+  HighlighterCore,
 } from 'shiki';
 
 import type { ShikiLanguageRegistration } from './extended-types';
@@ -148,15 +149,24 @@ export const useShikiHighlighter = (
     return { ...languageOption, ...themeOptions, ...restOptions };
   }, [languageId, themeId, langRev, themeRev, optsRev]);
 
+  const customHighlighter = stableOpts.highlighter;
+
   useEffect(() => {
     let isMounted = true;
 
     const highlightCode = async () => {
-      if (!languageId) return;
-      const highlighter = await getSingletonHighlighter({
-        langs: [langsToLoad as ShikiLanguageRegistration],
-        themes: themesToLoad,
-      });
+      let highlighter: Highlighter | HighlighterCore;
+
+      if (customHighlighter) {
+        highlighter = customHighlighter;
+      } else {
+        const dynamicImport = new Function('return import("./internal-highlighter")');
+        const { createInternalHighlighter } = await dynamicImport();
+        highlighter = await createInternalHighlighter(
+          langsToLoad as ShikiLanguageRegistration,
+          themesToLoad
+        );
+      }
 
       const hast = highlighter.codeToHast(code, shikiOptions);
 
@@ -177,7 +187,7 @@ export const useShikiHighlighter = (
       isMounted = false;
       clearTimeout(timeoutControl.current.timeoutId);
     };
-  }, [code, shikiOptions, stableOpts.delay]);
+  }, [code, shikiOptions, stableOpts.delay, customHighlighter]);
 
   return highlightedCode;
 };

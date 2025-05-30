@@ -8,7 +8,7 @@ import type {
   LanguageRegistration as ShikiLanguageRegistration,
   MaybeGetter,
   MaybeArray,
-} from 'shiki';
+} from 'shiki/core';
 
 // Extract or rebuild non-exported types from Shiki
 type IShikiRawRepository = ShikiLanguageRegistration['repository'];

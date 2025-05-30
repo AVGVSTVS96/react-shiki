@@ -335,6 +335,72 @@ const highlightedCode = useShikiHighlighter(code, "tsx", "github-dark", {
 });
 ```
 
+### Custom Highlighter Instance (experimental)
+
+Pass your own pre-configured Shiki highlighter to optimize bundle size. When you 
+provide a custom highlighter, react-shiki won't include any language/theme chunks 
+in your build output.
+
+**How it works**: react-shiki uses dynamic imports to load Shiki only when needed. 
+If you always provide a custom highlighter, webpack/vite won't generate chunks for 
+the built-in languages and themes, significantly reducing your bundle size.
+
+We re-export `createHighlighterCore` and both regex engines for convenience.
+
+For fine-grained bundle control, first install the specific themes/languages you need:
+
+```bash
+npm i @shikijs/themes @shikijs/langs
+```
+
+Then use `createHighlighterCore` with dynamic imports:
+
+```tsx
+import ShikiHighlighter, { 
+  createHighlighterCore, 
+  createOnigurumaEngine,
+  useShikiHighlighter 
+} from "react-shiki";
+
+// Create a minimal highlighter with only what you need
+const customHighlighter = await createHighlighterCore({
+  themes: [
+    import('@shikijs/themes/nord')
+  ],
+  langs: [
+    import('@shikijs/langs/javascript'),
+    import('@shikijs/langs/typescript')
+  ],
+  engine: createOnigurumaEngine(import('shiki/wasm'))
+});
+
+// Use it with the component or hook
+<ShikiHighlighter 
+  language="typescript" 
+  theme="nord"
+  highlighter={customHighlighter}
+>
+  {code.trim()}
+</ShikiHighlighter>
+```
+
+> [!TIP]
+> Shiki offers different regex engines. We also re-export `createJavaScriptRegexEngine` 
+> for smaller bundles in browser environments. See [Shiki's engine guide](https://shiki.style/guide/regex-engines) 
+> for more info.
+
+> [!IMPORTANT]
+> **Bundle Size Optimization**: When you provide a custom highlighter, your build 
+> output will NOT include the ~6.4MB of language/theme chunks that would normally 
+> be generated. This works because bundlers can detect that the dynamic import of
+> 'shiki' is never reached when a custom highlighter is provided.
+
+> [!NOTE]
+> I'm working on building a more complete solution for configuring fine grained
+> bundles with `react-shiki`. It will provide a clean API where users can define the
+> themes and languages they want in their bundle, and `react-shiki` will handle
+> dynamic imports and bundle creation internally. Track progress in [#56](https://github.com/AVGVSTVS96/react-shiki/pull/56)
+
 ## Performance
 
 ### Throttling Real-time Highlighting

@@ -13,3 +13,7 @@ export type {
   Element,
   HighlighterOptions,
 } from './types';
+
+export { createHighlighterCore } from 'shiki/core';
+export { createOnigurumaEngine } from 'shiki/engine/oniguruma';
+export { createJavaScriptRegexEngine } from 'shiki/engine/javascript';
