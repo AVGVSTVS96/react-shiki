@@ -10,7 +10,7 @@ export function validateCoreHighlighter(
   if (!highlighter) {
     throw new Error(
       'react-shiki/core requires a custom highlighter. ' +
-      'Use createHighlighterCore() from react-shiki or switch to react-shiki for plug-and-play usage.'
+        'Use createHighlighterCore() from react-shiki or switch to react-shiki for plug-and-play usage.'
     );
   }
   return highlighter;

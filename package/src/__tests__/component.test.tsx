@@ -22,7 +22,9 @@ describe('ShikiHighlighter Component', () => {
 
     // Verify that the highlighted code is rendered.
     await waitFor(() => {
-      const preElement = container.querySelector('pre.shiki.github-light');
+      const preElement = container.querySelector(
+        'pre.shiki.github-light'
+      );
       expect(preElement).toBeInTheDocument();
       expect(preElement?.textContent).toMatch(/console\.log/);
     });
@@ -30,7 +32,11 @@ describe('ShikiHighlighter Component', () => {
 
   test('does not render language label when showLanguage is false', async () => {
     const { container } = render(
-      <ShikiHighlighter language="javascript" theme="github-light" showLanguage={false}>
+      <ShikiHighlighter
+        language="javascript"
+        theme="github-light"
+        showLanguage={false}
+      >
         {codeSample}
       </ShikiHighlighter>
     );
@@ -43,13 +49,19 @@ describe('ShikiHighlighter Component', () => {
 
   test('renders with a custom wrapper element when "as" prop is provided', async () => {
     const { container } = render(
-      <ShikiHighlighter language="javascript" theme="github-light" as="div">
+      <ShikiHighlighter
+        language="javascript"
+        theme="github-light"
+        as="div"
+      >
         {codeSample}
       </ShikiHighlighter>
     );
 
     await waitFor(() => {
-      const containerElement = container.querySelector('[data-testid="shiki-container"]');
+      const containerElement = container.querySelector(
+        '[data-testid="shiki-container"]'
+      );
       expect(containerElement).toBeInTheDocument();
       expect(containerElement?.tagName.toLowerCase()).toBe('div');
     });
@@ -64,14 +76,18 @@ describe('ShikiHighlighter Component', () => {
     );
 
     await waitFor(() => {
-      const outerContainer = container.querySelector('[data-testid="shiki-container"]');
+      const outerContainer = container.querySelector(
+        '[data-testid="shiki-container"]'
+      );
       expect(outerContainer).toBeInTheDocument();
 
       const langLabel = outerContainer?.querySelector('#language-label');
       expect(langLabel).toBeInTheDocument();
       expect(langLabel?.textContent).toBe('unknownlang');
 
-      const preElement = outerContainer?.querySelector('pre.shiki.github-light');
+      const preElement = outerContainer?.querySelector(
+        'pre.shiki.github-light'
+      );
       expect(preElement).toBeInTheDocument();
 
       const codeElement = preElement?.querySelector('code');
@@ -101,7 +117,9 @@ greet('World');
     );
 
     await waitFor(() => {
-      const outerContainer = container.querySelector('[data-testid="shiki-container"]');
+      const outerContainer = container.querySelector(
+        '[data-testid="shiki-container"]'
+      );
       expect(outerContainer).toMatchSnapshot();
     });
   });
@@ -113,9 +131,9 @@ greet('World');
       pre(node) {
         node.properties = {
           ...node.properties,
-          'data-custom': 'applied'
+          'data-custom': 'applied',
         };
-      }
+      },
     };
 
     const customStyle = { border: '1px solid red' };
@@ -137,7 +155,9 @@ greet('World');
 
     await waitFor(() => {
       // Check container custom style and class.
-      const outerContainer = container.querySelector('[data-testid="shiki-container"]');
+      const outerContainer = container.querySelector(
+        '[data-testid="shiki-container"]'
+      );
       expect(outerContainer).toHaveStyle('border: 1px solid red');
       expect(outerContainer?.className).toContain('custom-code-block');
 
@@ -148,9 +168,10 @@ greet('World');
       expect(langLabel?.className).toContain('custom-lang-label');
 
       // Verify that our custom transformer injected the data attribute on the inner <pre>.
-      const innerPreElement = outerContainer?.querySelector('pre.shiki.github-light');
+      const innerPreElement = outerContainer?.querySelector(
+        'pre.shiki.github-light'
+      );
       expect(innerPreElement).toHaveAttribute('data-custom', 'applied');
     });
   });
 });
-

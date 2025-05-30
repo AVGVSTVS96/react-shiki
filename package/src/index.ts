@@ -4,7 +4,10 @@ import type { UseShikiHighlighter } from './lib/types';
 
 export { isInlineCode, rehypeInlineCodeProperty } from './lib/utils';
 
-import { createShikiHighlighterComponent, type ShikiHighlighterProps } from './lib/component';
+import {
+  createShikiHighlighterComponent,
+  type ShikiHighlighterProps,
+} from './lib/component';
 
 export type { ShikiHighlighterProps };
 
@@ -22,7 +25,7 @@ export type {
  * Includes all languages and themes for maximum compatibility.
  *
  * Bundle size: ~6.4MB minified (1.2MB gzipped)
- * 
+ *
  * For smaller bundles, consider:
  * - `react-shiki/web` for smaller shiki web bundle (~3.8MB minified, 695KB gzipped)
  * - `react-shiki/core` for custom fine-grained bundle
@@ -35,7 +38,7 @@ export const useShikiHighlighter: UseShikiHighlighter = (
 ) => {
   return useBaseHook(
     code,
-    lang, 
+    lang,
     themeInput,
     createFullHighlighter,
     options
@@ -46,5 +49,7 @@ export const useShikiHighlighter: UseShikiHighlighter = (
  * ShikiHighlighter component using the full bundle.
  * Includes all languages and themes for maximum compatibility.
  */
-export const ShikiHighlighter = createShikiHighlighterComponent(useShikiHighlighter);
+export const ShikiHighlighter = createShikiHighlighterComponent(
+  useShikiHighlighter
+);
 export default ShikiHighlighter;

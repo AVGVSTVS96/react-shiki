@@ -40,9 +40,7 @@ describe('rehypeInlineCodeProperty', () => {
               type: 'element',
               tagName: 'code',
               properties: {},
-              children: [
-                { type: 'text', value: 'inline code' },
-              ],
+              children: [{ type: 'text', value: 'inline code' }],
             },
           ],
         },
@@ -74,9 +72,7 @@ describe('rehypeInlineCodeProperty', () => {
               type: 'element',
               tagName: 'code',
               properties: {},
-              children: [
-                { type: 'text', value: 'block code' },
-              ],
+              children: [{ type: 'text', value: 'block code' }],
             },
           ],
         },

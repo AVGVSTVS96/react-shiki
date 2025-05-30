@@ -12,8 +12,15 @@ interface TestComponentProps {
   tabindex?: string;
 }
 
-const TestComponent = ({ code, language, theme, transformers }: TestComponentProps) => {
-  const highlighted = useShikiHighlighter(code, language, theme, { transformers });
+const TestComponent = ({
+  code,
+  language,
+  theme,
+  transformers,
+}: TestComponentProps) => {
+  const highlighted = useShikiHighlighter(code, language, theme, {
+    transformers,
+  });
   return <div data-testid="highlighted">{highlighted}</div>;
 };
 
@@ -33,7 +40,9 @@ describe('useShikiHighlighter Hook', () => {
     const { getByTestId } = renderComponent();
     await waitFor(() => {
       const container = getByTestId('highlighted');
-      const preElement = container.querySelector('pre.shiki.github-light');
+      const preElement = container.querySelector(
+        'pre.shiki.github-light'
+      );
       expect(preElement).toBeInTheDocument();
     });
   });
@@ -42,7 +51,9 @@ describe('useShikiHighlighter Hook', () => {
     const { getByTestId } = renderComponent();
     await waitFor(() => {
       const container = getByTestId('highlighted');
-      const preElement = container.querySelector('pre.shiki.github-light');
+      const preElement = container.querySelector(
+        'pre.shiki.github-light'
+      );
       const codeElement = preElement?.querySelector('code');
       expect(codeElement).toBeInTheDocument();
     });
@@ -52,7 +63,9 @@ describe('useShikiHighlighter Hook', () => {
     const { getByTestId } = renderComponent();
     await waitFor(() => {
       const container = getByTestId('highlighted');
-      const preElement = container.querySelector('pre.shiki.github-light');
+      const preElement = container.querySelector(
+        'pre.shiki.github-light'
+      );
       const codeElement = preElement?.querySelector('code');
       const lineSpan = codeElement?.querySelector('span.line');
       expect(lineSpan).toBeInTheDocument();
@@ -61,13 +74,18 @@ describe('useShikiHighlighter Hook', () => {
 
   test('falls back to plaintext highlighting when language is unknown', async () => {
     const code = 'function test() { return true; }';
-    const { getByTestId } = renderComponent({ code, language: 'unknownlang' });
+    const { getByTestId } = renderComponent({
+      code,
+      language: 'unknownlang',
+    });
     await waitFor(() => {
       const container = getByTestId('highlighted');
-      const preElement = container.querySelector('pre.shiki.github-light');
+      const preElement = container.querySelector(
+        'pre.shiki.github-light'
+      );
       const codeElement = preElement?.querySelector('code');
       const lineSpan = codeElement?.querySelector('span.line');
-      
+
       expect(preElement).toBeInTheDocument();
       expect(codeElement).toBeInTheDocument();
       expect(lineSpan).toBeInTheDocument();
@@ -85,9 +103,9 @@ describe('useShikiHighlighter Hook', () => {
       pre(node) {
         node.properties = {
           ...node.properties,
-          'data-custom-transformer': 'applied'
+          'data-custom-transformer': 'applied',
         };
-      }
+      },
     };
 
     const { getByTestId } = renderComponent({
@@ -99,7 +117,10 @@ describe('useShikiHighlighter Hook', () => {
     await waitFor(() => {
       const container = getByTestId('highlighted');
       const preElement = container.querySelector('pre');
-      expect(preElement).toHaveAttribute('data-custom-transformer', 'applied');
+      expect(preElement).toHaveAttribute(
+        'data-custom-transformer',
+        'applied'
+      );
     });
   });
 
@@ -112,4 +133,3 @@ describe('useShikiHighlighter Hook', () => {
     });
   });
 });
-

@@ -9,7 +9,6 @@ import type {
   Themes,
 } from './types';
 
-
 /**
  * Props for the ShikiHighlighter component
  */
@@ -110,20 +109,20 @@ export const createShikiHighlighterComponent = (
     customLanguages,
     ...shikiOptions
   }: ShikiHighlighterProps): React.ReactElement => {
-  const options: HighlighterOptions = {
-    delay,
-    transformers,
-    customLanguages,
-    defaultColor,
-    cssVariablePrefix,
-    ...shikiOptions,
-  };
+    const options: HighlighterOptions = {
+      delay,
+      transformers,
+      customLanguages,
+      defaultColor,
+      cssVariablePrefix,
+      ...shikiOptions,
+    };
 
-  // Use resolveLanguage to get displayLanguageId directly
-  const { displayLanguageId } = resolveLanguage(
-    language,
-    customLanguages
-  );
+    // Use resolveLanguage to get displayLanguageId directly
+    const { displayLanguageId } = resolveLanguage(
+      language,
+      customLanguages
+    );
 
     const highlightedCode = useShikiHighlighterImpl(
       code,
@@ -132,29 +131,29 @@ export const createShikiHighlighterComponent = (
       options
     );
 
-  return (
-    <Element
-      data-testid="shiki-container"
-      className={clsx(
-        'relative',
-        'not-prose',
-        addDefaultStyles && 'defaultStyles',
-        className
-      )}
-      style={style}
-      id="shiki-container"
-    >
-      {showLanguage && displayLanguageId ? (
-        <span
-          className={clsx('languageLabel', langClassName)}
-          style={langStyle}
-          id="language-label"
-        >
-          {displayLanguageId}
-        </span>
-      ) : null}
-      {highlightedCode}
-    </Element>
+    return (
+      <Element
+        data-testid="shiki-container"
+        className={clsx(
+          'relative',
+          'not-prose',
+          addDefaultStyles && 'defaultStyles',
+          className
+        )}
+        style={style}
+        id="shiki-container"
+      >
+        {showLanguage && displayLanguageId ? (
+          <span
+            className={clsx('languageLabel', langClassName)}
+            style={langStyle}
+            id="language-label"
+          >
+            {displayLanguageId}
+          </span>
+        ) : null}
+        {highlightedCode}
+      </Element>
     );
   };
 };

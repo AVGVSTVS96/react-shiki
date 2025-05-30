@@ -1,4 +1,7 @@
-import { getSingletonHighlighter, type Highlighter } from 'shiki/bundle/web';
+import {
+  getSingletonHighlighter,
+  type Highlighter,
+} from 'shiki/bundle/web';
 import type { ShikiLanguageRegistration } from '../lib/extended-types';
 import type { Theme } from '../lib/types';
 
