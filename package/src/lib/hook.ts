@@ -66,48 +66,24 @@ const useStableOptions = <T>(value: T) => {
 };
 
 /**
- * A React hook that provides syntax highlighting using Shiki.
- * Supports single theme and multi-theme highlighting, custom themes
- * and languages, custom transformers, and optional throttling.
+ * Base hook for syntax highlighting using Shiki.
+ * This is the core implementation used by all entry points.
  *
- * ```ts
- * // Basic Usage
- * const highlightedCode = useShikiHighlighter( code, 'typescript', 'github-dark');
- * ```
- *
- * ```ts
- * // Custom Languages, Transformers, and Delay
- * const highlightedCode = useShikiHighlighter(code, language, theme, {
- *   transformers: [customTransformer],
- *   delay: 150
- *   customLanguages: ['bosque', 'mcfunction']
- * });
- * ```
- *
- * ```ts
- * // Multiple Themes, Custom Languages, Delay, and Custom Transformers
- * const highlightedCode = useShikiHighlighter(
- *   code,
- *   language,
- *   {
- *     light: 'github-light',
- *     dark: 'github-dark',
- *     dim: 'github-dark-dimmed'
- *   },
- *   {
- *     delay: 150,
- *     defaultColor: 'dim',
- *     transformers: [customTransformer],
- *     customLanguages: ['bosque', 'mcfunction']
- *   }
- * );
- * ```
+ * @param code - The code to highlight
+ * @param lang - Language for highlighting
+ * @param themeInput - Theme or themes to use
+ * @param options - Highlighting options
+ * @param createHighlighter - Factory function to create highlighter (internal use)
  */
 export const useShikiHighlighter = (
   code: string,
   lang: Language,
   themeInput: Theme | Themes,
-  options: HighlighterOptions = {}
+  options: HighlighterOptions = {},
+  createHighlighter?: (
+    langsToLoad: ShikiLanguageRegistration,
+    themesToLoad: Theme[]
+  ) => Promise<Highlighter | HighlighterCore>
 ) => {
   const [highlightedCode, setHighlightedCode] =
     useState<ReactNode | null>(null);
@@ -149,24 +125,16 @@ export const useShikiHighlighter = (
     return { ...languageOption, ...themeOptions, ...restOptions };
   }, [languageId, themeId, langRev, themeRev, optsRev]);
 
-  const customHighlighter = stableOpts.highlighter;
-
   useEffect(() => {
     let isMounted = true;
 
     const highlightCode = async () => {
-      let highlighter: Highlighter | HighlighterCore;
+      if (!languageId) return;
 
-      if (customHighlighter) {
-        highlighter = customHighlighter;
-      } else {
-        const dynamicImport = new Function('return import("./internal-highlighter")');
-        const { createInternalHighlighter } = await dynamicImport();
-        highlighter = await createInternalHighlighter(
-          langsToLoad as ShikiLanguageRegistration,
-          themesToLoad
-        );
-      }
+      // Use provided highlighter or create one using the factory
+      const highlighter = stableOpts.highlighter
+        ? stableOpts.highlighter
+        : await createHighlighter!(langsToLoad as ShikiLanguageRegistration, themesToLoad);
 
       const hast = highlighter.codeToHast(code, shikiOptions);
 
@@ -187,7 +155,7 @@ export const useShikiHighlighter = (
       isMounted = false;
       clearTimeout(timeoutControl.current.timeoutId);
     };
-  }, [code, shikiOptions, stableOpts.delay, customHighlighter]);
+  }, [code, shikiOptions, stableOpts.delay, stableOpts.highlighter, createHighlighter, langsToLoad, themesToLoad]);
 
   return highlightedCode;
 };

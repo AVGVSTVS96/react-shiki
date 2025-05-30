@@ -4,7 +4,11 @@ import { peerDependencies } from './package.json';
 export default defineConfig((options) => {
   const dev = !!options.watch;
   return {
-    entry: ['src/index.ts'],
+    entry: {
+      index: 'src/index.ts',
+      web: 'src/web.ts',
+      core: 'src/core.ts',
+    },
     format: ['esm'],
     target: 'es2022',
     dts: true,

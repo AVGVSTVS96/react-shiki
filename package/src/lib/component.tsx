@@ -1,4 +1,4 @@
-import './styles.css';
+import '../styles.css';
 import { clsx } from 'clsx';
 import { useShikiHighlighter } from './hook';
 import { resolveLanguage } from './resolvers';
@@ -9,6 +9,7 @@ import type {
   Theme,
   Themes,
 } from './types';
+
 
 /**
  * Props for the ShikiHighlighter component
@@ -81,44 +82,35 @@ export interface ShikiHighlighterProps extends HighlighterOptions {
 }
 
 /**
- * ShikiHighlighter is a React component that provides syntax highlighting for code snippets.
- * It uses Shiki to render beautiful, theme-based syntax highlighting with optimized performance.
- *
- * @example
- * ```tsx
- * <ShikiHighlighter
- *   language="typescript"
- *   theme="github-dark"
- *   delay={100}
- *   transformers={[customTransformer]}
- *   addDefaultStyles={false}
- *   className="code-block"
- *   langClassName="lang-label"
- *   langStyle={{ color: 'blue' }},
- *   style={{ fontSize: '1.2rem' }}
- * >
- *   {code}
- * </ShikiHighlighter>
- * ```
+ * Base ShikiHighlighter component factory.
+ * This creates a component that uses the provided hook implementation.
  */
-export const ShikiHighlighter = ({
-  language,
-  theme,
-  delay,
-  transformers,
-  defaultColor,
-  cssVariablePrefix,
-  addDefaultStyles = true,
-  style,
-  langStyle,
-  className,
-  langClassName,
-  showLanguage = true,
-  children: code,
-  as: Element = 'pre',
-  customLanguages,
-  ...shikiOptions
-}: ShikiHighlighterProps): React.ReactElement => {
+export const createShikiHighlighterComponent = (
+  useShikiHighlighterImpl: (
+    code: string,
+    lang: Language,
+    themeInput: Theme | Themes,
+    options?: HighlighterOptions
+  ) => React.ReactNode
+) => {
+  return ({
+    language,
+    theme,
+    delay,
+    transformers,
+    defaultColor,
+    cssVariablePrefix,
+    addDefaultStyles = true,
+    style,
+    langStyle,
+    className,
+    langClassName,
+    showLanguage = true,
+    children: code,
+    as: Element = 'pre',
+    customLanguages,
+    ...shikiOptions
+  }: ShikiHighlighterProps): React.ReactElement => {
   const options: HighlighterOptions = {
     delay,
     transformers,
@@ -134,12 +126,12 @@ export const ShikiHighlighter = ({
     customLanguages
   );
 
-  const highlightedCode = useShikiHighlighter(
-    code,
-    language,
-    theme,
-    options
-  );
+    const highlightedCode = useShikiHighlighterImpl(
+      code,
+      language,
+      theme,
+      options
+    );
 
   return (
     <Element
@@ -164,5 +156,6 @@ export const ShikiHighlighter = ({
       ) : null}
       {highlightedCode}
     </Element>
-  );
+    );
+  };
 };
