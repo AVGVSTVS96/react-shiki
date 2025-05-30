@@ -1,5 +1,5 @@
-import type { Language, Theme, Themes } from '@/types';
-import { isSpecialLang, type ThemeRegistrationAny } from 'shiki/core';
+import type { Language, Theme, Themes } from './types';
+import type { ThemeRegistrationAny } from 'shiki/core';
 import type { LanguageRegistration } from './extended-types';
 
 /**

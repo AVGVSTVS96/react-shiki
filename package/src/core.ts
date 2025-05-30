@@ -23,8 +23,6 @@ export { createJavaScriptRegexEngine } from 'shiki/engine/javascript';
  * A React hook that provides syntax highlighting using Shiki with a custom highlighter.
  * Requires a highlighter to be provided in options for minimal bundle size.
  * 
- * Bundle size: Minimal (only what you import)
- * 
  * @example
  * ```ts
  * import { createHighlighterCore, createOnigurumaEngine } from 'react-shiki/core';
@@ -39,14 +37,14 @@ export { createJavaScriptRegexEngine } from 'shiki/engine/javascript';
  * ```
  * 
  * For plug-and-play usage, consider:
- * - `react-shiki` for all languages
- * - `react-shiki/web` for web-focused languages
+ * - `react-shiki` for full shiki bundle (~6.4MB minified, 1.2MB gzipped)
+ * - `react-shiki/web` for smaller shiki web bundle (~3.8MB minified, 695KB gzipped)
  */
 export const useShikiHighlighter = (
   code: string,
   lang: Parameters<typeof useBaseHook>[1],
   themeInput: Parameters<typeof useBaseHook>[2],
-  options: Parameters<typeof useBaseHook>[3] = {}
+  options: Parameters<typeof useBaseHook>[4] = {}
 ) => {
   // Validate that highlighter is provided
   const highlighter = validateCoreHighlighter(options.highlighter);
@@ -55,14 +53,14 @@ export const useShikiHighlighter = (
     code,
     lang, 
     themeInput,
-    { ...options, highlighter },
-    async () => highlighter
+    async () => highlighter,
+    { ...options, highlighter }
   );
 };
 
 /**
  * ShikiHighlighter component using a custom highlighter.
- * Requires a highlighter to be provided for minimal bundle size.
+ * Requires a highlighter to be provided.
  */
 export const ShikiHighlighter = createShikiHighlighterComponent(useShikiHighlighter);
 export default ShikiHighlighter;

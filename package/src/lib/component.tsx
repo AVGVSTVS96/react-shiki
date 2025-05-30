@@ -1,6 +1,5 @@
 import '../styles.css';
 import { clsx } from 'clsx';
-import { useShikiHighlighter } from './hook';
 import { resolveLanguage } from './resolvers';
 
 import type {

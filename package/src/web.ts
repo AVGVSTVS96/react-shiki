@@ -17,26 +17,26 @@ export type {
 
 /**
  * A React hook that provides syntax highlighting using Shiki with the web bundle.
- * Includes web-focused languages (HTML, CSS, JS, TS, JSON, Markdown, Vue, JSX, Svelte, etc.)
+ * Includes web-focused languages (HTML, CSS, JS, TS, JSON, Markdown, Astro, JSX, Svelte, Vue etc.)
  * 
  * Bundle size: ~3.8MB minified (695KB gzipped)
  * 
  * For other options, consider:
- * - `react-shiki` for all languages (larger bundle)
- * - `react-shiki/core` for custom highlighter control (minimal bundle)
+ * - `react-shiki` for full shiki bundle (~6.4MB minified, 1.2MB gzipped)
+ * - `react-shiki/core` for custom fine-grained bundle
  */
 export const useShikiHighlighter = (
   code: string,
   lang: Parameters<typeof useBaseHook>[1],
   themeInput: Parameters<typeof useBaseHook>[2],
-  options: Parameters<typeof useBaseHook>[3] = {}
+  options: Parameters<typeof useBaseHook>[4] = {}
 ) => {
   return useBaseHook(
     code,
     lang, 
     themeInput,
-    options,
-    createWebHighlighter
+    createWebHighlighter,
+    options
   );
 };
 

@@ -79,11 +79,11 @@ export const useShikiHighlighter = (
   code: string,
   lang: Language,
   themeInput: Theme | Themes,
-  options: HighlighterOptions = {},
-  createHighlighter?: (
+  createHighlighter: (
     langsToLoad: ShikiLanguageRegistration,
     themesToLoad: Theme[]
-  ) => Promise<Highlighter | HighlighterCore>
+  ) => Promise<Highlighter | HighlighterCore>,
+  options: HighlighterOptions = {}
 ) => {
   const [highlightedCode, setHighlightedCode] =
     useState<ReactNode | null>(null);
@@ -134,7 +134,10 @@ export const useShikiHighlighter = (
       // Use provided highlighter or create one using the factory
       const highlighter = stableOpts.highlighter
         ? stableOpts.highlighter
-        : await createHighlighter!(langsToLoad as ShikiLanguageRegistration, themesToLoad);
+        : await createHighlighter(
+            langsToLoad as ShikiLanguageRegistration,
+            themesToLoad
+          );
 
       const hast = highlighter.codeToHast(code, shikiOptions);
 
