@@ -158,7 +158,14 @@ export const useShikiHighlighter = (
       isMounted = false;
       clearTimeout(timeoutControl.current.timeoutId);
     };
-  }, [code, shikiOptions, stableOpts.delay, stableOpts.highlighter, createHighlighter, langsToLoad, themesToLoad]);
+  }, [
+    code,
+    shikiOptions,
+    stableOpts.delay,
+    stableOpts.highlighter,
+    langsToLoad,
+    themesToLoad,
+  ]);
 
   return highlightedCode;
 };
