@@ -71,8 +71,8 @@ export const resolveLanguage = (
     };
   }
 
-  // For any other string, pass it through to Shiki
-  // TODO: Ensure fallback to plaintext with fine grained bundles
+  // For any other string, pass it through, 
+  // fallback is handled in highlighter factories
   return {
     languageId: lang,
     displayLanguageId: lang,

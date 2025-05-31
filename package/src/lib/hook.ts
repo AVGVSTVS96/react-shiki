@@ -131,7 +131,7 @@ export const useShikiHighlighter = (
     const highlightCode = async () => {
       if (!languageId) return;
 
-      // Use provided highlighter or create one using the factory
+      // Use provided custom highlighter or create one using the factory
       const highlighter = stableOpts.highlighter
         ? stableOpts.highlighter
         : await createHighlighter(
@@ -139,7 +139,12 @@ export const useShikiHighlighter = (
             themesToLoad
           );
 
-      const hast = highlighter.codeToHast(code, shikiOptions);
+      // Check if language is loaded, fallback to plaintext if not
+      const loadedLanguages = highlighter.getLoadedLanguages();
+      const langToUse = loadedLanguages.includes(languageId) ? languageId : 'plaintext';
+      const finalOptions = { ...shikiOptions, lang: langToUse };
+      
+      const hast = highlighter.codeToHast(code, finalOptions);
 
       if (isMounted) {
         setHighlightedCode(toJsxRuntime(hast, { jsx, jsxs, Fragment }));

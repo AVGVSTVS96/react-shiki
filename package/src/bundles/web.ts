@@ -14,8 +14,18 @@ export async function createWebHighlighter(
   langsToLoad: ShikiLanguageRegistration,
   themesToLoad: Theme[]
 ): Promise<Highlighter> {
-  return getSingletonHighlighter({
-    langs: [langsToLoad],
-    themes: themesToLoad,
-  });
+  try {
+    return await getSingletonHighlighter({
+      langs: [langsToLoad],
+      themes: themesToLoad,
+    });
+  } catch (error) {
+    if (error instanceof Error && error.message.includes('Language')) {
+      return await getSingletonHighlighter({
+        langs: ['plaintext'],
+        themes: themesToLoad,
+      });
+    }
+    throw error;
+  }
 }
