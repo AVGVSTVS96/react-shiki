@@ -19,9 +19,9 @@ import { jsx, jsxs, Fragment } from 'react/jsx-runtime';
 import { toJsxRuntime } from 'hast-util-to-jsx-runtime';
 import htmlReactParser from 'html-react-parser';
 
-import type { Language, Theme, Themes } from '../types';
+import type { Language, Theme, Themes } from '../lib/types';
 
-import { resolveLanguage, resolveTheme } from '../resolvers';
+import { resolveLanguage, resolveTheme } from '../lib/resolvers';
 // --- Test Data ---
 
 // Small code sample (few lines)
