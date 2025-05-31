@@ -1,4 +1,4 @@
-import { throttleHighlighting } from '../utils';
+import { throttleHighlighting } from '../lib/utils';
 import { vi } from 'vitest';
 
 // Test the throttling function directly instead of through the React component

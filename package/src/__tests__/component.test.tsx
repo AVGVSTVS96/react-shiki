@@ -1,6 +1,6 @@
 import React from 'react';
 import { render, waitFor } from '@testing-library/react';
-import { ShikiHighlighter } from '../component';
+import { ShikiHighlighter } from '../index';
 import type { ShikiTransformer } from 'shiki';
 
 const codeSample = 'console.log("Hello World");';

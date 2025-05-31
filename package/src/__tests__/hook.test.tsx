@@ -1,7 +1,7 @@
 import React from 'react';
 import { render, waitFor } from '@testing-library/react';
-import { useShikiHighlighter } from '../hook';
-import type { Language, Theme } from '../types';
+import { useShikiHighlighter } from '../index';
+import type { Language, Theme } from '../lib/types';
 import type { ShikiTransformer } from 'shiki';
 
 interface TestComponentProps {
