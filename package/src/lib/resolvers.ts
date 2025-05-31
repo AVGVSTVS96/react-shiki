@@ -71,7 +71,7 @@ export const resolveLanguage = (
     };
   }
 
-  // For any other string, pass it through, 
+  // For any other string, pass it through,
   // fallback is handled in highlighter factories
   return {
     languageId: lang,

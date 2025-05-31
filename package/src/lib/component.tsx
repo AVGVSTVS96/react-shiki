@@ -73,6 +73,18 @@ export interface ShikiHighlighterProps extends HighlighterOptions {
   showLanguage?: boolean;
 
   /**
+   * Whether to show line numbers
+   * @default false
+   */
+  showLineNumbers?: boolean;
+
+  /**
+   * Starting line number (when showLineNumbers is true)
+   * @default 1
+   */
+  startingLineNumber?: number;
+
+  /**
    * The HTML element that wraps the generated code block.
    * @default 'pre'
    */
@@ -104,6 +116,8 @@ export const createShikiHighlighterComponent = (
     className,
     langClassName,
     showLanguage = true,
+    showLineNumbers = false,
+    startingLineNumber = 1,
     children: code,
     as: Element = 'pre',
     customLanguages,
@@ -115,6 +129,8 @@ export const createShikiHighlighterComponent = (
       customLanguages,
       defaultColor,
       cssVariablePrefix,
+      showLineNumbers,
+      startingLineNumber,
       ...shikiOptions,
     };
 

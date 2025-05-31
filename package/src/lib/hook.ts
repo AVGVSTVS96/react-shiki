@@ -31,6 +31,7 @@ import type {
 
 import { throttleHighlighting } from './utils';
 import { resolveLanguage, resolveTheme } from './resolvers';
+import { lineNumbersTransformer } from './transformers';
 
 const DEFAULT_THEMES: Themes = {
   light: 'github-light',
@@ -108,9 +109,14 @@ export const useShikiHighlighter = (
   });
 
   const shikiOptions = useMemo<CodeToHastOptions>(() => {
-    const { defaultColor, cssVariablePrefix, ...restOptions } =
-      stableOpts;
     const languageOption = { lang: languageId };
+    const {
+      defaultColor,
+      cssVariablePrefix,
+      showLineNumbers,
+      startingLineNumber,
+      ...restOptions
+    } = stableOpts;
 
     const themeOptions = isMultiTheme
       ? ({
@@ -122,7 +128,18 @@ export const useShikiHighlighter = (
           theme: singleTheme || DEFAULT_THEMES.dark,
         } as CodeOptionsSingleTheme);
 
-    return { ...languageOption, ...themeOptions, ...restOptions };
+    // Add line numbers transformer if enabled
+    const transformers = restOptions.transformers || [];
+    if (showLineNumbers) {
+      transformers.push(lineNumbersTransformer(startingLineNumber));
+    }
+
+    return {
+      ...languageOption,
+      ...themeOptions,
+      ...restOptions,
+      transformers,
+    };
   }, [languageId, themeId, langRev, themeRev, optsRev]);
 
   useEffect(() => {
@@ -141,9 +158,11 @@ export const useShikiHighlighter = (
 
       // Check if language is loaded, fallback to plaintext if not
       const loadedLanguages = highlighter.getLoadedLanguages();
-      const langToUse = loadedLanguages.includes(languageId) ? languageId : 'plaintext';
+      const langToUse = loadedLanguages.includes(languageId)
+        ? languageId
+        : 'plaintext';
       const finalOptions = { ...shikiOptions, lang: langToUse };
-      
+
       const hast = highlighter.codeToHast(code, finalOptions);
 
       if (isMounted) {
