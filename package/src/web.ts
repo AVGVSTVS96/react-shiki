@@ -1,5 +1,5 @@
 import { useShikiHighlighter as useBaseHook } from './lib/hook';
-import { createFullHighlighter } from './bundles/full';
+import { createWebHighlighter } from './bundles/web';
 import type { UseShikiHighlighter } from './lib/types';
 
 export { isInlineCode, rehypeInlineCodeProperty } from './lib/utils';
@@ -21,13 +21,13 @@ export type {
 } from './lib/types';
 
 /**
- * A React hook that provides syntax highlighting using Shiki with the full bundle.
- * Includes all languages and themes for maximum compatibility.
+ * A React hook that provides syntax highlighting using Shiki with the web bundle.
+ * Includes web-focused languages (HTML, CSS, JS, TS, JSON, Markdown, Astro, JSX, Svelte, Vue etc.)
  *
- * Bundle size: ~6.4MB minified (1.2MB gzipped)
+ * Bundle size: ~3.8MB minified (695KB gzipped)
  *
- * For smaller bundles, consider:
- * - `react-shiki/web` for smaller shiki web bundle (~3.8MB minified, 695KB gzipped)
+ * For other options, consider:
+ * - `react-shiki` for full shiki bundle (~6.4MB minified, 1.2MB gzipped)
  * - `react-shiki/core` for custom fine-grained bundle
  */
 export const useShikiHighlighter: UseShikiHighlighter = (
@@ -40,14 +40,14 @@ export const useShikiHighlighter: UseShikiHighlighter = (
     code,
     lang,
     themeInput,
-    createFullHighlighter,
+    createWebHighlighter,
     options
   );
 };
 
 /**
- * ShikiHighlighter component using the full bundle.
- * Includes all languages and themes for maximum compatibility.
+ * ShikiHighlighter component using the web bundle.
+ * Includes web-focused languages for balanced size and functionality.
  */
 export const ShikiHighlighter = createShikiHighlighterComponent(
   useShikiHighlighter

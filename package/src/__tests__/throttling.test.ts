@@ -1,4 +1,4 @@
-import { throttleHighlighting } from '../utils';
+import { throttleHighlighting } from '../lib/utils';
 import { vi } from 'vitest';
 
 // Test the throttling function directly instead of through the React component
@@ -24,8 +24,8 @@ describe('throttleHighlighting', () => {
     const timeoutControl = {
       current: {
         timeoutId: undefined,
-        nextAllowedTime: 0
-      }
+        nextAllowedTime: 0,
+      },
     };
 
     // First call should schedule immediately since nextAllowedTime is in the past

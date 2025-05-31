@@ -1,4 +1,4 @@
-import { isInlineCode, rehypeInlineCodeProperty } from '../utils';
+import { isInlineCode, rehypeInlineCodeProperty } from '../lib/utils';
 
 describe('isInlineCode', () => {
   it('returns true for inline code (no newline in text)', () => {
@@ -40,9 +40,7 @@ describe('rehypeInlineCodeProperty', () => {
               type: 'element',
               tagName: 'code',
               properties: {},
-              children: [
-                { type: 'text', value: 'inline code' },
-              ],
+              children: [{ type: 'text', value: 'inline code' }],
             },
           ],
         },
@@ -74,9 +72,7 @@ describe('rehypeInlineCodeProperty', () => {
               type: 'element',
               tagName: 'code',
               properties: {},
-              children: [
-                { type: 'text', value: 'block code' },
-              ],
+              children: [{ type: 'text', value: 'block code' }],
             },
           ],
         },

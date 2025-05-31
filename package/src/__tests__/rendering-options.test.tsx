@@ -365,4 +365,3 @@ describe('Shiki Rendering Options', () => {
     });
   });
 });
-

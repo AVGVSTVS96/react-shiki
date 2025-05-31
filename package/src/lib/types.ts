@@ -6,7 +6,11 @@ import type {
   ThemeRegistrationAny,
   StringLiteralUnion,
   CodeToHastOptions,
+  Highlighter,
+  HighlighterCore,
 } from 'shiki';
+
+import type { ReactNode } from 'react';
 
 import type { LanguageRegistration } from './extended-types';
 
@@ -66,6 +70,35 @@ interface ReactShikiOptions {
    * Custom textmate grammars to be preloaded for highlighting.
    */
   customLanguages?: LanguageRegistration | LanguageRegistration[];
+
+  /**
+   * Custom Shiki highlighter instance to use instead of the default one.
+   * Keeps bundle small by only importing specified languages/themes.
+   * Can be either a Highlighter or HighlighterCore instance.
+   *
+   * @example
+   * import {
+   *   createHighlighterCore,
+   *   createOnigurumaEngine,
+   *   useShikiHighlighter
+   * } from "react-shiki";
+   *
+   * const customHighlighter = await createHighlighterCore({
+   *   themes: [
+   *     import('@shikijs/themes/nord')
+   *   ],
+   *   langs: [
+   *     import('@shikijs/langs/javascript'),
+   *     import('@shikijs/langs/typescript')
+   *   ],
+   *   engine: createOnigurumaEngine(import('shiki/wasm'))
+   * });
+   *
+   * const highlightedCode = useShikiHighlighter(code, language, theme, {
+   *   highlighter: customHighlighter,
+   * });
+   */
+  highlighter?: Highlighter | HighlighterCore;
 }
 
 /**
@@ -93,6 +126,17 @@ interface TimeoutState {
    */
   nextAllowedTime: number;
 }
+
+/**
+ * Public API signature for the useShikiHighlighter hook.
+ * This ensures all entry points have consistent signatures.
+ */
+export type UseShikiHighlighter = (
+  code: string,
+  lang: Language,
+  themeInput: Theme | Themes,
+  options?: HighlighterOptions
+) => ReactNode;
 
 export type {
   Language,

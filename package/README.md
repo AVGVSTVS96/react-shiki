@@ -14,25 +14,28 @@ A performant client-side syntax highlighting component and hook for React, built
   - [Features](#features)
   - [Installation](#installation)
   - [Usage](#usage)
+  - [Bundle Options](#bundle-options)
+  - [Configuration](#configuration)
     - [Common Configuration Options](#common-configuration-options)
     - [Component-specific Props](#component-specific-props)
-    - [Integration with react-markdown](#integration-with-react-markdown)
-    - [Handling Inline Code](#handling-inline-code)
     - [Multi-theme Support](#multi-theme-support)
     - [Custom Themes](#custom-themes)
     - [Custom Languages](#custom-languages)
       - [Preloading Custom Languages](#preloading-custom-languages)
     - [Custom Transformers](#custom-transformers)
-  - [Performance](#performance) 
-  - [Throttling Real-time Highlighting](#throttling-real-time-highlighting)
-  - [Streaming and LLM Chat UI](#streaming-and-llm-chat-ui)
+  - [Integration](#integration)
+    - [Integration with react-markdown](#integration-with-react-markdown)
+    - [Handling Inline Code](#handling-inline-code)
+  - [Performance](#performance)
+    - [Throttling Real-time Highlighting](#throttling-real-time-highlighting)
+    - [Streaming and LLM Chat UI](#streaming-and-llm-chat-ui)
   <!--toc:end-->
 
 ## Features
 
 - 🖼️ Provides both a `ShikiHighlighter` component and a `useShikiHighlighter` hook for more flexibility
 - 🔐 Shiki output is processed from HAST directly into React elements, no `dangerouslySetInnerHTML` required
-- 📦 Supports all built-in Shiki languages and themes
+- 📦 Multiple bundle options: Full bundle (~1.2MB gz), web bundle (~695KB gz), or minimal core bundle for fine-grained bundle control
 - 🖌️ Full support for custom TextMate themes and languages
 - 🔧 Supports passing custom Shiki transformers to the highlighter, in addition to all other options supported by `codeToHast`
 - 🚰 Performant highlighting of streamed code, with optional throttling
@@ -78,21 +81,87 @@ function CodeBlock({ code, language }) {
 }
 ```
 
+## Bundle Options
+`react-shiki`, like `shiki`, offers three entry points to balance convenience and bundle optimization:
+
+### `react-shiki` (Full Bundle)
+```tsx
+import ShikiHighlighter from 'react-shiki';
+```
+- **Size**: ~6.4MB minified, 1.2MB gzipped
+- **Languages**: All Shiki languages and themes
+- **Use case**: Unknown language requirements, maximum language support
+- **Setup**: Zero configuration required
+
+### `react-shiki/web` (Web Bundle)  
+```tsx
+import ShikiHighlighter from 'react-shiki/web';
+```
+- **Size**: ~3.8MB minified, 695KB gzipped
+- **Languages**: Web-focused languages (HTML, CSS, JS, TS, JSON, Markdown, Vue, JSX, Svelte)
+- **Use case**: Web applications with balanced size/functionality
+- **Setup**: Drop-in replacement for main entry point
+
+### `react-shiki/core` (Minimal Bundle)
+```tsx
+import ShikiHighlighter, { 
+  createHighlighterCore,        // re-exported from shiki/core
+  createOnigurumaEngine,        // re-exported from shiki/engine/oniguruma
+  createJavaScriptRegexEngine,  // re-exported from shiki/engine/javascript
+} from 'react-shiki/core';
+
+// Create custom highlighter with dynamic imports to optimize client-side bundle size
+const highlighter = await createHighlighterCore({
+  themes: [import('@shikijs/themes/nord')],
+  langs: [import('@shikijs/langs/typescript')],
+  engine: createOnigurumaEngine(import('shiki/wasm')) 
+    // or createJavaScriptRegexEngine()
+});
+
+<ShikiHighlighter highlighter={highlighter} language="typescript" theme="nord">
+  {code}
+</ShikiHighlighter>
+```
+- **Size**: Minimal (only what you import)
+- **Languages**: User-defined via custom highlighter  
+- **Use case**: Production apps requiring maximum bundle control
+- **Setup**: Requires custom highlighter configuration
+- **Engine options**: Choose JavaScript engine (smaller bundle, faster startup) or Oniguruma (WASM, maximum language support)
+
+### RegExp Engines
+
+Shiki offers two built-in engines:
+- **Oniguruma** - default, uses the compiled Oniguruma WebAssembly, and offer maximum language support
+- **JavaScript** - smaller bundle, faster startup, recommended when running highlighting on the client
+
+Unlike the Oniguruma engine, the JavaScript engine is [strict by default](https://shiki.style/guide/regex-engines#use-with-unsupported-languages). It will throw an error if it encounters an invalid Oniguruma pattern or a pattern that it cannot convert. If you want best-effort results for unsupported grammars, you can enable the forgiving option to suppress any conversion errors:
+
+```tsx
+createJavaScriptRegexEngine({ forgiving: true });
+```
+
+See [Shiki - RegExp Engines](https://shiki.style/guide/regex-engines) for more info.
+
+
+## Configuration
+
 ### Common Configuration Options
 
-> [!IMPORTANT]
-> `react-shiki` now supports all options that [`codeToHast`](https://github.com/shikijs/shiki/blob/main/packages/types/src/options.ts#L121) supports, this table has not yet been updated to reflect this.
 
-| Option              | Type               | Default         | Description                                                               |
-| ------------------- | ------------------ | --------------- | ------------------------------------------------------------------------- |
-| `code`            | `string`           | -               | Code to highlight                                                          |
-| `language`          | `string \| object` | -               | Language to highlight, built-in or custom textmate grammer object                                                         |
+| Option              | Type               | Default         | Description                                                                   |
+| ------------------- | ------------------ | --------------- | ----------------------------------------------------------------------------- |
+| `code`            | `string`           | -               | Code to highlight                                                               |
+| `language`          | `string \| object` | -               | Language to highlight, built-in or custom textmate grammer object             |
 | `theme`             | `string \| object` | `'github-dark'` | Single or multi-theme configuration, built-in or custom textmate theme object |
 | `delay`             | `number`           | `0`             | Delay between highlights (in milliseconds)                                    |
-| `transformers`      | `array`            | `[]`            | Custom Shiki transformers for modifying the highlighting output               |
 | `customLanguages`   | `array`            | `[]`            | Array of custom languages to preload                                          |
+| `transformers`      | `array`            | `[]`            | Custom Shiki transformers for modifying the highlighting output               |
 | `cssVariablePrefix` | `string`           | `'--shiki'`     | Prefix for CSS variables storing theme colors                                 |
 | `defaultColor`      | `string \| false`  | `'light'`       | Default theme mode when using multiple themes, can also disable default theme |
+| `tabindex`          | `number`           | `0`             | Tab index for the code block                                                  |
+| `decorations`       | `array`            | `[]`            | Custom decorations to wrap the highlighted tokens with                        |
+| `structure`        | `string`           | `classic`  | The structure of the generated HAST and HTML - `classic` or `inline`               |
+| [`codeToHastOptions`](https://github.com/shikijs/shiki/blob/main/packages/types/src/options.ts#L121) | -             | -              | All other options supported by Shiki's `codeToHast`      |
 
 ### Component-specific Props
 
@@ -107,6 +176,116 @@ The `ShikiHighlighter` component offers minimal built-in styling and customizati
 | `langClassName`    | `string`  | -       | Class name for styling the language label                  |
 | `style`            | `object`  | -       | Inline style object for the code block                     |
 | `langStyle`        | `object`  | -       | Inline style object for the language label                 |
+
+### Multi-theme Support
+
+To use multiple theme modes, pass an object with your multi-theme configuration to the `theme` prop in the `ShikiHighlighter` component:
+
+```tsx
+<ShikiHighlighter
+  language="tsx"
+  theme={{
+    light: "github-light",
+    dark: "github-dark",
+    dim: "github-dark-dimmed",
+  }}
+  defaultColor="dark"
+>
+  {code.trim()}
+</ShikiHighlighter>
+```
+
+Or, when using the hook, pass it to the `theme` parameter:
+
+```tsx
+const highlightedCode = useShikiHighlighter(
+  code,
+  "tsx",
+  {
+    light: "github-light",
+    dark: "github-dark",
+    dim: "github-dark-dimmed",
+  },
+  {
+    defaultColor: "dark",
+  }
+);
+```
+
+See [shiki's documentation](https://shiki.matsu.io/docs/themes) for more information on dual and multi theme support, and for the CSS needed to make the themes reactive to your site's theme.
+
+### Custom Themes
+
+Custom themes can be passed as a TextMate theme in JavaScript object. For example, [it should look like this](https://github.com/antfu/textmate-grammars-themes/blob/main/packages/tm-themes/themes/dark-plus.json).
+
+```tsx
+import tokyoNight from "../styles/tokyo-night.json";
+
+// Using the component
+<ShikiHighlighter language="tsx" theme={tokyoNight}>
+  {code.trim()}
+</ShikiHighlighter>
+
+// Using the hook
+const highlightedCode = useShikiHighlighter(code, "tsx", tokyoNight);
+```
+
+### Custom Languages
+
+Custom languages should be passed as a TextMate grammar in JavaScript object. For example, [it should look like this](https://github.com/shikijs/textmate-grammars-themes/blob/main/packages/tm-grammars/grammars/typescript.json)
+
+```tsx
+import mcfunction from "../langs/mcfunction.tmLanguage.json";
+
+// Using the component
+<ShikiHighlighter language={mcfunction} theme="github-dark">
+  {code.trim()}
+</ShikiHighlighter>
+
+// Using the hook
+const highlightedCode = useShikiHighlighter(code, mcfunction, "github-dark");
+```
+
+#### Preloading Custom Languages
+
+For dynamic highlighting scenarios where language selection happens at runtime:
+
+```tsx
+import mcfunction from "../langs/mcfunction.tmLanguage.json";
+import bosque from "../langs/bosque.tmLanguage.json";
+
+// With the component
+<ShikiHighlighter
+  language="typescript"
+  theme="github-dark"
+  customLanguages={[mcfunction, bosque]}
+>
+  {code.trim()}
+</ShikiHighlighter>
+
+// With the hook
+const highlightedCode = useShikiHighlighter(code, "typescript", "github-dark", {
+  customLanguages: [mcfunction, bosque],
+});
+```
+
+### Custom Transformers
+
+```tsx
+import { customTransformer } from "../utils/shikiTransformers";
+
+// Using the component
+<ShikiHighlighter language="tsx" transformers={[customTransformer]}>
+  {code.trim()}
+</ShikiHighlighter>
+
+// Using the hook
+const highlightedCode = useShikiHighlighter(code, "tsx", "github-dark", {
+  transformers: [customTransformer],
+});
+```
+
+## Integration
 
 ### Integration with react-markdown
 
@@ -225,114 +404,6 @@ const CodeHighlight = ({
     </code>
   );
 };
-```
-
-### Multi-theme Support
-
-To use multiple theme modes, pass an object with your multi-theme configuration to the `theme` prop in the `ShikiHighlighter` component:
-
-```tsx
-<ShikiHighlighter
-  language="tsx"
-  theme={{
-    light: "github-light",
-    dark: "github-dark",
-    dim: "github-dark-dimmed",
-  }}
-  defaultColor="dark"
->
-  {code.trim()}
-</ShikiHighlighter>
-```
-
-Or, when using the hook, pass it to the `theme` parameter:
-
-```tsx
-const highlightedCode = useShikiHighlighter(
-  code,
-  "tsx",
-  {
-    light: "github-light",
-    dark: "github-dark",
-    dim: "github-dark-dimmed",
-  },
-  {
-    defaultColor: "dark",
-  }
-);
-```
-
-See [shiki's documentation](https://shiki.matsu.io/docs/themes) for more information on dual and multi theme support, and for the CSS needed to make the themes reactive to your site's theme.
-
-### Custom Themes
-
-Custom themes can be passed as a TextMate theme in JavaScript object. For example, [it should look like this](https://github.com/antfu/textmate-grammars-themes/blob/main/packages/tm-themes/themes/dark-plus.json).
-
-```tsx
-import tokyoNight from "../styles/tokyo-night.json";
-
-// Using the component
-<ShikiHighlighter language="tsx" theme={tokyoNight}>
-  {code.trim()}
-</ShikiHighlighter>
-
-// Using the hook
-const highlightedCode = useShikiHighlighter(code, "tsx", tokyoNight);
-```
-
-### Custom Languages
-
-Custom languages should be passed as a TextMate grammar in JavaScript object. For example, [it should look like this](https://github.com/shikijs/textmate-grammars-themes/blob/main/packages/tm-grammars/grammars/typescript.json)
-
-```tsx
-import mcfunction from "../langs/mcfunction.tmLanguage.json";
-
-// Using the component
-<ShikiHighlighter language={mcfunction} theme="github-dark">
-  {code.trim()}
-</ShikiHighlighter>
-
-// Using the hook
-const highlightedCode = useShikiHighlighter(code, mcfunction, "github-dark");
-```
-
-#### Preloading Custom Languages
-
-For dynamic highlighting scenarios where language selection happens at runtime:
-
-```tsx
-import mcfunction from "../langs/mcfunction.tmLanguage.json";
-import bosque from "../langs/bosque.tmLanguage.json";
-
-// With the component
-<ShikiHighlighter
-  language="typescript"
-  theme="github-dark"
-  customLanguages={[mcfunction, bosque]}
->
-  {code.trim()}
-</ShikiHighlighter>
-
-// With the hook
-const highlightedCode = useShikiHighlighter(code, "typescript", "github-dark", {
-  customLanguages: [mcfunction, bosque],
-});
-```
-
-### Custom Transformers
-
-```tsx
-import { customTransformer } from "../utils/shikiTransformers";
-
-// Using the component
-<ShikiHighlighter language="tsx" transformers={[customTransformer]}>
-  {code.trim()}
-</ShikiHighlighter>
-
-// Using the hook
-const highlightedCode = useShikiHighlighter(code, "tsx", "github-dark", {
-  transformers: [customTransformer],
-});
 ```
 
 ## Performance

@@ -1,10 +1,5 @@
-import type { Language, Theme, Themes } from '@/types';
-import {
-  type ThemeRegistrationAny,
-  bundledLanguages,
-  isSpecialLang,
-} from 'shiki';
-
+import type { Language, Theme, Themes } from './types';
+import type { ThemeRegistrationAny } from 'shiki/core';
 import type { LanguageRegistration } from './extended-types';
 
 /**
@@ -35,10 +30,7 @@ export const resolveLanguage = (
       : [customLanguages]
     : [];
 
-  const bundledLangs = new Set(
-    Object.keys(bundledLanguages).map((id) => id.toLowerCase())
-  );
-
+  // Language is null or empty string
   if (lang == null || (typeof lang === 'string' && !lang.trim())) {
     return {
       languageId: 'plaintext',
@@ -79,23 +71,12 @@ export const resolveLanguage = (
     };
   }
 
-  // Language is Built-in/Special
-  if (
-    (bundledLangs.has(lowerLang) || isSpecialLang(lowerLang)) &&
-    !customMatch
-  ) {
-    return {
-      languageId: lang,
-      displayLanguageId: lang,
-      langsToLoad: lang,
-    };
-  }
-
-  // Language is not supported
+  // For any other string, pass it through, 
+  // fallback is handled in highlighter factories
   return {
-    languageId: 'plaintext',
+    languageId: lang,
     displayLanguageId: lang,
-    langsToLoad: undefined,
+    langsToLoad: lang,
   };
 };
 
