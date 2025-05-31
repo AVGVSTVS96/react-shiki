@@ -1,5 +1,15 @@
 # react-shiki
 
+## 0.7.0
+
+### Minor Changes
+
+- Add `react-shiki/core` entrypoint for fine-grained bundle support, as well as `react-shiki/web` for Shiki's smaller web bundle _[`#59`](https://github.com/AVGVSTVS96/react-shiki/pull/59) [`fdf9609`](https://github.com/avgvstvs96/react-shiki/commit/fdf96094691fc78279ac0d6a0c216075b2fc50c6) [@AVGVSTVS96](https://github.com/AVGVSTVS96)_
+
+### Patch Changes
+
+- Chore: remove minification _[`#58`](https://github.com/AVGVSTVS96/react-shiki/pull/58) [`91a4fa2`](https://github.com/avgvstvs96/react-shiki/commit/91a4fa292b9e04b8184a26cba30d15518365b81e) [@juliusmarminge](https://github.com/juliusmarminge)_
+
 ## 0.6.0
 
 ### Minor Changes
@@ -9,7 +19,6 @@
 - **Breaking change:** Built-in removal of `tabindex` from code blocks has been removed. By default, code blocks will now be focusable (`tabindex="0"`), aligning with Shiki’s upstream default and WCAG accessibility guidelines. If you want to restore the previous non-focusable behavior, explicitly set `tabindex: -1` in your options. For more details and accessibility context, see References below.
   - WCAG 3.1 compliance: scrollable `<pre>` elements should be focusable ([WCAG rule](https://www.w3.org/WAI/standards-guidelines/act/rules/0ssw9k/proposed/))
   - Rationale and discussion: [shikijs/shiki#428](https://github.com/shikijs/shiki/issues/428)
-
 
 ## 0.5.3
 
