@@ -1,5 +1,11 @@
 # react-shiki
 
+## 0.7.1
+
+### Patch Changes
+
+- Feat: Add support for line numbers with `showLineNumbers` _[`928c69c`](https://github.com/avgvstvs96/react-shiki/commit/928c69c1bfc9f9918fc9ffbe2b85635dd645ce1e) [@AVGVSTVS96](https://github.com/AVGVSTVS96)_
+
 ## 0.7.0
 
 ### Minor Changes
