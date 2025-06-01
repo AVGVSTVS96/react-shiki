@@ -23,6 +23,7 @@ A performant client-side syntax highlighting component and hook for React, built
     - [Custom Languages](#custom-languages)
       - [Preloading Custom Languages](#preloading-custom-languages)
     - [Custom Transformers](#custom-transformers)
+    - [Line Numbers](#line-numbers)
   - [Integration](#integration)
     - [Integration with react-markdown](#integration-with-react-markdown)
     - [Handling Inline Code](#handling-inline-code)
@@ -44,6 +45,7 @@ A performant client-side syntax highlighting component and hook for React, built
 - 🖥️ `ShikiHighlighter` component displays a language label for each code block
   when `showLanguage` is set to `true` (default)
 - 🎨 Customizable styling of generated code blocks and language labels
+- 📏 Optional line numbers with customizable starting number and styling
 
 ## Installation
 
@@ -155,6 +157,8 @@ See [Shiki - RegExp Engines](https://shiki.style/guide/regex-engines) for more i
 | `theme`             | `string \| object` | `'github-dark'` | Single or multi-theme configuration, built-in or custom textmate theme object |
 | `delay`             | `number`           | `0`             | Delay between highlights (in milliseconds)                                    |
 | `customLanguages`   | `array`            | `[]`            | Array of custom languages to preload                                          |
+| `showLineNumbers`   | `boolean`          | `false`         | Display line numbers alongside code                                           |
+| `startingLineNumber` | `number`           | `1`             | Starting line number when line numbers are enabled                           |
 | `transformers`      | `array`            | `[]`            | Custom Shiki transformers for modifying the highlighting output               |
 | `cssVariablePrefix` | `string`           | `'--shiki'`     | Prefix for CSS variables storing theme colors                                 |
 | `defaultColor`      | `string \| false`  | `'light'`       | Default theme mode when using multiple themes, can also disable default theme |
@@ -221,12 +225,12 @@ Custom themes can be passed as a TextMate theme in JavaScript object. For exampl
 ```tsx
 import tokyoNight from "../styles/tokyo-night.json";
 
-// Using the component
+// Component
 <ShikiHighlighter language="tsx" theme={tokyoNight}>
   {code.trim()}
 </ShikiHighlighter>
 
-// Using the hook
+// Hook
 const highlightedCode = useShikiHighlighter(code, "tsx", tokyoNight);
 ```
 
@@ -237,12 +241,12 @@ Custom languages should be passed as a TextMate grammar in JavaScript object. Fo
 ```tsx
 import mcfunction from "../langs/mcfunction.tmLanguage.json";
 
-// Using the component
+// Component
 <ShikiHighlighter language={mcfunction} theme="github-dark">
   {code.trim()}
 </ShikiHighlighter>
 
-// Using the hook
+// Hook
 const highlightedCode = useShikiHighlighter(code, mcfunction, "github-dark");
 ```
 
@@ -254,7 +258,7 @@ For dynamic highlighting scenarios where language selection happens at runtime:
 import mcfunction from "../langs/mcfunction.tmLanguage.json";
 import bosque from "../langs/bosque.tmLanguage.json";
 
-// With the component
+// Component
 <ShikiHighlighter
   language="typescript"
   theme="github-dark"
@@ -263,7 +267,7 @@ import bosque from "../langs/bosque.tmLanguage.json";
   {code.trim()}
 </ShikiHighlighter>
 
-// With the hook
+// Hook
 const highlightedCode = useShikiHighlighter(code, "typescript", "github-dark", {
   customLanguages: [mcfunction, bosque],
 });
@@ -274,15 +278,80 @@ const highlightedCode = useShikiHighlighter(code, "typescript", "github-dark", {
 ```tsx
 import { customTransformer } from "../utils/shikiTransformers";
 
-// Using the component
+// Component
 <ShikiHighlighter language="tsx" transformers={[customTransformer]}>
   {code.trim()}
 </ShikiHighlighter>
 
-// Using the hook
+// Hook
 const highlightedCode = useShikiHighlighter(code, "tsx", "github-dark", {
   transformers: [customTransformer],
 });
+```
+
+### Line Numbers
+
+Display line numbers alongside your code, these are CSS-based
+and can be customized with CSS variables:
+
+```tsx
+// Component
+<ShikiHighlighter 
+  language="javascript"
+  theme="github-dark"
+  showLineNumbers,
+  startingLineNumber={0} // default is 1
+>
+  {code}
+</ShikiHighlighter>
+
+<ShikiHighlighter 
+  language="python" 
+  theme="github-dark" 
+  showLineNumbers 
+  startingLineNumber={0}
+>
+  {code}
+</ShikiHighlighter>
+
+// Hook (import 'react-shiki/css' for line numbers to work)
+const highlightedCode = useShikiHighlighter(code, "javascript", "github-dark", {
+  showLineNumbers: true,
+  startingLineNumber: 0, 
+});
+```
+
+> [!NOTE]
+> When using the hook with line numbers, import the CSS file for the line numbers to work:
+> ```tsx
+> import 'react-shiki/css';
+> ```
+> Or provide your own CSS counter implementation and styles for `.line-numbers` (line `span`) and `.has-line-numbers` (container `code` element)
+
+Available CSS variables for customization:
+```css
+--line-numbers-foreground: rgba(107, 114, 128, 0.5);
+--line-numbers-width: 2ch;
+--line-numbers-padding-left: 0ch;
+--line-numbers-padding-right: 2ch;
+--line-numbers-font-size: inherit;
+--line-numbers-font-weight: inherit;
+--line-numbers-opacity: 1;
+```
+
+You can customize them in your own CSS or by using the style prop on the component:
+```tsx
+<ShikiHighlighter 
+  language="javascript"
+  theme="github-dark"
+  showLineNumbers
+  style={{
+    '--line-numbers-foreground': '#60a5fa',
+    '--line-numbers-width': '3ch'
+  }}
+>
+  {code}
+</ShikiHighlighter>
 ```
 
 ## Integration

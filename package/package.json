@@ -26,9 +26,7 @@
   "type": "module",
   "main": "./dist/index.js",
   "types": "./dist/index.d.ts",
-  "files": [
-    "dist"
-  ],
+  "files": ["dist", "src/lib/styles.css"],
   "exports": {
     ".": {
       "types": "./dist/index.d.ts",
@@ -41,7 +39,8 @@
     "./core": {
       "types": "./dist/core.d.ts",
       "default": "./dist/core.js"
-    }
+    },
+    "./css": "./src/lib/styles.css"
   },
   "scripts": {
     "dev": "tsup --watch",

@@ -512,6 +512,49 @@ const highlightedCode = useShikiHighlighter(code, "tsx", "github-dark", {
 `.trim()}
 </ShikiHighlighter>
 
+## Line Numbers
+
+Display line numbers alongside your code:
+
+<ShikiHighlighter language="tsx" theme="github-dark" showLineNumbers>
+{`
+function fibonacci(n) {
+    if (n <= 1) return n;
+    return fibonacci(n - 1) + fibonacci(n - 2);
+}
+
+// Example usage
+const result = fibonacci(10);
+console.log(result); // 55
+`.trim()}
+</ShikiHighlighter>
+
+With custom starting line number:
+
+<ShikiHighlighter language="python" theme="vitesse-dark" showLineNumbers lineNumbersStart={42}>
+{`
+def calculate_area(radius):
+    """Calculate the area of a circle."""
+    import math
+    return math.pi * radius ** 2
+
+# Usage
+area = calculate_area(5)
+print(f"Area: {area}")
+`.trim()}
+</ShikiHighlighter>
+
+Using the hook with line numbers:
+
+<ShikiHighlighter language="tsx" theme="rose-pine">
+{`
+const highlightedCode = useShikiHighlighter(code, "javascript", "github-dark", {
+    showLineNumbers: true,
+    lineNumbersStart: 1,
+});
+`.trim()}
+</ShikiHighlighter>
+
 ## Performance
 
 ### Throttling Real-time Highlighting

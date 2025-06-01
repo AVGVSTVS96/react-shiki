@@ -99,6 +99,18 @@ interface ReactShikiOptions {
    * });
    */
   highlighter?: Highlighter | HighlighterCore;
+
+  /**
+   * Whether to show line numbers
+   * @default false
+   */
+  showLineNumbers?: boolean;
+
+  /**
+   * Starting line number (when showLineNumbers is true)
+   * @default 1
+   */
+  startingLineNumber?: number;
 }
 
 /**
