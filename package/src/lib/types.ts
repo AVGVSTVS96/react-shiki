@@ -8,6 +8,7 @@ import type {
   CodeToHastOptions,
   Highlighter,
   HighlighterCore,
+  BundledHighlighterOptions,
 } from 'shiki';
 
 import type { ReactNode } from 'react';
@@ -123,7 +124,8 @@ interface HighlighterOptions
       CodeOptionsMultipleThemes<BundledTheme>,
       'defaultColor' | 'cssVariablePrefix'
     >,
-    Omit<CodeToHastOptions, 'lang' | 'theme' | 'themes'> {}
+    Omit<CodeToHastOptions, 'lang' | 'theme' | 'themes'>,
+    Pick<BundledHighlighterOptions<string, string>, 'langAlias'> {}
 
 /**
  * State for the throttling logic
