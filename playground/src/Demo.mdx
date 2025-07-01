@@ -5,43 +5,37 @@ import bosque from './assets/bosque.tmLanguage.json';
 # 🎨 react-shiki
 
 Performant client side syntax highlighting component + hook
-for react using [Shiki](https://shiki.matsu.io/)
+for React, powered by  [Shiki](https://shiki.matsu.io/)
 
 ## Features
 
 - 🖼️ Provides both a `ShikiHighlighter` component and a `useShikiHighlighter` hook for more flexibility
-- 🔐 No `dangerouslySetInnerHTML` - output from Shiki is parsed using `html-react-parser`
-- 📦 Supports all built-in Shiki languages and themes
+- 🔐 Shiki output is processed from HAST directly into React elements, no `dangerouslySetInnerHTML` required
+- 📦 Multiple bundle options: Full bundle (~1.2MB gz), web bundle (~695KB gz), or minimal core bundle for fine-grained bundle control
 - 🖌️ Full support for custom TextMate themes and languages
-- 🔧 Supports passing custom Shiki transformers to the highlighter
+- 🔧 Supports passing custom Shiki transformers to the highlighter, in addition to all other options supported by `codeToHast`
 - 🚰 Performant highlighting of streamed code, with optional throttling
 - 📚 Includes minimal default styles for code blocks
 - 🚀 Shiki dynamically imports only the languages and themes used on a page for optimal performance
 - 🖥️ `ShikiHighlighter` component displays a language label for each code block
   when `showLanguage` is set to `true` (default)
 - 🎨 Customizable styling of generated code blocks and language labels
+- 📏 Optional line numbers with customizable starting number and styling
 
-## Installation
+## Code Examples
 
-<ShikiHighlighter language="bash" theme="tokyo-night">
-{`npm install react-shiki`}
-</ShikiHighlighter>
-
-## Usage
+Below are examples showcasing different themes and options available in react-shiki. For full documentation and installation instructions see the [README](https://github.com/avgvstvs96/react-shiki) on GitHub.
 
 ### Basic Usage
+[View docs →](https://github.com/avgvstvs96/react-shiki#usage)
 
-You can use either the `ShikiHighlighter` component or the `useShikiHighlighter` hook to highlight code.
-
-**Using the Component:**
-
-<ShikiHighlighter language="tsx" theme="ayu-dark">
+<ShikiHighlighter language="tsx" theme="github-dark">
 {`
-import { ShikiHighlighter } from 'react-shiki';
+import ShikiHighlighter from "react-shiki";
 
 function CodeBlock() {
     return (
-        <ShikiHighlighter language="jsx" theme="ayu-dark">
+        <ShikiHighlighter language="jsx" theme="github-dark">
             {code.trim()}
         </ShikiHighlighter>
     );
@@ -49,326 +43,51 @@ function CodeBlock() {
 `.trim()}
 </ShikiHighlighter>
 
-The `ShikiHighlighter` component accepts the following props:
+### Using the Hook
+[View docs →](https://github.com/avgvstvs96/react-shiki#usage)
 
-<div style={{overflowX: 'auto'}}>
-  <table>
-    <thead>
-      <tr>
-        <th>Prop</th>
-        <th>Type</th>
-        <th>Default</th>
-        <th>Description</th>
-      </tr>
-    </thead>
-    <tbody>
-      <tr>
-        <td><code>language</code></td>
-        <td><code>string</code></td>
-        <td>-</td>
-        <td>Language of the code to highlight</td>
-      </tr>
-      <tr>
-        <td><code>theme</code></td>
-        <td><code>string | object</code></td>
-        <td>'github-dark'</td>
-        <td>Shiki theme to use</td>
-      </tr>
-      <tr>
-        <td><code>showLanguage</code></td>
-        <td><code>boolean</code></td>
-        <td>true</td>
-        <td>Shows the language name in the top right corner</td>
-      </tr>
-      <tr>
-        <td><code>addDefaultStyles</code></td>
-        <td><code>boolean</code></td>
-        <td>true</td>
-        <td>Adds default styling to the code block</td>
-      </tr>
-      <tr>
-        <td><code>as</code></td>
-        <td><code>string</code></td>
-        <td>'pre'</td>
-        <td>Root element to render</td>
-      </tr>
-      <tr>
-        <td><code>delay</code></td>
-        <td><code>number</code></td>
-        <td>0</td>
-        <td>Delay between highlights in milliseconds</td>
-      </tr>
-      <tr>
-        <td><code>customLanguages</code></td>
-        <td><code>array</code></td>
-        <td>-</td>
-        <td>Custom languages to preload</td>
-      </tr>
-      <tr>
-        <td><code>transformers</code></td>
-        <td><code>array</code></td>
-        <td>-</td>
-        <td>Custom Shiki transformers</td>
-      </tr>
-      <tr>
-        <td><code>className</code></td>
-        <td><code>string</code></td>
-        <td>-</td>
-        <td>Custom class names for the component</td>
-      </tr>
-      <tr>
-        <td><code>langClassName</code></td>
-        <td><code>string</code></td>
-        <td>-</td>
-        <td>Class names for the language label</td>
-      </tr>
-      <tr>
-        <td><code>style</code></td>
-        <td><code>object</code></td>
-        <td>-</td>
-        <td>Inline style object for the component</td>
-      </tr>
-      <tr>
-        <td><code>langStyle</code></td>
-        <td><code>object</code></td>
-        <td>-</td>
-        <td>Inline style object for the language label</td>
-      </tr>
-    </tbody>
-  </table>
-</div>
-
-
-**Using the Hook:**
-
-<ShikiHighlighter language="tsx" theme="houston">
+<ShikiHighlighter language="tsx" theme="dracula">
 {`
-import { useShikiHighlighter } from 'react-shiki';
+import { useShikiHighlighter } from "react-shiki";
 
-function CustomCodeBlock({ code, language }) {
-    const highlightedCode = useShikiHighlighter(code, language, 'github-dark');
-    
-    return <div className="custom-code-block">{highlightedCode}</div>;
+function CodeBlock({ code, language }) {
+    const highlightedCode = useShikiHighlighter(code, language, "dracula");
+
+    return <div className="code-block">{highlightedCode}</div>;
 }
 `.trim()}
 </ShikiHighlighter>
 
-**The hook accepts the following parameters:**
+### Custom Highlighter Bundles
+[View docs →](https://github.com/avgvstvs96/react-shiki#bundle-options)
 
-<div style={{overflowX: 'auto'}}>
-  <table>
-    <thead>
-      <tr>
-        <th>Param</th>
-        <th>Type</th>
-        <th>Description</th>
-      </tr>
-    </thead>
-    <tbody>
-      <tr>
-        <td><code>code</code></td>
-        <td><code>string</code></td>
-        <td>The code to be highlighted</td>
-      </tr>
-      <tr>
-        <td><code>language</code></td>
-        <td><code>string | object</code></td>
-        <td>The language for highlighting</td>
-      </tr>
-      <tr>
-        <td><code>themeInput</code></td>
-        <td><code>string | object</code></td>
-        <td>The theme or themes to be used for highlighting</td>
-      </tr>
-      <tr>
-        <td><code>options</code></td>
-        <td><code>object</code></td>
-        <td>Optional configuration options</td>
-      </tr>
-    </tbody>
-  </table>
-</div>
-
-**`options`:**
-
-<div style={{overflowX: 'auto'}}>
-  <table>
-    <thead>
-      <tr>
-        <th>Param</th>
-        <th>Type</th>
-        <th>Default</th>
-        <th>Description</th>
-      </tr>
-    </thead>
-    <tbody>
-      <tr>
-        <td><code>delay</code></td>
-        <td><code>number</code></td>
-        <td><code>0</code> (disabled)</td>
-        <td>The delay between highlights in milliseconds</td>
-      </tr>
-      <tr>
-        <td><code>transformers</code></td>
-        <td><code>array</code></td>
-        <td><code>[]</code></td>
-        <td>Transformers for the Shiki pipeline</td>
-      </tr>
-      <tr>
-        <td><code>customLanguages</code></td>
-        <td><code>array</code></td>
-        <td><code>[]</code></td>
-        <td>Custom languages to preload</td>
-      </tr>
-      <tr>
-        <td><code>cssVariablePrefix</code></td>
-        <td><code>string</code></td>
-        <td><code>'--shiki'</code></td>
-        <td>Prefix of CSS variables used to store theme colors</td>
-      </tr>
-      <tr>
-        <td><code>defaultColor</code></td>
-        <td><code>string</code></td>
-        <td><code>'light'</code></td>
-        <td>The default theme mode when using multiple themes. Can be set to <code>false</code> to disable the default theme</td>
-      </tr>
-    </tbody>
-  </table>
-</div>
-
-### Integration with react-markdown
-
-Create a component to handle syntax highlighting:
-<ShikiHighlighter language="tsx" theme="houston">
+<ShikiHighlighter language="tsx" theme="ayu-dark">
 {`
-import ReactMarkdown from "react-markdown";
-import { ShikiHighlighter, isInlineCode } from "react-shiki";
+import ShikiHighlighter, { 
+    createHighlighterCore,        // re-exported from shiki/core
+    createOnigurumaEngine,        // re-exported from shiki/engine/oniguruma
+    createJavaScriptRegexEngine,  // re-exported from shiki/engine/javascript
+} from 'react-shiki/core';
 
-const CodeHighlight = ({ className, children, node, ...props }) => {
-    const code = String(children).trim();
-    const match = className?.match(/language-(\\w+)/);
-    const language = match ? match[1] : undefined;
-    const isInline = node ? isInlineCode(node) : undefined;
+// Create custom highlighter with dynamic imports to optimize client-side bundle size
+const highlighter = await createHighlighterCore({
+    themes: [import('@shikijs/themes/ayu-dark')],
+    langs: [import('@shikijs/langs/typescript')],
+    engine: createOnigurumaEngine(import('shiki/wasm')) 
+        // or createJavaScriptRegexEngine()
+});
 
-    return !isInline ? (
-        <ShikiHighlighter language={language} theme="github-dark" {...props}>
-            {code}
-        </ShikiHighlighter>
-    ) : (
-        <code className={className} {...props}>
-            {code}
-        </code>
-    );
-};
-`.trim()}
+<ShikiHighlighter highlighter={highlighter} language="typescript" theme="ayu-dark">
+    {code.trim()}
 </ShikiHighlighter>
-
-Pass the component to react-markdown as a code component:
-<ShikiHighlighter language="tsx" theme="rose-pine-moon">
-{`
-<ReactMarkdown
-    components={{
-        code: CodeHighlight,
-    }}
->
-    {markdown}
-</ReactMarkdown>
-`.trim()}
-</ShikiHighlighter>
-
-### Handling Inline Code
-
-Prior to `9.0.0`, `react-markdown` exposed the `inline` prop to `code` 
-components which helped to determine if code is inline. This functionality was 
-removed in `9.0.0`. For your convenience, `react-shiki` provides two 
-ways to replicate this functionality and API.
-
-**Method 1: Using the `isInlineCode` helper:**
-
-`react-shiki` exports `isInlineCode` which parses the `node` prop from `react-markdown` and identifies inline code by checking for the absence of newline characters:
-
-<ShikiHighlighter language="tsx" theme="material-theme-ocean">
-{`
-import { isInlineCode, ShikiHighlighter } from "react-shiki";
-
-const CodeHighlight = ({ className, children, node, ...props }) => {
-    const match = className?.match(/language-(\\w+)/);
-    const language = match ? match[1] : undefined;
-    const isInline = node ? isInlineCode(node) : undefined;
-
-    return !isInline ? (
-        <ShikiHighlighter language={language} theme="github-dark" {...props}>
-            {String(children).trim()}
-        </ShikiHighlighter>
-    ) : (
-        <code className={className} {...props}>
-            {children}
-        </code>
-    );
-};
-`.trim()}
-</ShikiHighlighter>
-
-**Method 2: Using the rehype plugin:**
-
-`react-shiki` also exports `rehypeInlineCodeProperty`, a rehype plugin that 
-provides the same API as `react-markdown` prior to `9.0.0`. It reintroduces the 
-`inline` prop which works by checking if `<code>` is nested within a `<pre>` tag, 
-if not, it's considered inline code and the `inline` prop is set to `true`.
-
-It's passed as a rehype plugin to `react-markdown`:
-
-<ShikiHighlighter language="tsx" theme="catppuccin-latte">
-{`
-import ReactMarkdown from "react-markdown";
-import { rehypeInlineCodeProperty } from "react-shiki";
-
-<ReactMarkdown
-    rehypePlugins={[rehypeInlineCodeProperty]}
-    components={{
-        code: CodeHighlight,
-    }}>
-    {markdown}
-</ReactMarkdown>;
-`.trim()}
-</ShikiHighlighter>
-
-Now `inline` can be accessed as a prop in the `CodeHighlight` component:
-
-<ShikiHighlighter language="tsx" theme="vitesse-light">
-{`
-const CodeHighlight = ({
-    inline,
-    className,
-    children,
-    node,
-    ...props
-}: CodeHighlightProps): JSX.Element => {
-    const match = className?.match(/language-(\\w+)/);
-    const language = match ? match[1] : undefined;
-    const code = String(children).trim();
-
-    return !inline ? (
-        <ShikiHighlighter language={language} theme="github-dark" {...props}>
-            {code}
-        </ShikiHighlighter>
-    ) : (
-        <code className={className} {...props}>
-            {code}
-        </code>
-    );
-};
 `.trim()}
 </ShikiHighlighter>
 
 ### Multi-theme Support
+[View docs →](https://github.com/avgvstvs96/react-shiki#multi-theme-support)
 
-<ShikiHighlighter
-  language="tsx"
-  theme={{ light: "github-light", dark: "vitesse-dark" }}
-  defaultColor="dark"
->
-  {`
+<ShikiHighlighter language="tsx" theme="nord">
+{`
 <ShikiHighlighter
     language="tsx"
     theme={{
@@ -380,143 +99,47 @@ const CodeHighlight = ({
 >
     {code.trim()}
 </ShikiHighlighter>
-
-// Using the hook
-const highlightedCode = useShikiHighlighter(
-    code,
-    "tsx",
-    { 
-        light: "github-light",
-        dark: "github-dark",
-        dim: "github-dark-dimmed"
-    },
-    {
-        defaultColor: "dark",
-    }
-);
 `.trim()}
 </ShikiHighlighter>
 
-See [shiki's documentation](https://shiki.matsu.io/docs/themes) for more information on dual and multi theme support, and for the CSS needed to make the themes reactive to your site's theme.
-
 ### Custom Themes
-Pass custom TextMate themes as a JSON object:
+[View docs →](https://github.com/avgvstvs96/react-shiki#custom-themes)
 
-<ShikiHighlighter language="tsx" theme="snazzy-light">
+<ShikiHighlighter language="tsx" theme="rose-pine">
 {`
 import tokyoNight from "../styles/tokyo-night.json";
 
-// Using the component
+// Component
 <ShikiHighlighter language="tsx" theme={tokyoNight}>
     {code.trim()}
 </ShikiHighlighter>
 
-// Using the hook
+// Hook
 const highlightedCode = useShikiHighlighter(code, "tsx", tokyoNight);
 `.trim()}
 </ShikiHighlighter>
 
 ### Custom Languages
-Pass custom TextMate languages as a JSON object:
+[View docs →](https://github.com/avgvstvs96/react-shiki#custom-languages)
 
-<ShikiHighlighter language="tsx" theme="github-dark">
+<ShikiHighlighter language="tsx" theme="vitesse-dark">
 {`
 import mcfunction from "../langs/mcfunction.tmLanguage.json";
 
-// Using the component
-<ShikiHighlighter language={mcfunction} theme="github-dark">
+// Component
+<ShikiHighlighter language={mcfunction} theme="vitesse-dark">
     {code.trim()}
 </ShikiHighlighter>
 
-// Using the hook
-const highlightedCode = useShikiHighlighter(code, mcfunction, "github-dark");
+// Hook
+const highlightedCode = useShikiHighlighter(code, mcfunction, "vitesse-dark");
 `.trim()}
 </ShikiHighlighter>
 
-### Custom Language Examples
+### Line Numbers
+[View docs →](https://github.com/avgvstvs96/react-shiki#line-numbers)
 
-**Mcfunction**:
-<ShikiHighlighter language={mcfunction} theme="rose-pine-moon" >
-  {`
-tag @e[tag=mcscriptTags] add isCool
-tag @e[tag=mcscriptTags] remove isCool
-execute if entity @e[tag=mcscriptTags,tag=isCool] run say he is cool
-
-tag @s add isBad
-tag @s remove isBad
-execute if entity @s[tag=isBad] run say he is bad
-  `.trim()}
-</ShikiHighlighter>
-
-**Bosque**:
-<ShikiHighlighter language={bosque} theme="rose-pine">
-  {`
-function sign(x?: Int=0i): Int {
-    var y: Int;
-
-    if(x == 0i) {
-        y = 0i;
-    }
-    else {
-        y = (x > 0i) ? 1i : -1i;
-    }
-
-    return y;
-}
-
-sign(5i)    //1
-sign(-5i)   //-1
-sign()     //0
-  `.trim()}
-</ShikiHighlighter>
-
-#### Preloading Custom Languages
-For dynamic highlighting scenarios where language selection happens at runtime:
-
-<ShikiHighlighter language="tsx" theme="github-dark">
-{`
-import mcfunction from "../langs/mcfunction.tmLanguage.json";
-import bosque from "../langs/bosque.tmLanguage.json";
-
-// With the component
-<ShikiHighlighter
-    language="typescript"
-    theme="github-dark"
-    customLanguages={[mcfunction, bosque]}
->
-    {code.trim()}
-</ShikiHighlighter>
-
-// With the hook
-const highlightedCode = useShikiHighlighter(code, "typescript", "github-dark", {
-    customLanguages: [mcfunction, bosque],
-});
-`.trim()}
-</ShikiHighlighter>
-
-### Custom Transformers
-
-<ShikiHighlighter language="tsx" theme="snazzy-light">
-{`
-import { customTransformer } from "../utils/shikiTransformers";
-
-// Using the component
-<ShikiHighlighter language="tsx" transformers={[customTransformer]}>
-    {code.trim()}
-</ShikiHighlighter>
-
-// Using the hook
-const highlightedCode = useShikiHighlighter(code, "tsx", "github-dark", {
-    transformers: [customTransformer],
-});
-`.trim()}
-</ShikiHighlighter>
-
-## Line Numbers
-
-Display line numbers alongside your code:
-
-<ShikiHighlighter language="tsx" theme="github-dark" showLineNumbers>
+<ShikiHighlighter language="javascript" theme="material-theme-ocean" showLineNumbers>
 {`
 function fibonacci(n) {
     if (n <= 1) return n;
@@ -529,173 +152,84 @@ console.log(result); // 55
 `.trim()}
 </ShikiHighlighter>
 
-With custom starting line number:
+### Integration with react-markdown
+[View docs →](https://github.com/avgvstvs96/react-shiki#integration-with-react-markdown)
 
-<ShikiHighlighter language="python" theme="vitesse-dark" showLineNumbers lineNumbersStart={42}>
+<ShikiHighlighter language="tsx" theme="catppuccin-mocha">
 {`
-def calculate_area(radius):
-    """Calculate the area of a circle."""
-    import math
-    return math.pi * radius ** 2
+import ReactMarkdown from "react-markdown";
+import ShikiHighlighter, { isInlineCode } from "react-shiki";
 
-# Usage
-area = calculate_area(5)
-print(f"Area: {area}")
-`.trim()}
-</ShikiHighlighter>
-
-Using the hook with line numbers:
-
-<ShikiHighlighter language="tsx" theme="rose-pine">
-{`
-const highlightedCode = useShikiHighlighter(code, "javascript", "github-dark", {
-    showLineNumbers: true,
-    lineNumbersStart: 1,
-});
-`.trim()}
-</ShikiHighlighter>
-
-## Performance
-
-### Throttling Real-time Highlighting
-
-For improved performance when highlighting frequently changing code:
-
-<ShikiHighlighter language="tsx" theme="night-owl">
-{`
-// With the component
-<ShikiHighlighter language="tsx" theme="github-dark" delay={150}>
-    {code.trim()}
-</ShikiHighlighter>
-
-// With the hook
-const highlightedCode = useShikiHighlighter(code, "tsx", "github-dark", {
-    delay: 150,
-});
-`.trim()}
-</ShikiHighlighter>
-
-### Streaming and LLM Chat UI
-
-`react-shiki` can be used to highlight streamed code from LLM responses in real-time.
-
-I use it for an LLM chatbot UI, it renders markdown and highlights
-code in memoized chat messages.
-
-Using `useShikiHighlighter` hook:
-
-<ShikiHighlighter language="tsx" theme="poimandres">
-{`
-import type { ReactNode } from "react";
-import { isInlineCode, useShikiHighlighter, type Element } from "react-shiki";
-import tokyoNight from "@styles/tokyo-night.mjs";
-
-interface CodeHighlightProps {
-    className?: string | undefined;
-    children?: ReactNode | undefined;
-    node?: Element | undefined;
-}
-
-export const CodeHighlight = ({
-    className,
-    children,
-    node,
-    ...props
-}: CodeHighlightProps) => {
+const CodeHighlight = ({ className, children, node, ...props }) => {
     const code = String(children).trim();
-    const language = className?.match(/language-(\\w+)/)?.[1];
-
-    const isInline = node ? isInlineCode(node) : false;
-
-    const highlightedCode = useShikiHighlighter(code, language, tokyoNight, {
-        delay: 150,
-    });
+    const match = className?.match(/language-(\\w+)/);
+    const language = match ? match[1] : undefined;
+    const isInline = node ? isInlineCode(node) : undefined;
 
     return !isInline ? (
-        <div
-            className="shiki not-prose relative [&_pre]:overflow-auto 
-            [&_pre]:rounded-lg [&_pre]:px-6 [&_pre]:py-5"
-        >
-            {language ? (
-                <span
-                    className="absolute right-3 top-2 text-xs tracking-tighter
-                    text-muted-foreground/85"
-                >
-                    {language}
-                </span>
-            ) : null}
-            {highlightedCode}
-        </div>
+        <ShikiHighlighter language={language} theme="catppuccin-mocha" {...props}>
+            {code}
+        </ShikiHighlighter>
     ) : (
         <code className={className} {...props}>
-            {children}
+            {code}
         </code>
     );
 };
 `.trim()}
 </ShikiHighlighter>
 
-Or using the `ShikiHighlighter` component:
+### Custom Transformers
+[View docs →](https://github.com/avgvstvs96/react-shiki#custom-transformers)
 
-<ShikiHighlighter language="tsx" theme="andromeeda">
+<ShikiHighlighter language="tsx" theme="poimandres">
 {`
-import type { ReactNode } from "react";
-import ShikiHighlighter, { isInlineCode, type Element } from "react-shiki";
+import { customTransformer } from "../utils/shikiTransformers";
 
-interface CodeHighlightProps {
-    className?: string | undefined;
-    children?: ReactNode | undefined;
-    node?: Element | undefined;
-}
+// Component
+<ShikiHighlighter language="tsx" theme="poimandres" transformers={[customTransformer]}>
+    {code.trim()}
+</ShikiHighlighter>
 
-export const CodeHighlight = ({
-    className,
-    children,
-    node,
-    ...props
-}: CodeHighlightProps): JSX.Element => {
-    const match = className?.match(/language-(\\w+)/);
-    const language = match ? match[1] : undefined;
-    const code = String(children).trim();
-
-    const isInline: boolean | undefined = node ? isInlineCode(node) : undefined;
-
-    return !isInline ? (
-        <ShikiHighlighter
-            language={language}
-            theme="github-dark"
-            delay={150}
-            {...props}
-        >
-            {code}
-        </ShikiHighlighter>
-    ) : (
-        <code className={className}>{code}</code>
-    );
-};
+// Hook
+const highlightedCode = useShikiHighlighter(code, "tsx", "poimandres", {
+    transformers: [customTransformer],
+});
 `.trim()}
 </ShikiHighlighter>
 
-Passed to `react-markdown` as a `code` component in memo-ized chat messages:
+### Throttling Real-time Highlighting
+[View docs →](https://github.com/avgvstvs96/react-shiki#throttling-real-time-highlighting)
 
-<ShikiHighlighter language="tsx" theme="synthwave-84">
+<ShikiHighlighter language="tsx" theme="houston">
 {`
-const RenderedMessage = React.memo(({ message }: { message: Message }) => (
-    <div className={cn(messageStyles[message.role])}>
-        <ReactMarkdown components={{ code: CodeHighlight }}>
-            {message.content}
-        </ReactMarkdown>
-    </div>
-));
+// With the component
+<ShikiHighlighter language="tsx" theme="houston" delay={150}>
+    {code.trim()}
+</ShikiHighlighter>
 
-export const ChatMessages = ({ messages }: { messages: Message[] }) => {
-    return (
-        <div className="space-y-4">
-            {messages.map((message) => (
-                <RenderedMessage key={message.id} message={message} />
-            ))}
-        </div>
-    );
-};
+// With the hook
+const highlightedCode = useShikiHighlighter(code, "tsx", "houston", {
+    delay: 150,
+});
 `.trim()}
 </ShikiHighlighter>
+
+### Custom Language Example
+[View docs →](https://github.com/avgvstvs96/react-shiki#custom-languages)
+
+<ShikiHighlighter language={mcfunction} theme="tokyo-night">
+{`
+tag @e[tag=mcscriptTags] add isCool
+tag @e[tag=mcscriptTags] remove isCool
+execute if entity @e[tag=mcscriptTags,tag=isCool] run say he is cool
+
+tag @s add isBad
+tag @s remove isBad
+execute if entity @s[tag=isBad] run say he is bad
+`.trim()}
+</ShikiHighlighter>
+
+---
+
+For full documentation and installation instructions see the react-shiki [README on GitHub](https://github.com/avgvstvs96/react-shiki).
