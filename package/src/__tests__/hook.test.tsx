@@ -10,6 +10,7 @@ interface TestComponentProps {
   theme: Theme;
   transformers?: ShikiTransformer[];
   tabindex?: string;
+  langAlias?: Record<string, string>;
 }
 
 const TestComponent = ({
@@ -17,9 +18,11 @@ const TestComponent = ({
   language,
   theme,
   transformers,
+  langAlias,
 }: TestComponentProps) => {
   const highlighted = useShikiHighlighter(code, language, theme, {
     transformers,
+    langAlias,
   });
   return <div data-testid="highlighted">{highlighted}</div>;
 };
@@ -130,6 +133,28 @@ describe('useShikiHighlighter Hook', () => {
     await waitFor(() => {
       const container = getByTestId('highlighted');
       expect(container).toMatchSnapshot();
+    });
+  });
+
+  test('applies highlighting on aliased language', async () => {
+    const code = 'package main';
+    const { getByTestId } = renderComponent({
+      code,
+      language: 'golang',
+      langAlias: {
+        golang: 'go',
+      },
+    });
+
+    await waitFor(() => {
+      const container = getByTestId('highlighted');
+      const preElement = container.querySelector('pre');
+      const spanElement = preElement?.querySelector(
+        'code>span>span'
+      ) as HTMLSpanElement | null;
+
+      expect(spanElement).toBeInTheDocument();
+      expect(spanElement).toHaveStyle('color: #D73A49');
     });
   });
 });

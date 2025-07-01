@@ -1,5 +1,8 @@
 import type { Language, Theme, Themes } from './types';
-import type { ThemeRegistrationAny } from 'shiki/core';
+import type {
+  BundledHighlighterOptions,
+  ThemeRegistrationAny,
+} from 'shiki/core';
 import type { LanguageRegistration } from './extended-types';
 
 /**
@@ -22,7 +25,8 @@ type LanguageResult = {
  */
 export const resolveLanguage = (
   lang: Language,
-  customLanguages?: LanguageRegistration | LanguageRegistration[]
+  customLanguages?: LanguageRegistration | LanguageRegistration[],
+  langAliases?: Record<string, string>
 ): LanguageResult => {
   const normalizedCustomLangs = customLanguages
     ? Array.isArray(customLanguages)
@@ -68,6 +72,15 @@ export const resolveLanguage = (
       languageId: customMatch.name || lang,
       displayLanguageId: lang,
       langsToLoad: customMatch,
+    };
+  }
+
+  // Check if language is aliased
+  if (langAliases && langAliases[lang]) {
+    return {
+      languageId: langAliases[lang],
+      displayLanguageId: lang,
+      langsToLoad: langAliases[lang],
     };
   }
 
