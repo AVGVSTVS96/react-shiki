@@ -60,7 +60,7 @@
     "react-dom": ">= 16.8.0"
   },
   "dependencies": {
-    "@types/jest": "^29.5.14",
+    "@types/jest": "^30.0.0",
     "clsx": "^2.1.1",
     "dequal": "^2.0.3",
     "hast-util-to-jsx-runtime": "^2.3.6",
