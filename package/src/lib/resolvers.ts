@@ -76,7 +76,7 @@ export const resolveLanguage = (
   }
 
   // Check if language is aliased
-  if (langAliases && langAliases[lang]) {
+  if (langAliases?.[lang]) {
     return {
       languageId: langAliases[lang],
       displayLanguageId: lang,

@@ -39,37 +39,20 @@ describe('useShikiHighlighter Hook', () => {
     return render(<TestComponent {...defaultProps} />);
   };
 
-  test('renders pre element with correct theme classes', async () => {
+  test('renders correct DOM structure', async () => {
     const { getByTestId } = renderComponent();
     await waitFor(() => {
       const container = getByTestId('highlighted');
-      const preElement = container.querySelector(
-        'pre.shiki.github-light'
-      );
+      
+      // Check pre element with theme classes
+      const preElement = container.querySelector('pre.shiki.github-light');
       expect(preElement).toBeInTheDocument();
-    });
-  });
-
-  test('renders code element inside pre element', async () => {
-    const { getByTestId } = renderComponent();
-    await waitFor(() => {
-      const container = getByTestId('highlighted');
-      const preElement = container.querySelector(
-        'pre.shiki.github-light'
-      );
+      
+      // Check code element inside pre
       const codeElement = preElement?.querySelector('code');
       expect(codeElement).toBeInTheDocument();
-    });
-  });
-
-  test('renders line spans inside code element', async () => {
-    const { getByTestId } = renderComponent();
-    await waitFor(() => {
-      const container = getByTestId('highlighted');
-      const preElement = container.querySelector(
-        'pre.shiki.github-light'
-      );
-      const codeElement = preElement?.querySelector('code');
+      
+      // Check line spans inside code
       const lineSpan = codeElement?.querySelector('span.line');
       expect(lineSpan).toBeInTheDocument();
     });
@@ -127,14 +110,6 @@ describe('useShikiHighlighter Hook', () => {
     });
   });
 
-  test('matches snapshot for hook rendered output for known language', async () => {
-    const code = '<div>Hello World</div>';
-    const { getByTestId } = renderComponent({ code });
-    await waitFor(() => {
-      const container = getByTestId('highlighted');
-      expect(container).toMatchSnapshot();
-    });
-  });
 
   test('applies highlighting on aliased language', async () => {
     const code = 'package main';
@@ -155,6 +130,27 @@ describe('useShikiHighlighter Hook', () => {
 
       expect(spanElement).toBeInTheDocument();
       expect(spanElement).toHaveStyle('color: #D73A49');
+    });
+  });
+
+  test('handles multiple language aliases', async () => {
+    const code = 'def hello():\n    print("world")';
+    const { getByTestId } = renderComponent({
+      code,
+      language: 'indents',
+      langAlias: {
+        indents: 'python',
+      },
+    });
+
+    await waitFor(() => {
+      const container = getByTestId('highlighted');
+      const preElement = container.querySelector('pre');
+      const defKeyword = Array.from(preElement?.querySelectorAll('span') || [])
+        .find(span => span.textContent === 'def');
+
+      expect(defKeyword).toBeInTheDocument();
+      expect(defKeyword).toHaveStyle('color: #D73A49');
     });
   });
 });

@@ -99,7 +99,7 @@ export const useShikiHighlighter = (
     () =>
       resolveLanguage(
         stableLang,
-        stableOpts.customLanguages as never,
+        stableOpts.customLanguages,
         stableOpts.langAlias
       ),
     [stableLang, stableOpts.customLanguages, stableOpts.langAlias]
