@@ -15,6 +15,7 @@ type LanguageResult = {
  * Resolves the language input to standardized IDs and objects for Shiki and UI display
  * @param lang The language input from props
  * @param customLanguages An array of custom textmate grammar objects or a single grammar object
+ * @param langAlias Global language alias mapping for common shortcuts
  * @returns A LanguageResult object containing:
  *   - languageId: The resolved language ID
  *   - displayLanguageId: The display language ID
@@ -22,7 +23,8 @@ type LanguageResult = {
  */
 export const resolveLanguage = (
   lang: Language,
-  customLanguages?: LanguageRegistration | LanguageRegistration[]
+  customLanguages?: LanguageRegistration | LanguageRegistration[],
+  langAlias?: Record<string, string>
 ): LanguageResult => {
   const normalizedCustomLangs = customLanguages
     ? Array.isArray(customLanguages)
@@ -69,6 +71,21 @@ export const resolveLanguage = (
       displayLanguageId: lang,
       langsToLoad: customMatch,
     };
+  }
+
+  // Check global language aliases (case-insensitive)
+  if (langAlias) {
+    const aliasKey = Object.keys(langAlias).find(
+      (key) => key.toLowerCase() === lowerLang
+    );
+    if (aliasKey && langAlias[aliasKey]) {
+      const resolvedLang = langAlias[aliasKey];
+      return {
+        languageId: resolvedLang,
+        displayLanguageId: lang, // Keep original for display
+        langsToLoad: resolvedLang,
+      };
+    }
   }
 
   // For any other string, pass it through,

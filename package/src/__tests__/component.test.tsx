@@ -124,6 +124,39 @@ greet('World');
     });
   });
 
+  test('resolves language aliases correctly and displays original alias', async () => {
+    const { container } = render(
+      <ShikiHighlighter 
+        language="js" 
+        theme="github-light"
+        langAlias={{
+          'js': 'javascript',
+          'ts': 'typescript'
+        }}
+      >
+        {codeSample}
+      </ShikiHighlighter>
+    );
+
+    await waitFor(() => {
+      // Language label should show the original alias "js"
+      const langLabel = container.querySelector('#language-label');
+      expect(langLabel).toBeInTheDocument();
+      expect(langLabel?.textContent).toBe('js');
+
+      // But the code should be highlighted as JavaScript
+      const preElement = container.querySelector(
+        'pre.shiki.github-light'
+      );
+      expect(preElement).toBeInTheDocument();
+      
+      // Check that the code contains syntax highlighting (colored spans)
+      const codeElement = preElement?.querySelector('code');
+      const coloredSpans = codeElement?.querySelectorAll('span[style*="color"]');
+      expect(coloredSpans?.length).toBeGreaterThan(0);
+    });
+  });
+
   test('applies custom transformers and custom styling props', async () => {
     const customCode = 'console.log("Custom transformer test");';
     // Transformer that adds a custom attribute to the <pre> tag.

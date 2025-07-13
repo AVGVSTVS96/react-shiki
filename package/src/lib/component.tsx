@@ -137,7 +137,8 @@ export const createShikiHighlighterComponent = (
     // Use resolveLanguage to get displayLanguageId directly
     const { displayLanguageId } = resolveLanguage(
       language,
-      customLanguages
+      customLanguages,
+      shikiOptions.langAlias
     );
 
     const highlightedCode = useShikiHighlighterImpl(

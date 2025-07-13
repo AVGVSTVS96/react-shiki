@@ -10,6 +10,7 @@ interface TestComponentProps {
   theme: Theme;
   transformers?: ShikiTransformer[];
   tabindex?: string;
+  langAlias?: Record<string, string>;
 }
 
 const TestComponent = ({
@@ -17,9 +18,11 @@ const TestComponent = ({
   language,
   theme,
   transformers,
+  langAlias,
 }: TestComponentProps) => {
   const highlighted = useShikiHighlighter(code, language, theme, {
     transformers,
+    langAlias,
   });
   return <div data-testid="highlighted">{highlighted}</div>;
 };
@@ -121,6 +124,89 @@ describe('useShikiHighlighter Hook', () => {
         'data-custom-transformer',
         'applied'
       );
+    });
+  });
+
+  test('resolves language aliases correctly', async () => {
+    const code = 'const x = 42;';
+    const langAlias = {
+      'js': 'javascript',
+      'ts': 'typescript',
+      'py': 'python'
+    };
+    
+    const { getByTestId } = renderComponent({
+      code,
+      language: 'js', // Use alias
+      langAlias,
+    });
+
+    await waitFor(() => {
+      const container = getByTestId('highlighted');
+      const preElement = container.querySelector('pre.shiki.github-light');
+      const codeElement = preElement?.querySelector('code');
+      
+      // Should render successfully as JavaScript
+      expect(preElement).toBeInTheDocument();
+      expect(codeElement).toBeInTheDocument();
+      
+      // Check that the code contains syntax highlighting (colored spans)
+      const coloredSpans = codeElement?.querySelectorAll('span[style*="color"]');
+      expect(coloredSpans?.length).toBeGreaterThan(0);
+    });
+  });
+
+  test('falls back to original language when alias not found', async () => {
+    const code = 'const x = 42;';
+    const langAlias = {
+      'py': 'python'
+    };
+    
+    const { getByTestId } = renderComponent({
+      code,
+      language: 'javascript', // Not in alias map
+      langAlias,
+    });
+
+    await waitFor(() => {
+      const container = getByTestId('highlighted');
+      const preElement = container.querySelector('pre.shiki.github-light');
+      const codeElement = preElement?.querySelector('code');
+      
+      // Should still render successfully as JavaScript
+      expect(preElement).toBeInTheDocument();
+      expect(codeElement).toBeInTheDocument();
+      
+      // Check that the code contains syntax highlighting
+      const coloredSpans = codeElement?.querySelectorAll('span[style*="color"]');
+      expect(coloredSpans?.length).toBeGreaterThan(0);
+    });
+  });
+
+  test('langAlias matching is case-insensitive', async () => {
+    const code = 'const x = 42;';
+    const langAlias = {
+      'JS': 'javascript'
+    };
+    
+    const { getByTestId } = renderComponent({
+      code,
+      language: 'js', // lowercase
+      langAlias,
+    });
+
+    await waitFor(() => {
+      const container = getByTestId('highlighted');
+      const preElement = container.querySelector('pre.shiki.github-light');
+      const codeElement = preElement?.querySelector('code');
+      
+      // Should render successfully
+      expect(preElement).toBeInTheDocument();
+      expect(codeElement).toBeInTheDocument();
+      
+      // Check that the code contains syntax highlighting
+      const coloredSpans = codeElement?.querySelectorAll('span[style*="color"]');
+      expect(coloredSpans?.length).toBeGreaterThan(0);
     });
   });
 

@@ -72,6 +72,23 @@ interface ReactShikiOptions {
   customLanguages?: LanguageRegistration | LanguageRegistration[];
 
   /**
+   * Global language alias mapping for common language shortcuts.
+   * This allows you to define aliases at the library level.
+   *
+   * @example
+   * ```ts
+   * useShikiHighlighter(code, "js", theme, {
+   *   langAlias: {
+   *     "js": "javascript",
+   *     "ts": "typescript",
+   *     "py": "python"
+   *   }
+   * })
+   * ```
+   */
+  langAlias?: Record<string, string>;
+
+  /**
    * Custom Shiki highlighter instance to use instead of the default one.
    * Keeps bundle small by only importing specified languages/themes.
    * Can be either a Highlighter or HighlighterCore instance.

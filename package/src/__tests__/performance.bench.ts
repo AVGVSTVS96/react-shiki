@@ -158,7 +158,7 @@ async function runApproachA(
   lang: Language,
   theme: Theme | Themes
 ) {
-  const { languageId } = resolveLanguage(lang);
+  const { languageId } = resolveLanguage(lang, undefined, undefined);
   const { isMultiTheme, singleTheme, multiTheme } = resolveTheme(theme);
 
   const options: CodeToHastOptions = {
@@ -181,7 +181,7 @@ async function runApproachB(
   lang: Language,
   theme: Theme | Themes
 ) {
-  const { languageId } = resolveLanguage(lang);
+  const { languageId } = resolveLanguage(lang, undefined, undefined);
   const { isMultiTheme, singleTheme, multiTheme } = resolveTheme(theme);
 
   const options: CodeToHastOptions = {
@@ -210,7 +210,7 @@ beforeAll(async () => {
 
     const languagesToLoad = new Set(
       allConfigs
-        .map((c) => resolveLanguage(c.lang).langsToLoad)
+        .map((c) => resolveLanguage(c.lang, undefined, undefined).langsToLoad)
         .filter(Boolean)
     );
 

@@ -96,8 +96,8 @@ export const useShikiHighlighter = (
   const [stableOpts, optsRev] = useStableOptions(options);
 
   const { languageId, langsToLoad } = useMemo(
-    () => resolveLanguage(stableLang, stableOpts.customLanguages),
-    [stableLang, stableOpts.customLanguages]
+    () => resolveLanguage(stableLang, stableOpts.customLanguages, stableOpts.langAlias),
+    [stableLang, stableOpts.customLanguages, stableOpts.langAlias]
   );
 
   const { isMultiTheme, themeId, multiTheme, singleTheme, themesToLoad } =
