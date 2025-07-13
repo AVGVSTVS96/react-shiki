@@ -1,5 +1,11 @@
 # react-shiki
 
+## 0.7.2
+
+### Patch Changes
+
+- Feat: support langAlias option _[`#68`](https://github.com/AVGVSTVS96/react-shiki/pull/68) [`7faa245`](https://github.com/avgvstvs96/react-shiki/commit/7faa245662a8db285f8ec44dba0269d43a5becc2) [@juliusmarminge](https://github.com/juliusmarminge)_
+
 ## 0.7.1
 
 ### Patch Changes
