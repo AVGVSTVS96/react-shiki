@@ -22,7 +22,8 @@ type LanguageResult = {
  */
 export const resolveLanguage = (
   lang: Language,
-  customLanguages?: LanguageRegistration | LanguageRegistration[]
+  customLanguages?: LanguageRegistration | LanguageRegistration[],
+  langAliases?: Record<string, string>
 ): LanguageResult => {
   const normalizedCustomLangs = customLanguages
     ? Array.isArray(customLanguages)
@@ -68,6 +69,15 @@ export const resolveLanguage = (
       languageId: customMatch.name || lang,
       displayLanguageId: lang,
       langsToLoad: customMatch,
+    };
+  }
+
+  // Check if language is aliased
+  if (langAliases?.[lang]) {
+    return {
+      languageId: langAliases[lang],
+      displayLanguageId: lang,
+      langsToLoad: langAliases[lang],
     };
   }
 

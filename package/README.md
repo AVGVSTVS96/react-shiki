@@ -157,6 +157,7 @@ See [Shiki - RegExp Engines](https://shiki.style/guide/regex-engines) for more i
 | `theme`             | `string \| object` | `'github-dark'` | Single or multi-theme configuration, built-in or custom textmate theme object |
 | `delay`             | `number`           | `0`             | Delay between highlights (in milliseconds)                                    |
 | `customLanguages`   | `array`            | `[]`            | Array of custom languages to preload                                          |
+| `langAlias`         | `object`           | `{}`            | Map of language aliases                                                       |
 | `showLineNumbers`   | `boolean`          | `false`         | Display line numbers alongside code                                           |
 | `startingLineNumber` | `number`           | `1`             | Starting line number when line numbers are enabled                           |
 | `transformers`      | `array`            | `[]`            | Custom Shiki transformers for modifying the highlighting output               |
@@ -270,6 +271,26 @@ import bosque from "../langs/bosque.tmLanguage.json";
 // Hook
 const highlightedCode = useShikiHighlighter(code, "typescript", "github-dark", {
   customLanguages: [mcfunction, bosque],
+});
+```
+
+### Language Aliases
+
+You can define custom aliases for languages using the `langAlias` option. This is useful when you want to use alternative names for languages:
+
+```tsx
+// Component
+<ShikiHighlighter 
+  language="indents" 
+  theme="github-dark" 
+  langAlias={{ indents: "python" }}
+>
+  {code.trim()}
+</ShikiHighlighter>
+
+// Hook
+const highlightedCode = useShikiHighlighter(code, "indents", "github-dark", {
+  langAlias: { indents: "python" },
 });
 ```
 

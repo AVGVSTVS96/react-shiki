@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { render } from '@testing-library/react';
+import { render, waitFor } from '@testing-library/react';
 import { ShikiHighlighter } from '../index';
 
 describe('Line Numbers', () => {
@@ -14,14 +14,14 @@ describe('Line Numbers', () => {
       </ShikiHighlighter>
     );
 
-    // Wait for highlighting to complete
-    await new Promise((resolve) => setTimeout(resolve, 100));
+    await waitFor(() => {
+      const containerElement =
+        container.querySelector('#shiki-container');
+      expect(containerElement).not.toHaveClass('has-line-numbers');
 
-    const container_element = container.querySelector('#shiki-container');
-    expect(container_element).not.toHaveClass('has-line-numbers');
-
-    const lineElements = container.querySelectorAll('.line-numbers');
-    expect(lineElements).toHaveLength(0);
+      const lineElements = container.querySelectorAll('.line-numbers');
+      expect(lineElements).toHaveLength(0);
+    });
   });
 
   it('should show line numbers when enabled', async () => {
@@ -35,14 +35,13 @@ describe('Line Numbers', () => {
       </ShikiHighlighter>
     );
 
-    // Wait for highlighting to complete
-    await new Promise((resolve) => setTimeout(resolve, 100));
+    await waitFor(() => {
+      const codeElement = container.querySelector('code');
+      expect(codeElement).toHaveClass('has-line-numbers');
 
-    const codeElement = container.querySelector('code');
-    expect(codeElement).toHaveClass('has-line-numbers');
-
-    const lineElements = container.querySelectorAll('.line-numbers');
-    expect(lineElements.length).toBeGreaterThan(0);
+      const lineElements = container.querySelectorAll('.line-numbers');
+      expect(lineElements.length).toBeGreaterThan(0);
+    });
   });
 
   it('should set custom starting line number', async () => {
@@ -57,17 +56,16 @@ describe('Line Numbers', () => {
       </ShikiHighlighter>
     );
 
-    // Wait for highlighting to complete
-    await new Promise((resolve) => setTimeout(resolve, 100));
-
-    // Check which elements have the style attribute
-    const elementsWithStyle = container.querySelectorAll(
-      '[style*="--line-start"]'
-    );
-    expect(elementsWithStyle.length).toBeGreaterThan(0);
-    expect(elementsWithStyle[0]?.getAttribute('style')).toContain(
-      '--line-start: 42'
-    );
+    await waitFor(() => {
+      // Check which elements have the style attribute
+      const elementsWithStyle = container.querySelectorAll(
+        '[style*="--line-start"]'
+      );
+      expect(elementsWithStyle.length).toBeGreaterThan(0);
+      expect(elementsWithStyle[0]?.getAttribute('style')).toContain(
+        '--line-start: 42'
+      );
+    });
   });
 
   it('should not set line-start CSS variable when starting from 1', async () => {
@@ -82,12 +80,11 @@ describe('Line Numbers', () => {
       </ShikiHighlighter>
     );
 
-    // Wait for highlighting to complete
-    await new Promise((resolve) => setTimeout(resolve, 100));
-
-    const elementsWithStyle = container.querySelectorAll(
-      '[style*="--line-start"]'
-    );
-    expect(elementsWithStyle.length).toBe(0);
+    await waitFor(() => {
+      const elementsWithStyle = container.querySelectorAll(
+        '[style*="--line-start"]'
+      );
+      expect(elementsWithStyle.length).toBe(0);
+    });
   });
 });
