@@ -1,7 +1,0 @@
-// Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
-
-exports[`useShikiHighlighter Hook > matches snapshot for hook rendered output for known language 1`] = `
-<div
-  data-testid="highlighted"
-/>
-`;

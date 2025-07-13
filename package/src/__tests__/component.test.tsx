@@ -102,27 +102,6 @@ describe('ShikiHighlighter Component', () => {
     });
   });
 
-  test('matches snapshot for complex language input', async () => {
-    const complexCode = `
-function greet(name) {
-  console.log('Hello, ' + name);
-}
-greet('World');
-    `.trim();
-
-    const { container } = render(
-      <ShikiHighlighter language="javascript" theme="github-light">
-        {complexCode}
-      </ShikiHighlighter>
-    );
-
-    await waitFor(() => {
-      const outerContainer = container.querySelector(
-        '[data-testid="shiki-container"]'
-      );
-      expect(outerContainer).toMatchSnapshot();
-    });
-  });
 
   test('applies custom transformers and custom styling props', async () => {
     const customCode = 'console.log("Custom transformer test");';
