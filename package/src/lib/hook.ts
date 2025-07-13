@@ -133,7 +133,6 @@ export const useShikiHighlighter = (
           theme: singleTheme || DEFAULT_THEMES.dark,
         } as CodeOptionsSingleTheme);
 
-    // Add line numbers transformer if enabled
     const transformers = restOptions.transformers || [];
     if (showLineNumbers) {
       transformers.push(lineNumbersTransformer(startingLineNumber));
@@ -153,7 +152,6 @@ export const useShikiHighlighter = (
     const highlightCode = async () => {
       if (!languageId) return;
 
-      // Use provided custom highlighter or create one using the factory
       const highlighter = stableOpts.highlighter
         ? stableOpts.highlighter
         : await createHighlighter(
@@ -161,7 +159,6 @@ export const useShikiHighlighter = (
             themesToLoad
           );
 
-      // Check if language is loaded, fallback to plaintext if not
       const loadedLanguages = highlighter.getLoadedLanguages();
       const langToUse = loadedLanguages.includes(languageId)
         ? languageId
