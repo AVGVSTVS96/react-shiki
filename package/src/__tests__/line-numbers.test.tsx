@@ -15,7 +15,8 @@ describe('Line Numbers', () => {
     );
 
     await waitFor(() => {
-      const containerElement = container.querySelector('#shiki-container');
+      const containerElement =
+        container.querySelector('#shiki-container');
       expect(containerElement).not.toHaveClass('has-line-numbers');
 
       const lineElements = container.querySelectorAll('.line-numbers');

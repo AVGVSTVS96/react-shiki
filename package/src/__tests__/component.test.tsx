@@ -102,7 +102,6 @@ describe('ShikiHighlighter Component', () => {
     });
   });
 
-
   test('applies custom transformers and custom styling props', async () => {
     const customCode = 'console.log("Custom transformer test");';
     // Transformer that adds a custom attribute to the <pre> tag.

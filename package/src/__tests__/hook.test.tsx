@@ -43,15 +43,17 @@ describe('useShikiHighlighter Hook', () => {
     const { getByTestId } = renderComponent();
     await waitFor(() => {
       const container = getByTestId('highlighted');
-      
+
       // Check pre element with theme classes
-      const preElement = container.querySelector('pre.shiki.github-light');
+      const preElement = container.querySelector(
+        'pre.shiki.github-light'
+      );
       expect(preElement).toBeInTheDocument();
-      
+
       // Check code element inside pre
       const codeElement = preElement?.querySelector('code');
       expect(codeElement).toBeInTheDocument();
-      
+
       // Check line spans inside code
       const lineSpan = codeElement?.querySelector('span.line');
       expect(lineSpan).toBeInTheDocument();
@@ -110,7 +112,6 @@ describe('useShikiHighlighter Hook', () => {
     });
   });
 
-
   test('applies highlighting on aliased language', async () => {
     const code = 'package main';
     const { getByTestId } = renderComponent({
@@ -146,8 +147,9 @@ describe('useShikiHighlighter Hook', () => {
     await waitFor(() => {
       const container = getByTestId('highlighted');
       const preElement = container.querySelector('pre');
-      const defKeyword = Array.from(preElement?.querySelectorAll('span') || [])
-        .find(span => span.textContent === 'def');
+      const defKeyword = Array.from(
+        preElement?.querySelectorAll('span') || []
+      ).find((span) => span.textContent === 'def');
 
       expect(defKeyword).toBeInTheDocument();
       expect(defKeyword).toHaveStyle('color: #D73A49');

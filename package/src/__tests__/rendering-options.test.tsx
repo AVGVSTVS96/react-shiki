@@ -21,9 +21,9 @@ describe('Shiki Rendering Options', () => {
 
   test('passes mergeWhitespaces option to Shiki', async () => {
     const { getByTestId } = render(
-      <TestHookComponent 
-        code={sampleCode} 
-        language="javascript" 
+      <TestHookComponent
+        code={sampleCode}
+        language="javascript"
         mergeWhitespaces={false}
       />
     );
@@ -38,9 +38,9 @@ describe('Shiki Rendering Options', () => {
 
   test('passes structure option to Shiki', async () => {
     const { getByTestId } = render(
-      <TestHookComponent 
-        code={sampleCode} 
-        language="javascript" 
+      <TestHookComponent
+        code={sampleCode}
+        language="javascript"
         structure="inline"
       />
     );
@@ -63,13 +63,13 @@ describe('Shiki Rendering Options', () => {
       start: 0,
       end: 5,
       tagName: 'mark',
-      properties: { class: 'highlighted' }
+      properties: { class: 'highlighted' },
     };
 
     const { getByTestId } = render(
-      <TestHookComponent 
-        code={sampleCode} 
-        language="javascript" 
+      <TestHookComponent
+        code={sampleCode}
+        language="javascript"
         decorations={[decoration]}
       />
     );
@@ -83,8 +83,8 @@ describe('Shiki Rendering Options', () => {
 
   test('component accepts rendering options', async () => {
     const { container } = render(
-      <ShikiHighlighter 
-        language="javascript" 
+      <ShikiHighlighter
+        language="javascript"
         theme="github-light"
         mergeWhitespaces={false}
         structure="inline"
@@ -95,7 +95,9 @@ describe('Shiki Rendering Options', () => {
 
     await waitFor(() => {
       // Just verify the component renders without errors when options are passed
-      const shikiContainer = container.querySelector('[data-testid="shiki-container"]');
+      const shikiContainer = container.querySelector(
+        '[data-testid="shiki-container"]'
+      );
       expect(shikiContainer).toBeInTheDocument();
     });
   });

@@ -1,8 +1,5 @@
 import type { Language, Theme, Themes } from './types';
-import type {
-  BundledHighlighterOptions,
-  ThemeRegistrationAny,
-} from 'shiki/core';
+import type { ThemeRegistrationAny } from 'shiki/core';
 import type { LanguageRegistration } from './extended-types';
 
 /**
