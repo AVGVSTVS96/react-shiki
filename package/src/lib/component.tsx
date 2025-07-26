@@ -1,4 +1,5 @@
 import './styles.css';
+import React from 'react';
 import { clsx } from 'clsx';
 import { resolveLanguage } from './resolvers';
 
@@ -12,7 +13,9 @@ import type {
 /**
  * Props for the ShikiHighlighter component
  */
-export interface ShikiHighlighterProps extends HighlighterOptions {
+export interface ShikiHighlighterProps extends 
+  HighlighterOptions,
+  Omit<React.HTMLAttributes<HTMLElement>, 'children' | 'style' | 'className'> {
   /**
    * The programming language for syntax highlighting
    * Supports custom textmate grammar objects in addition to Shiki's bundled languages
@@ -103,7 +106,7 @@ export const createShikiHighlighterComponent = (
     options?: HighlighterOptions
   ) => React.ReactNode
 ) => {
-  return ({
+  return React.forwardRef<any, ShikiHighlighterProps>(({
     language,
     theme,
     delay,
@@ -121,8 +124,9 @@ export const createShikiHighlighterComponent = (
     children: code,
     as: Element = 'pre',
     customLanguages,
-    ...shikiOptions
-  }: ShikiHighlighterProps): React.ReactElement => {
+    ...restProps
+  }, ref) => {
+    // Separate shiki options from HTML props
     const options: HighlighterOptions = {
       delay,
       transformers,
@@ -131,7 +135,6 @@ export const createShikiHighlighterComponent = (
       cssVariablePrefix,
       showLineNumbers,
       startingLineNumber,
-      ...shikiOptions,
     };
 
     // Use resolveLanguage to get displayLanguageId directly
@@ -149,6 +152,7 @@ export const createShikiHighlighterComponent = (
 
     return (
       <Element
+        ref={ref}
         data-testid="shiki-container"
         className={clsx(
           'relative',
@@ -158,6 +162,7 @@ export const createShikiHighlighterComponent = (
         )}
         style={style}
         id="shiki-container"
+        {...restProps}
       >
         {showLanguage && displayLanguageId ? (
           <span
@@ -171,5 +176,5 @@ export const createShikiHighlighterComponent = (
         {highlightedCode}
       </Element>
     );
-  };
+  });
 };
