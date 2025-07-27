@@ -107,37 +107,23 @@ export const createShikiHighlighterComponent = (
   return React.forwardRef<any, ShikiHighlighterProps>(({
     language,
     theme,
-    delay,
-    transformers,
-    defaultColor,
-    cssVariablePrefix,
     addDefaultStyles = true,
     style,
     langStyle,
     className,
     langClassName,
     showLanguage = true,
-    showLineNumbers = false,
-    startingLineNumber = 1,
     children: code,
     as: Element = 'pre',
-    customLanguages,
+    ...shikiOptions
   }, ref) => {
-    // Separate shiki options from HTML props
-    const options: HighlighterOptions = {
-      delay,
-      transformers,
-      customLanguages,
-      defaultColor,
-      cssVariablePrefix,
-      showLineNumbers,
-      startingLineNumber,
-    };
+    // Pass through all shiki options
+    const options: HighlighterOptions = shikiOptions;
 
     // Use resolveLanguage to get displayLanguageId directly
     const { displayLanguageId } = resolveLanguage(
       language,
-      customLanguages
+      shikiOptions.customLanguages
     );
 
     const highlightedCode = useShikiHighlighterImpl(
