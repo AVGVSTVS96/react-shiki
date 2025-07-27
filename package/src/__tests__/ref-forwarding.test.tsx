@@ -66,7 +66,7 @@ describe('ShikiHighlighter Ref Forwarding', () => {
     });
   });
 
-  test('ref provides access to DOM methods and accepts HTML attributes', async () => {
+  test('ref provides access to DOM methods', async () => {
     let refCurrent: HTMLElement | null = null;
     
     const TestComponent = () => {
@@ -81,9 +81,6 @@ describe('ShikiHighlighter Ref Forwarding', () => {
           ref={ref}
           language="javascript" 
           theme="github-light"
-          tabIndex={0} // Make it focusable for keyboard navigation
-          title="Code block"
-          id="custom-id"
         >
           {codeSample}
         </ShikiHighlighter>
@@ -96,9 +93,6 @@ describe('ShikiHighlighter Ref Forwarding', () => {
       expect(refCurrent).not.toBeNull();
       expect(typeof refCurrent?.focus).toBe('function');
       expect(refCurrent?.tagName.toLowerCase()).toBe('pre');
-      expect(refCurrent?.getAttribute('tabindex')).toBe('0');
-      expect(refCurrent?.getAttribute('title')).toBe('Code block');
-      expect(refCurrent?.getAttribute('id')).toBe('custom-id');
     });
   });
 });

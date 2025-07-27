@@ -13,9 +13,7 @@ import type {
 /**
  * Props for the ShikiHighlighter component
  */
-export interface ShikiHighlighterProps extends 
-  HighlighterOptions,
-  Omit<React.HTMLAttributes<HTMLElement>, 'children' | 'style' | 'className'> {
+export interface ShikiHighlighterProps extends HighlighterOptions {
   /**
    * The programming language for syntax highlighting
    * Supports custom textmate grammar objects in addition to Shiki's bundled languages
@@ -124,7 +122,6 @@ export const createShikiHighlighterComponent = (
     children: code,
     as: Element = 'pre',
     customLanguages,
-    ...restProps
   }, ref) => {
     // Separate shiki options from HTML props
     const options: HighlighterOptions = {
@@ -162,7 +159,6 @@ export const createShikiHighlighterComponent = (
         )}
         style={style}
         id="shiki-container"
-        {...restProps}
       >
         {showLanguage && displayLanguageId ? (
           <span

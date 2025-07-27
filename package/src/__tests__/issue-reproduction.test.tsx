@@ -1,6 +1,6 @@
 // Test the exact scenario from the GitHub issue
 import React, { useRef } from 'react';
-import { render } from '@testing-library/react';
+import { render, waitFor } from '@testing-library/react';
 import { ShikiHighlighter } from '../index';
 
 // This exact code caused the TypeScript error in the issue
@@ -15,7 +15,6 @@ const TestOriginalIssue = () => {
       showLineNumbers={true}
       showLanguage={false}
       addDefaultStyles={true}
-      tabIndex={0} // Needed for keyboard navigation
       className="code-block"
     >
       console.log("Hello World");
@@ -31,35 +30,15 @@ describe('Original Issue Reproduction', () => {
     }).not.toThrow();
   });
 
-  test('ref enables keyboard navigation use case', async () => {
+  test('ref enables DOM access for programmatic control', async () => {
     let refElement: HTMLElement | null = null;
     
-    const KeyboardNavigationTest = () => {
+    const ProgrammaticControlTest = () => {
       const ref = useRef<HTMLPreElement>(null);
       
       React.useEffect(() => {
         refElement = ref.current;
       }, []);
-
-      // Simulate keyboard navigation handler
-      const handleKeyDown = (e: React.KeyboardEvent) => {
-        if (ref.current) {
-          switch (e.key) {
-            case 'ArrowLeft':
-              ref.current.scrollLeft -= 20;
-              break;
-            case 'ArrowRight':
-              ref.current.scrollLeft += 20;
-              break;
-            case 'ArrowUp':
-              ref.current.scrollTop -= 20;
-              break;
-            case 'ArrowDown':
-              ref.current.scrollTop += 20;
-              break;
-          }
-        }
-      };
 
       return (
         <ShikiHighlighter
@@ -69,9 +48,7 @@ describe('Original Issue Reproduction', () => {
           showLineNumbers={true}
           showLanguage={false}
           addDefaultStyles={true}
-          tabIndex={0}
           className="code-block"
-          onKeyDown={handleKeyDown}
         >
           {`// Long code that requires scrolling
 const veryLongVariableNameThatExtendsOffScreen = "This line is very long and will require horizontal scrolling";
@@ -87,12 +64,13 @@ console.log("Line 5");`}
       );
     };
 
-    render(<KeyboardNavigationTest />);
+    render(<ProgrammaticControlTest />);
     
-    // Verify the ref provides access to DOM element for keyboard navigation
-    expect(refElement).not.toBeNull();
-    expect(refElement?.tagName.toLowerCase()).toBe('pre');
-    expect(refElement?.getAttribute('tabindex')).toBe('0');
-    expect(typeof refElement?.focus).toBe('function');
+    await waitFor(() => {
+      // Verify the ref provides access to DOM element for programmatic control
+      expect(refElement).not.toBeNull();
+      expect(refElement?.tagName.toLowerCase()).toBe('pre');
+      expect(typeof refElement?.focus).toBe('function');
+    });
   });
 });
