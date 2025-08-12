@@ -104,7 +104,7 @@ export const createShikiHighlighterComponent = (
     options?: HighlighterOptions
   ) => React.ReactNode
 ) => {
-  return forwardRef<any, ShikiHighlighterProps>(({
+  return forwardRef<HTMLElement, ShikiHighlighterProps>(({
     language,
     theme,
     delay,
