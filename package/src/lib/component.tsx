@@ -8,6 +8,7 @@ import type {
   Theme,
   Themes,
 } from './types';
+import { forwardRef } from 'react';
 
 /**
  * Props for the ShikiHighlighter component
@@ -103,7 +104,7 @@ export const createShikiHighlighterComponent = (
     options?: HighlighterOptions
   ) => React.ReactNode
 ) => {
-  return ({
+  return forwardRef<any, ShikiHighlighterProps>(({
     language,
     theme,
     delay,
@@ -122,13 +123,12 @@ export const createShikiHighlighterComponent = (
     as: Element = 'pre',
     customLanguages,
     ...shikiOptions
-  }: ShikiHighlighterProps): React.ReactElement => {
+  }, ref) => {
+    // Destructure some options for use in hook
     const options: HighlighterOptions = {
       delay,
       transformers,
       customLanguages,
-      defaultColor,
-      cssVariablePrefix,
       showLineNumbers,
       startingLineNumber,
       ...shikiOptions,
@@ -149,6 +149,7 @@ export const createShikiHighlighterComponent = (
 
     return (
       <Element
+        ref={ref}
         data-testid="shiki-container"
         className={clsx(
           'relative',
@@ -171,5 +172,5 @@ export const createShikiHighlighterComponent = (
         {highlightedCode}
       </Element>
     );
-  };
+  });
 };
