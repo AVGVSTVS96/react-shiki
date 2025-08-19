@@ -1,5 +1,11 @@
 # react-shiki
 
+## 0.7.3
+
+### Patch Changes
+
+- Feat: Support passing ref to component _[`#78`](https://github.com/AVGVSTVS96/react-shiki/pull/78) [`3e24fe8`](https://github.com/avgvstvs96/react-shiki/commit/3e24fe852170acef14dde41ae6902cf9c5cf9401) [@AVGVSTVS96](https://github.com/AVGVSTVS96)_
+
 ## 0.7.2
 
 ### Patch Changes
