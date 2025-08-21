@@ -68,16 +68,16 @@
     "unist-util-visit": "^5.0.0"
   },
   "devDependencies": {
-    "@testing-library/jest-dom": "^6.6.3",
+    "@testing-library/jest-dom": "^6.8.0",
     "@testing-library/react": "^16.3.0",
     "@types/hast": "^3.0.4",
-    "@types/node": "22.14.0",
-    "@types/react": "^19.1.0",
-    "@vitejs/plugin-react": "^4.3.4",
+    "@types/node": "22.17.2",
+    "@types/react": "^19.1.10",
+    "@vitejs/plugin-react": "^4.7.0",
     "benny": "^3.7.1",
-    "html-react-parser": "^5.2.3",
-    "jsdom": "^26.0.0",
-    "tsup": "^8.4.0",
-    "vitest": "^3.1.1"
+    "html-react-parser": "^5.2.6",
+    "jsdom": "^26.1.0",
+    "tsup": "^8.5.0",
+    "vitest": "^3.2.4"
   }
 }
