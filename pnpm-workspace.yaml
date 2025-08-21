@@ -1,6 +1,13 @@
 packages:
   - package
   - playground
+
+catalog:
+  react: ^19.1.0
+  react-dom: ^19.1.0
+  "@types/react": ^19.1.0
+  "@types/react-dom": ^19.1.1
+
 onlyBuiltDependencies:
   - "@biomejs/biome"
   - esbuild
