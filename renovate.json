@@ -24,26 +24,23 @@
       "enabled": false
     },
     {
+      "groupName": "react ecosystem",
+      "matchPackageNames": ["react", "react-dom", "@types/react", "@types/react-dom"]
+    },
+    {
       "groupName": "playground dependencies",
-      "matchFileNames": ["playground/**"],
-      "matchUpdateTypes": ["minor", "patch", "major"]
+      "matchFileNames": ["playground/**"]
     },
     {
-      "groupName": "package dev-dependencies",
-      "semanticCommitScope": "dev-deps",
-      "matchDepTypes": ["devDependencies"],
-      "matchFileNames": ["package/**"]
-    },
-    {
-      "groupName": "package core dependencies",
+      "groupName": "library runtime dependencies",
       "matchDepTypes": ["dependencies"],
       "matchFileNames": ["package/**"]
     },
     {
-      "groupName": "root dev-dependencies",
+      "groupName": "dev dependencies",
       "semanticCommitScope": "dev-deps",
       "matchDepTypes": ["devDependencies"],
-      "matchFileNames": ["package.json"]
+      "matchFileNames": ["package.json", "package/**"]
     }
   ]
 }
