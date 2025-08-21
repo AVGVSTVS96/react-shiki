@@ -46,8 +46,7 @@
       "types": "./dist/core.d.ts",
       "default": "./dist/core.js"
     },
-    "./css": "./src/lib/styles.css",
-    "./package.json": "./package.json"
+    "./css": "./src/lib/styles.css"
   },
   "scripts": {
     "dev": "tsup --watch",
