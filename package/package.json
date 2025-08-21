@@ -64,7 +64,7 @@
     "clsx": "^2.1.1",
     "dequal": "^2.0.3",
     "hast-util-to-jsx-runtime": "^2.3.6",
-    "shiki": "^3.2.1",
+    "shiki": "^3.11.0",
     "unist-util-visit": "^5.0.0"
   },
   "devDependencies": {
