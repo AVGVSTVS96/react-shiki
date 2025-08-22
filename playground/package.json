@@ -21,8 +21,8 @@
     "@tailwindcss/vite": "^4.1.12",
     "@types/react": "catalog:",
     "@types/react-dom": "catalog:",
-    "@vitejs/plugin-react": "^4.7.0",
+    "@vitejs/plugin-react": "^5.0.1",
     "tailwindcss": "^4.1.12",
-    "vite": "^6.3.5"
+    "vite": "^7.1.3"
   }
 }

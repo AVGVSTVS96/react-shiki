@@ -19,7 +19,7 @@
     "release": "node scripts/release.mjs"
   },
   "devDependencies": {
-    "@biomejs/biome": "^1.9.4",
+    "@biomejs/biome": "^2.2.0",
     "@changesets/cli": "^2.29.6",
     "changesets-changelog-clean": "^1.3.0",
     "typescript": "^5.9.2"
