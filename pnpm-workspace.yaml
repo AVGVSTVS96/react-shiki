@@ -10,4 +10,5 @@ catalog:
 
 onlyBuiltDependencies:
   - "@biomejs/biome"
+  - "@tailwindcss/oxide"
   - esbuild
