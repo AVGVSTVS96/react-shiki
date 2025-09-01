@@ -84,7 +84,7 @@
     "@testing-library/react": "^16.3.0",
     "@types/hast": "^3.0.4",
     "@types/jest": "^29.5.14",
-    "@types/node": "22.17.2",
+    "@types/node": "22.18.0",
     "@types/react": "catalog:",
     "@vitejs/plugin-react": "^4.7.0",
     "benny": "^3.7.1",
