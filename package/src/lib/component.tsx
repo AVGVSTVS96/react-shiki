@@ -104,73 +104,80 @@ export const createShikiHighlighterComponent = (
     options?: HighlighterOptions
   ) => React.ReactNode
 ) => {
-  return forwardRef<HTMLElement, ShikiHighlighterProps>(({
-    language,
-    theme,
-    delay,
-    transformers,
-    defaultColor,
-    cssVariablePrefix,
-    addDefaultStyles = true,
-    style,
-    langStyle,
-    className,
-    langClassName,
-    showLanguage = true,
-    showLineNumbers = false,
-    startingLineNumber = 1,
-    children: code,
-    as: Element = 'pre',
-    customLanguages,
-    ...shikiOptions
-  }, ref) => {
-    // Destructure some options for use in hook
-    const options: HighlighterOptions = {
-      delay,
-      transformers,
-      customLanguages,
-      showLineNumbers,
-      startingLineNumber,
-      ...shikiOptions,
-    };
+  return forwardRef<HTMLElement, ShikiHighlighterProps>(
+    (
+      {
+        language,
+        theme,
+        delay,
+        transformers,
+        defaultColor,
+        cssVariablePrefix,
+        addDefaultStyles = true,
+        style,
+        langStyle,
+        className,
+        langClassName,
+        showLanguage = true,
+        showLineNumbers = false,
+        startingLineNumber = 1,
+        children: code,
+        as: Element = 'pre',
+        customLanguages,
+        ...shikiOptions
+      },
+      ref
+    ) => {
+      // Destructure some options for use in hook
+      const options: HighlighterOptions = {
+        delay,
+        transformers,
+        customLanguages,
+        showLineNumbers,
+        defaultColor,
+        cssVariablePrefix,
+        startingLineNumber,
+        ...shikiOptions,
+      };
 
-    // Use resolveLanguage to get displayLanguageId directly
-    const { displayLanguageId } = resolveLanguage(
-      language,
-      customLanguages
-    );
+      // Use resolveLanguage to get displayLanguageId directly
+      const { displayLanguageId } = resolveLanguage(
+        language,
+        customLanguages
+      );
 
-    const highlightedCode = useShikiHighlighterImpl(
-      code,
-      language,
-      theme,
-      options
-    );
+      const highlightedCode = useShikiHighlighterImpl(
+        code,
+        language,
+        theme,
+        options
+      );
 
-    return (
-      <Element
-        ref={ref}
-        data-testid="shiki-container"
-        className={clsx(
-          'relative',
-          'not-prose',
-          addDefaultStyles && 'defaultStyles',
-          className
-        )}
-        style={style}
-        id="shiki-container"
-      >
-        {showLanguage && displayLanguageId ? (
-          <span
-            className={clsx('languageLabel', langClassName)}
-            style={langStyle}
-            id="language-label"
-          >
-            {displayLanguageId}
-          </span>
-        ) : null}
-        {highlightedCode}
-      </Element>
-    );
-  });
+      return (
+        <Element
+          ref={ref}
+          data-testid="shiki-container"
+          className={clsx(
+            'relative',
+            'not-prose',
+            addDefaultStyles && 'defaultStyles',
+            className
+          )}
+          style={style}
+          id="shiki-container"
+        >
+          {showLanguage && displayLanguageId ? (
+            <span
+              className={clsx('languageLabel', langClassName)}
+              style={langStyle}
+              id="language-label"
+            >
+              {displayLanguageId}
+            </span>
+          ) : null}
+          {highlightedCode}
+        </Element>
+      );
+    }
+  );
 };
