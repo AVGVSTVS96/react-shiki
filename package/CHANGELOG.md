@@ -1,5 +1,14 @@
 # react-shiki
 
+## 0.7.4
+
+### Patch Changes
+
+- Update react dependencies _[`#80`](https://github.com/AVGVSTVS96/react-shiki/pull/80) [`6611364`](https://github.com/avgvstvs96/react-shiki/commit/66113640784261a6cc346df2acf6c2669a52566d) [@renovate](https://github.com/apps/renovate)_
+- Internal updates to dependency management _[`#79`](https://github.com/AVGVSTVS96/react-shiki/pull/79) [`4b2720f`](https://github.com/avgvstvs96/react-shiki/commit/4b2720f988bd1067ba3913d1f91031631cf38bfd) [@copilot-swe-agent](https://github.com/apps/copilot-swe-agent)_
+- Fix multi-theme support in component _[`#87`](https://github.com/AVGVSTVS96/react-shiki/pull/87) [`44d670a`](https://github.com/avgvstvs96/react-shiki/commit/44d670a5132c6152538bf69ac290e944d9bdaf97) [@AVGVSTVS96](https://github.com/AVGVSTVS96)_
+- Update shiki to 3.11.0 _[`b40ad4e`](https://github.com/avgvstvs96/react-shiki/commit/b40ad4eb1e22641618f8c5216fe0e98348a79235) [@AVGVSTVS96](https://github.com/AVGVSTVS96)_
+
 ## 0.7.3
 
 ### Patch Changes
