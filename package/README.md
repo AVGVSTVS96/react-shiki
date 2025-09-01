@@ -217,7 +217,57 @@ const highlightedCode = useShikiHighlighter(
 );
 ```
 
-See [shiki's documentation](https://shiki.matsu.io/docs/themes) for more information on dual and multi theme support, and for the CSS needed to make the themes reactive to your site's theme.
+#### Making Themes Reactive
+
+There are two approaches to make multi-themes reactive to your site's theme:
+
+##### Option 1: Using `light-dark()` Function (Recommended)
+
+Set `defaultColor="light-dark()"` to use CSS's built-in `light-dark()` function. This automatically switches themes based on the user's `color-scheme` preference:
+
+```tsx
+// Component
+<ShikiHighlighter
+  language="tsx"
+  theme={{
+    light: "github-light",
+    dark: "github-dark",
+  }}
+  defaultColor="light-dark()"
+>
+  {code.trim()}
+</ShikiHighlighter>
+
+// Hook
+const highlightedCode = useShikiHighlighter(code, "tsx", {
+  light: "github-light",
+  dark: "github-dark",
+}, {
+  defaultColor: "light-dark()"
+});
+```
+
+Ensure your site sets the `color-scheme` CSS property:
+```css
+:root {
+  color-scheme: light dark;
+}
+
+/* Or dynamically with a class */
+* {
+  color-scheme: light;
+}
+
+.dark {
+  color-scheme: dark;
+}
+```
+
+##### Option 2: CSS Theme Switching
+
+For broader browser support or more control, add CSS snippets to your site to enable theme switching with media queries or class-based switching. See [Shiki's documentation](https://shiki.matsu.io/guide/dual-themes) for the required CSS snippets.
+
+> **Note**: The `light-dark()` function requires modern browser support. For older browsers, use the manual CSS variables approach.
 
 ### Custom Themes
 
