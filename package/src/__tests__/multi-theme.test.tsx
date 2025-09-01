@@ -1,6 +1,6 @@
 import React from 'react';
 import { render, waitFor } from '@testing-library/react';
-import { useShikiHighlighter } from '../index';
+import { useShikiHighlighter, ShikiHighlighter } from '../index';
 
 // Test component with configurable options
 const TestComponent = ({
@@ -103,6 +103,87 @@ describe('Multi-theme support', () => {
       const style = span?.getAttribute('style');
       expect(style).toContain('--custom-dark');
       expect(style).not.toContain('--shiki-dark');
+    });
+  });
+});
+
+describe('ShikiHighlighter Component Multi-theme support', () => {
+  const code = 'console.log("test");';
+  const language = 'javascript';
+  const themes = { light: 'github-light', dark: 'github-dark' };
+
+  test('component with multi-themes should render CSS variables for non-default theme', async () => {
+    const { container } = render(
+      <ShikiHighlighter language={language} theme={themes}>
+        {code}
+      </ShikiHighlighter>
+    );
+
+    await waitFor(() => {
+      const shikiContainer = container.querySelector('[data-testid="shiki-container"]');
+      expect(shikiContainer).toBeInTheDocument();
+
+      const pre = shikiContainer?.querySelector('pre');
+      expect(pre).toBeInTheDocument();
+      expect(pre).toHaveClass('shiki');
+
+      // Find spans with CSS variables
+      const spans = container.querySelectorAll('span[style*="--shiki-"]');
+      expect(spans.length).toBeGreaterThan(0);
+
+      // When no defaultColor is specified, light is default, so we should have --shiki-dark
+      const span = spans[0];
+      const style = span?.getAttribute('style');
+      expect(style).toContain('--shiki-dark');
+      expect(style).not.toContain('--shiki-light'); // light is the default, so no CSS variable
+    });
+  });
+
+  test('component with multi-themes and defaultColor=dark should show light variables', async () => {
+    const { container } = render(
+      <ShikiHighlighter
+        language={language}
+        theme={themes}
+        defaultColor="dark"
+      >
+        {code}
+      </ShikiHighlighter>
+    );
+
+    await waitFor(() => {
+      const spans = container.querySelectorAll('span[style*="--shiki-"]');
+      expect(spans.length).toBeGreaterThan(0);
+
+      // When defaultColor=dark, dark is default, so we should have --shiki-light
+      const span = spans[0];
+      const style = span?.getAttribute('style');
+      expect(style).toContain('--shiki-light');
+      expect(style).not.toContain('--shiki-dark'); // dark is the default, so no CSS variable
+    });
+  });
+
+  test('component with multi-themes and custom cssVariablePrefix should work', async () => {
+    const { container } = render(
+      <ShikiHighlighter
+        language={language}
+        theme={themes}
+        cssVariablePrefix="--custom-"
+        defaultColor="light"
+      >
+        {code}
+      </ShikiHighlighter>
+    );
+
+    await waitFor(() => {
+      const spans = container.querySelectorAll('span[style*="--custom-"]');
+      expect(spans.length).toBeGreaterThan(0);
+
+      // When defaultColor=light, light is default, so we should have --custom-dark
+      const span = spans[0];
+      const style = span?.getAttribute('style');
+      expect(style).toContain('--custom-dark');
+      expect(style).not.toContain('--custom-light'); // light is the default, so no CSS variable
+      expect(style).not.toContain('--shiki-');
     });
   });
 });
