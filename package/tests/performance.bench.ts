@@ -1,9 +1,10 @@
 /**
  * Attribution: Benchmark written by AI.
  *
- * This benchmark measures the performance of the two main transformation approaches:
- * - codeToHast -> toJsxRuntime: Used in the useShikiHighlighter hook
+ * This benchmark measures the performance of three transformation approaches:
+ * - codeToHast -> toJsxRuntime: Used in the useShikiHighlighter hook for React output
  * - codeToHtml -> html-react-parser: An alternative approach
+ * - codeToHtml -> dangerouslySetInnerHTML: Used for HTML output (both Shiki native and react-shiki)
  *
  * Each benchmark is run with different code sizes and configurations to provide
  * a comprehensive view of performance characteristics.
@@ -19,9 +20,9 @@ import { jsx, jsxs, Fragment } from 'react/jsx-runtime';
 import { toJsxRuntime } from 'hast-util-to-jsx-runtime';
 import htmlReactParser from 'html-react-parser';
 
-import type { Language, Theme, Themes } from '../lib/types';
+import type { Language, Theme, Themes } from '../src/lib/types';
 
-import { resolveLanguage, resolveTheme } from '../lib/resolvers';
+import { resolveLanguage, resolveTheme } from '../src/lib/resolvers';
 // --- Test Data ---
 
 // Small code sample (few lines)
@@ -197,6 +198,29 @@ async function runApproachB(
   return reactNodes;
 }
 
+// Approach C: codeToHtml -> dangerouslySetInnerHTML (Both Shiki native and react-shiki HTML output)
+async function runApproachC(
+  highlighter: Highlighter,
+  code: string,
+  lang: Language,
+  theme: Theme | Themes
+) {
+  const { languageId } = resolveLanguage(lang);
+  const { isMultiTheme, singleTheme, multiTheme } = resolveTheme(theme);
+
+  const options: CodeToHastOptions = {
+    ...(shikiOptionsBase as CodeToHastOptions),
+    lang: languageId,
+    ...(isMultiTheme
+      ? { themes: multiTheme as Themes }
+      : { theme: singleTheme as Theme }),
+  };
+
+  const html = highlighter.codeToHtml(code, options);
+  // Return an object mimicking what would be passed to dangerouslySetInnerHTML
+  return { __html: html };
+}
+
 // --- Vitest Benchmark Suite ---
 
 let highlighterInstance: Highlighter | null = null;
@@ -283,6 +307,26 @@ describe('1. Raw Transformation Performance', () => {
           if (!highlighterInstance)
             throw new Error('Highlighter not initialized');
           await runApproachB(
+            highlighterInstance,
+            config.code,
+            config.lang,
+            config.theme
+          );
+        },
+        {
+          time: 2000,
+          iterations: config.size === 'very-large' ? 5 : 20,
+          warmupIterations: 3,
+        }
+      );
+
+      // Benchmark Approach C (codeToHtml -> dangerouslySetInnerHTML)
+      bench(
+        'codeToHtml -> dangerouslySetInnerHTML',
+        async () => {
+          if (!highlighterInstance)
+            throw new Error('Highlighter not initialized');
+          await runApproachC(
             highlighterInstance,
             config.code,
             config.lang,
