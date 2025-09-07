@@ -1,8 +1,5 @@
 # 🎨 [react-shiki](https://npmjs.com/react-shiki)
 
-> [!NOTE]
-> This library is still in development. More features will be implemented, and the API may change.
-> Contributions are welcome!
 
 A performant client-side syntax highlighting component and hook for React, built with [Shiki](https://shiki.matsu.io/).
 
@@ -262,12 +259,12 @@ Ensure your site sets the `color-scheme` CSS property:
   color-scheme: light dark;
 }
 
-/* Or dynamically with a class */
-* {
+/* Or dynamically for class based dark mode */
+:root {
   color-scheme: light;
 }
 
-.dark {
+:root.dark {
   color-scheme: dark;
 }
 ```
