@@ -13,6 +13,9 @@
     "workarounds:all"
   ],
   "prHourlyLimit": 10,
+  "gitIgnoredAuthors": [
+    "41898282+github-actions[bot]@users.noreply.github.com"
+  ],
   "rangeStrategy": "bump",
   "labels": ["dependencies"],
   "commitMessageTopic": "{{depName}}",
@@ -25,7 +28,12 @@
     },
     {
       "groupName": "react dependencies",
-      "matchPackageNames": ["react", "react-dom", "@types/react", "@types/react-dom"]
+      "matchPackageNames": [
+        "react",
+        "react-dom",
+        "@types/react",
+        "@types/react-dom"
+      ]
     },
     {
       "groupName": "playground dependencies",
