@@ -1,4 +1,7 @@
-import { isInlineCode, rehypeInlineCodeProperty } from '../lib/utils';
+import {
+  isInlineCode,
+  rehypeInlineCodeProperty,
+} from '../src/lib/plugins';
 
 describe('isInlineCode', () => {
   it('returns true for inline code (no newline in text)', () => {

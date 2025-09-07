@@ -73,6 +73,14 @@ interface ReactShikiOptions {
   customLanguages?: LanguageRegistration | LanguageRegistration[];
 
   /**
+   * Output format for the highlighted code.
+   * - 'react': Returns React nodes (default, safer)
+   * - 'html': Returns HTML string (~15-45% faster, requires dangerouslySetInnerHTML)
+   * @default 'react'
+   */
+  outputFormat?: 'react' | 'html';
+
+  /**
    * Custom Shiki highlighter instance to use instead of the default one.
    * Keeps bundle small by only importing specified languages/themes.
    * Can be either a Highlighter or HighlighterCore instance.
@@ -150,7 +158,7 @@ export type UseShikiHighlighter = (
   lang: Language,
   themeInput: Theme | Themes,
   options?: HighlighterOptions
-) => ReactNode;
+) => ReactNode | string | null;
 
 export type {
   Language,

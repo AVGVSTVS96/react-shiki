@@ -7,6 +7,7 @@ import type {
   Language,
   Theme,
   Themes,
+  UseShikiHighlighter,
 } from './types';
 import { forwardRef } from 'react';
 
@@ -97,12 +98,7 @@ export interface ShikiHighlighterProps extends HighlighterOptions {
  * This creates a component that uses the provided hook implementation.
  */
 export const createShikiHighlighterComponent = (
-  useShikiHighlighterImpl: (
-    code: string,
-    lang: Language,
-    themeInput: Theme | Themes,
-    options?: HighlighterOptions
-  ) => React.ReactNode
+  useShikiHighlighterImpl: UseShikiHighlighter
 ) => {
   return forwardRef<HTMLElement, ShikiHighlighterProps>(
     (
@@ -153,6 +149,8 @@ export const createShikiHighlighterComponent = (
         options
       );
 
+      const isHtmlOutput = typeof highlightedCode === 'string';
+
       return (
         <Element
           ref={ref}
@@ -175,7 +173,11 @@ export const createShikiHighlighterComponent = (
               {displayLanguageId}
             </span>
           ) : null}
-          {highlightedCode}
+          {isHtmlOutput ? (
+            <div dangerouslySetInnerHTML={{ __html: highlightedCode }} />
+          ) : (
+            highlightedCode
+          )}
         </Element>
       );
     }
