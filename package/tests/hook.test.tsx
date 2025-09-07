@@ -458,6 +458,46 @@ describe('useShikiHighlighter Hook', () => {
         expect(container.querySelector('pre')).toBeInTheDocument();
       });
     });
+
+    test('HTML output contains syntax highlighting', async () => {
+      let capturedOutput: any = null;
+
+      const TestCapture = () => {
+        const highlighted = useShikiHighlighter(
+          'const x = 1;',
+          'javascript',
+          'github-dark',
+          { outputFormat: 'html' }
+        );
+        capturedOutput = highlighted;
+
+        if (typeof highlighted === 'string' && highlighted) {
+          return (
+            <div
+              data-testid="output"
+              dangerouslySetInnerHTML={{ __html: highlighted }}
+            />
+          );
+        }
+        return <div data-testid="output">Loading...</div>;
+      };
+
+      const { getByTestId } = render(<TestCapture />);
+
+      await waitFor(() => {
+        // Verify HTML string contains syntax highlighting elements
+        expect(capturedOutput).toContain('style=');
+        expect(capturedOutput).toContain('color:');
+        
+        // Verify rendered DOM has highlighted spans
+        const container = getByTestId('output');
+        const spans = container.querySelectorAll('span[style*="color"]');
+        expect(spans.length).toBeGreaterThan(0);
+        
+        // Verify the code content is preserved
+        expect(container.textContent).toContain('const x = 1;');
+      });
+    });
   });
 
   describe('Throttling', () => {
