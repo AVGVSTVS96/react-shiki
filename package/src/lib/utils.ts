@@ -33,7 +33,6 @@ export const useStableOptions = <T>(value: T) => {
 
 /**
  * Optionally throttles rapid sequential highlighting operations
- * Exported for testing in __tests__/throttleHighlighting.test.ts
  *
  * @example
  * const timeoutControl = useRef<TimeoutState>({
