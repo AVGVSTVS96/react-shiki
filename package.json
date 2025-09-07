@@ -17,7 +17,7 @@
     "format": "pnpm --filter react-shiki format",
     "changeset": "changeset",
     "release": "node scripts/release.mjs",
-    "ci:publish": "pnpm build && changeset publish"
+    "ci:publish": "pnpm package:build && changeset publish"
   },
   "devDependencies": {
     "@biomejs/biome": "^1.9.4",
