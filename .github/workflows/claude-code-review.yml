@@ -42,19 +42,27 @@ jobs:
           
           # Direct prompt for automated review (no @claude mention needed)
           direct_prompt: |
-            Please review this pull request and provide feedback on:
-            - Code quality and best practices
-            - Potential bugs or issues
-            - Performance considerations
-            - Security concerns
-            - Test coverage
+            Important, ensure:
+            - PR includes changeset when updating package source
+            - PR includes documentation updates when API surface changes
+            - Code updates are clean and well architected
+            - Tests cover relevant code changes
+
+            Provide feedback on:
+            - Code quality and best practices - readability, maintainability, elegance
+            - Potential bugs, performance considerations, security concerns
             
             Be constructive and helpful in your feedback.
+
+            ${{ github.event.pull_request.author_association == 'FIRST_TIME_CONTRIBUTOR' && 
+            '
+
+            Welcome! This is from a first-time contributor. Be encouraging and provide detailed explanations for any suggestions.' || '' }}
 
           allowed_bots: "renovate"
           
           # Optional: Use sticky comments to make Claude reuse the same comment on subsequent pushes to the same PR
-          # use_sticky_comment: true
+          use_sticky_comment: true
           
           # Optional: Customize review based on file types
           # direct_prompt: |
@@ -63,12 +71,6 @@ jobs:
           #   - For API endpoints: Security, input validation, and error handling
           #   - For React components: Performance, accessibility, and best practices
           #   - For tests: Coverage, edge cases, and test quality
-          
-          # Optional: Different prompts for different authors
-          # direct_prompt: |
-          #   ${{ github.event.pull_request.author_association == 'FIRST_TIME_CONTRIBUTOR' && 
-          #   'Welcome! Please review this PR from a first-time contributor. Be encouraging and provide detailed explanations for any suggestions.' ||
-          #   'Please provide a thorough code review focusing on our coding standards and best practices.' }}
           
           # Optional: Add specific tools for running tests or linting
           # allowed_tools: "Bash(npm run test),Bash(npm run lint),Bash(npm run typecheck)"
