@@ -1,5 +1,11 @@
 # react-shiki
 
+## 0.8.0
+
+### Minor Changes
+
+- Add `outputFormat` option, support HTML in addition to JSX output for improved performance _[`#92`](https://github.com/AVGVSTVS96/react-shiki/pull/92) [`5fa19ee`](https://github.com/avgvstvs96/react-shiki/commit/5fa19ee163da6cdee4403b050ccc561aeda6b5fa) [@AVGVSTVS96](https://github.com/AVGVSTVS96)_
+
 ## 0.7.4
 
 ### Patch Changes
