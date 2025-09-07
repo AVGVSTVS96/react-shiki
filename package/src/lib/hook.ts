@@ -6,7 +6,6 @@ import {
   type ReactNode,
 } from 'react';
 
-
 import { jsx, jsxs, Fragment } from 'react/jsx-runtime';
 import { toJsxRuntime } from 'hast-util-to-jsx-runtime';
 

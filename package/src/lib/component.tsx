@@ -7,6 +7,7 @@ import type {
   Language,
   Theme,
   Themes,
+  UseShikiHighlighter,
 } from './types';
 import { forwardRef } from 'react';
 
@@ -96,13 +97,8 @@ export interface ShikiHighlighterProps extends HighlighterOptions {
  * Base ShikiHighlighter component factory.
  * This creates a component that uses the provided hook implementation.
  */
-export const createShikiHighlighterComponent = <T,>(
-  useShikiHighlighterImpl: (
-    code: string,
-    lang: Language,
-    themeInput: Theme | Themes,
-    options?: HighlighterOptions
-  ) => T
+export const createShikiHighlighterComponent = (
+  useShikiHighlighterImpl: UseShikiHighlighter
 ) => {
   return forwardRef<HTMLElement, ShikiHighlighterProps>(
     (

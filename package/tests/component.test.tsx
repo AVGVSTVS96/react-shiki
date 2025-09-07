@@ -7,7 +7,9 @@ const codeSample = 'console.log("Hello World");';
 
 // Test utilities
 const getContainer = (container: HTMLElement) =>
-  container.querySelector('[data-testid="shiki-container"]') as HTMLElement | null;
+  container.querySelector(
+    '[data-testid="shiki-container"]'
+  ) as HTMLElement | null;
 
 const getLanguageLabel = (container: HTMLElement | null) =>
   container?.querySelector('#language-label') as HTMLElement | null;
@@ -94,7 +96,7 @@ describe('ShikiHighlighter Component', () => {
       await waitFor(() => {
         const outerContainer = getContainer(container);
         const langLabel = getLanguageLabel(outerContainer);
-        
+
         // Verify language label shows original language
         expect(langLabel).toBeInTheDocument();
         expect(langLabel?.textContent).toBe('unknownlang');
@@ -179,7 +181,8 @@ describe('ShikiHighlighter Component', () => {
       );
 
       await waitFor(() => {
-        const shikiContainer = container.querySelector('#shiki-container');
+        const shikiContainer =
+          container.querySelector('#shiki-container');
         expect(shikiContainer).toBeInTheDocument();
 
         // Should have a div with dangerouslySetInnerHTML
@@ -223,13 +226,19 @@ describe('ShikiHighlighter Component', () => {
       let refCurrent: HTMLElement | null = null;
 
       render(
-        <RefTestComponent onRefSet={(ref) => { refCurrent = ref; }} />
+        <RefTestComponent
+          onRefSet={(ref) => {
+            refCurrent = ref;
+          }}
+        />
       );
 
       await waitFor(() => {
         expect(refCurrent).not.toBeNull();
         expect(refCurrent?.tagName.toLowerCase()).toBe('pre');
-        expect(refCurrent?.getAttribute('data-testid')).toBe('shiki-container');
+        expect(refCurrent?.getAttribute('data-testid')).toBe(
+          'shiki-container'
+        );
       });
     });
 
@@ -238,7 +247,9 @@ describe('ShikiHighlighter Component', () => {
 
       render(
         <RefTestComponent
-          onRefSet={(ref) => { refCurrent = ref; }}
+          onRefSet={(ref) => {
+            refCurrent = ref;
+          }}
           as="div"
         />
       );
@@ -246,7 +257,9 @@ describe('ShikiHighlighter Component', () => {
       await waitFor(() => {
         expect(refCurrent).not.toBeNull();
         expect(refCurrent?.tagName.toLowerCase()).toBe('div');
-        expect(refCurrent?.getAttribute('data-testid')).toBe('shiki-container');
+        expect(refCurrent?.getAttribute('data-testid')).toBe(
+          'shiki-container'
+        );
       });
     });
 
@@ -254,7 +267,11 @@ describe('ShikiHighlighter Component', () => {
       let refCurrent: HTMLElement | null = null;
 
       render(
-        <RefTestComponent onRefSet={(ref) => { refCurrent = ref; }} />
+        <RefTestComponent
+          onRefSet={(ref) => {
+            refCurrent = ref;
+          }}
+        />
       );
 
       await waitFor(() => {

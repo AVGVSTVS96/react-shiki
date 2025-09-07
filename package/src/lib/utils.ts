@@ -8,29 +8,28 @@ import type { TimeoutState } from './types';
  * Includes optimizations for primitive values and reference equality.
  */
 export const useStableOptions = <T>(value: T) => {
-    const ref = useRef(value);
-    const revision = useRef(0);
+  const ref = useRef(value);
+  const revision = useRef(0);
 
-    // Fast-path for primitive values
-    if (typeof value !== 'object' || value === null) {
-        if (value !== ref.current) {
-            ref.current = value;
-            revision.current += 1;
-        }
-        return [value, revision.current] as const;
-    }
-
-    // Reference equality check before expensive deep comparison
+  // Fast-path for primitive values
+  if (typeof value !== 'object' || value === null) {
     if (value !== ref.current) {
-        if (!dequal(value, ref.current)) {
-            ref.current = value;
-            revision.current += 1;
-        }
+      ref.current = value;
+      revision.current += 1;
     }
+    return [value, revision.current] as const;
+  }
 
-    return [ref.current, revision.current] as const;
+  // Reference equality check before expensive deep comparison
+  if (value !== ref.current) {
+    if (!dequal(value, ref.current)) {
+      ref.current = value;
+      revision.current += 1;
+    }
+  }
+
+  return [ref.current, revision.current] as const;
 };
-
 
 /**
  * Optionally throttles rapid sequential highlighting operations

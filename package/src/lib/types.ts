@@ -158,7 +158,7 @@ export type UseShikiHighlighter = (
   lang: Language,
   themeInput: Theme | Themes,
   options?: HighlighterOptions
-) => ReactNode;
+) => ReactNode | string | null;
 
 export type {
   Language,

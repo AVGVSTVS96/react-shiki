@@ -29,16 +29,19 @@ const TestComponent = ({
   ...options
 }: TestComponentProps) => {
   const highlighted = useShikiHighlighter(code, language, theme, options);
-  
+
   // Handle HTML output format
-  if (options.outputFormat === 'html' && typeof highlighted === 'string') {
+  if (
+    options.outputFormat === 'html' &&
+    typeof highlighted === 'string'
+  ) {
     return (
       <div data-testid="highlighted">
         <div dangerouslySetInnerHTML={{ __html: highlighted }} />
       </div>
     );
   }
-  
+
   return <div data-testid="highlighted">{highlighted}</div>;
 };
 
@@ -60,7 +63,9 @@ describe('useShikiHighlighter Hook', () => {
         const container = getByTestId('highlighted');
 
         // Check pre element with theme classes
-        const preElement = container.querySelector('pre.shiki.github-light');
+        const preElement = container.querySelector(
+          'pre.shiki.github-light'
+        );
         expect(preElement).toBeInTheDocument();
 
         // Check code element inside pre
@@ -81,7 +86,9 @@ describe('useShikiHighlighter Hook', () => {
       });
       await waitFor(() => {
         const container = getByTestId('highlighted');
-        const preElement = container.querySelector('pre.shiki.github-light');
+        const preElement = container.querySelector(
+          'pre.shiki.github-light'
+        );
         const codeElement = preElement?.querySelector('code');
         const lineSpan = codeElement?.querySelector('span.line');
 
@@ -263,7 +270,9 @@ describe('useShikiHighlighter Hook', () => {
         expect(pre).toHaveClass('shiki');
 
         // Find spans with CSS variables
-        const spans = container.querySelectorAll('span[style*="--shiki-"]');
+        const spans = container.querySelectorAll(
+          'span[style*="--shiki-"]'
+        );
         expect(spans.length).toBeGreaterThan(0);
 
         // When no defaultColor is specified, light is default, so we should have --shiki-dark
@@ -282,7 +291,9 @@ describe('useShikiHighlighter Hook', () => {
 
       await waitFor(() => {
         const container = getByTestId('highlighted');
-        const spans = container.querySelectorAll('span[style*="--shiki-"]');
+        const spans = container.querySelectorAll(
+          'span[style*="--shiki-"]'
+        );
         expect(spans.length).toBeGreaterThan(0);
 
         const span = spans[0];
@@ -301,7 +312,9 @@ describe('useShikiHighlighter Hook', () => {
 
       await waitFor(() => {
         const container = getByTestId('highlighted');
-        const spans = container.querySelectorAll('span[style*="--shiki-"]');
+        const spans = container.querySelectorAll(
+          'span[style*="--shiki-"]'
+        );
         expect(spans.length).toBeGreaterThan(0);
 
         const span = spans[0];
@@ -321,7 +334,9 @@ describe('useShikiHighlighter Hook', () => {
 
       await waitFor(() => {
         const container = getByTestId('highlighted');
-        const spans = container.querySelectorAll('span[style*="--custom-"]');
+        const spans = container.querySelectorAll(
+          'span[style*="--custom-"]'
+        );
         expect(spans.length).toBeGreaterThan(0);
 
         const span = spans[0];

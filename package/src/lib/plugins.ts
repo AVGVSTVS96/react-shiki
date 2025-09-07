@@ -1,5 +1,5 @@
 import { visit } from 'unist-util-visit';
-import type { Element } from "./types";
+import type { Element } from './types';
 
 /**
  * Rehype plugin to add an 'inline' property to <code> elements
