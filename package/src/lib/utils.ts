@@ -1,41 +1,36 @@
-import { visit } from 'unist-util-visit';
+import { useRef } from 'react';
+import { dequal } from 'dequal';
 
-import type { TimeoutState, Element } from './types';
-
-/**
- * Rehype plugin to add an 'inline' property to <code> elements
- * Sets 'inline' property to true if the <code> is not within a <pre> tag
- *
- * Pass this plugin to the `rehypePlugins` prop of react-markdown
- * You can then access `inline` as a prop in components passed to react-markdown
- *
- * @example
- * <ReactMarkdown rehypePlugins={[rehypeInlineCodeProperty]} />
- */
-export function rehypeInlineCodeProperty() {
-  return (tree: any): undefined => {
-    visit(tree, 'element', (node: Element, _index, parent: Element) => {
-      if (node.tagName === 'code' && parent.tagName !== 'pre') {
-        node.properties.inline = true;
-      }
-    });
-  };
-}
+import type { TimeoutState } from './types';
 
 /**
- * Function to determine if code is inline based on the presence of line breaks
- *
- * @example
- * const isInline = node && isInlineCode(node: Element)
+ * Returns a deep-stable reference and a version counter that only changes when content changes.
+ * Includes optimizations for primitive values and reference equality.
  */
-export const isInlineCode = (node: Element): boolean => {
-  const textContent = (node.children || [])
-    .filter((child) => child.type === 'text')
-    .map((child) => child.value)
-    .join('');
+export const useStableOptions = <T>(value: T) => {
+    const ref = useRef(value);
+    const revision = useRef(0);
 
-  return !textContent.includes('\n');
+    // Fast-path for primitive values
+    if (typeof value !== 'object' || value === null) {
+        if (value !== ref.current) {
+            ref.current = value;
+            revision.current += 1;
+        }
+        return [value, revision.current] as const;
+    }
+
+    // Reference equality check before expensive deep comparison
+    if (value !== ref.current) {
+        if (!dequal(value, ref.current)) {
+            ref.current = value;
+            revision.current += 1;
+        }
+    }
+
+    return [ref.current, revision.current] as const;
 };
+
 
 /**
  * Optionally throttles rapid sequential highlighting operations

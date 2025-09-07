@@ -6,7 +6,6 @@ import {
   type ReactNode,
 } from 'react';
 
-import { dequal } from 'dequal/lite';
 
 import { jsx, jsxs, Fragment } from 'react/jsx-runtime';
 import { toJsxRuntime } from 'hast-util-to-jsx-runtime';
@@ -29,41 +28,13 @@ import type {
   Themes,
 } from './types';
 
-import { throttleHighlighting } from './utils';
+import { throttleHighlighting, useStableOptions } from './utils';
 import { resolveLanguage, resolveTheme } from './resolvers';
 import { lineNumbersTransformer } from './transformers';
 
 const DEFAULT_THEMES: Themes = {
   light: 'github-light',
   dark: 'github-dark',
-};
-
-/**
- * Returns a deep-stable reference and a version counter that only changes when content changes.
- * Includes optimizations for primitive values and reference equality.
- */
-const useStableOptions = <T>(value: T) => {
-  const ref = useRef(value);
-  const revision = useRef(0);
-
-  // Fast-path for primitive values
-  if (typeof value !== 'object' || value === null) {
-    if (value !== ref.current) {
-      ref.current = value;
-      revision.current += 1;
-    }
-    return [value, revision.current] as const;
-  }
-
-  // Reference equality check before expensive deep comparison
-  if (value !== ref.current) {
-    if (!dequal(value, ref.current)) {
-      ref.current = value;
-      revision.current += 1;
-    }
-  }
-
-  return [ref.current, revision.current] as const;
 };
 
 /**
@@ -86,8 +57,9 @@ export const useShikiHighlighter = (
   ) => Promise<Highlighter | HighlighterCore>,
   options: HighlighterOptions = {}
 ) => {
-  const [highlightedCode, setHighlightedCode] =
-    useState<ReactNode | null>(null);
+  const [highlightedCode, setHighlightedCode] = useState<
+    ReactNode | string | null
+  >(null);
 
   // Stabilize options, language and theme inputs to prevent unnecessary
   // re-renders or recalculations when object references change
@@ -165,10 +137,16 @@ export const useShikiHighlighter = (
         : 'plaintext';
       const finalOptions = { ...shikiOptions, lang: langToUse };
 
-      const hast = highlighter.codeToHast(code, finalOptions);
-
       if (isMounted) {
-        setHighlightedCode(toJsxRuntime(hast, { jsx, jsxs, Fragment }));
+        const output =
+          stableOpts.outputFormat === 'html'
+            ? highlighter.codeToHtml(code, finalOptions)
+            : toJsxRuntime(highlighter.codeToHast(code, finalOptions), {
+                jsx,
+                jsxs,
+                Fragment,
+              });
+        setHighlightedCode(output);
       }
     };
 

@@ -96,13 +96,13 @@ export interface ShikiHighlighterProps extends HighlighterOptions {
  * Base ShikiHighlighter component factory.
  * This creates a component that uses the provided hook implementation.
  */
-export const createShikiHighlighterComponent = (
+export const createShikiHighlighterComponent = <T,>(
   useShikiHighlighterImpl: (
     code: string,
     lang: Language,
     themeInput: Theme | Themes,
     options?: HighlighterOptions
-  ) => React.ReactNode
+  ) => T
 ) => {
   return forwardRef<HTMLElement, ShikiHighlighterProps>(
     (
@@ -153,6 +153,8 @@ export const createShikiHighlighterComponent = (
         options
       );
 
+      const isHtmlOutput = typeof highlightedCode === 'string';
+
       return (
         <Element
           ref={ref}
@@ -175,7 +177,11 @@ export const createShikiHighlighterComponent = (
               {displayLanguageId}
             </span>
           ) : null}
-          {highlightedCode}
+          {isHtmlOutput ? (
+            <div dangerouslySetInnerHTML={{ __html: highlightedCode }} />
+          ) : (
+            highlightedCode
+          )}
         </Element>
       );
     }

@@ -2,7 +2,7 @@ import { useShikiHighlighter as useBaseHook } from './lib/hook';
 import { validateCoreHighlighter } from './bundles/core';
 import type { UseShikiHighlighter } from './lib/types';
 
-export { isInlineCode, rehypeInlineCodeProperty } from './lib/utils';
+export { isInlineCode, rehypeInlineCodeProperty } from './lib/plugins';
 
 import {
   createShikiHighlighterComponent,
