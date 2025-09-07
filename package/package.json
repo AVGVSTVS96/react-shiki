@@ -82,7 +82,6 @@
     "@types/node": "22.17.2",
     "@types/react": "catalog:",
     "@vitejs/plugin-react": "^4.7.0",
-    "benny": "^3.7.1",
     "html-react-parser": "^5.2.6",
     "jsdom": "^26.1.0",
     "tsup": "^8.5.0",
