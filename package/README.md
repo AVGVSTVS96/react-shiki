@@ -40,7 +40,7 @@ A performant client-side syntax highlighting component and hook for React, built
 ## Features
 
 - 🖼️ Provides both a `ShikiHighlighter` component and a `useShikiHighlighter` hook for more flexibility
-- 🔐 Flexible output: Choose between safe React elements (no `dangerouslySetInnerHTML`) or HTML strings for better performance
+- 🔐 Flexible output: Choose between React elements (no `dangerouslySetInnerHTML`) or HTML strings for better performance
 - 📦 Multiple bundle options: Full bundle (~1.2MB gz), web bundle (~695KB gz), or minimal core bundle for fine-grained bundle control
 - 🖌️ Full support for custom TextMate themes and languages
 - 🔧 Supports passing custom Shiki transformers to the highlighter, in addition to all other options supported by `codeToHast`
