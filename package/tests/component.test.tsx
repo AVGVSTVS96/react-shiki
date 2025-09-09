@@ -14,9 +14,6 @@ const getContainer = (container: HTMLElement) =>
 const getLanguageLabel = (container: HTMLElement | null) =>
   container?.querySelector('#language-label') as HTMLElement | null;
 
-const getPreElement = (container: HTMLElement | null) =>
-  container?.querySelector('pre.shiki') as HTMLPreElement | null;
-
 describe('ShikiHighlighter Component', () => {
   describe('Component-specific Props', () => {
     test('renders with default pre element', async () => {

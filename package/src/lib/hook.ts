@@ -44,17 +44,17 @@ const DEFAULT_THEMES: Themes = {
  * @param lang - Language for highlighting
  * @param themeInput - Theme or themes to use
  * @param options - Highlighting options
- * @param createHighlighter - Factory function to create highlighter (internal use)
+ * @param highlighterFactory - Factory function to create highlighter (internal use)
  */
 export const useShikiHighlighter = (
   code: string,
   lang: Language,
   themeInput: Theme | Themes,
-  createHighlighter: (
+  options: HighlighterOptions = {},
+  highlighterFactory: (
     langsToLoad: ShikiLanguageRegistration,
     themesToLoad: Theme[]
-  ) => Promise<Highlighter | HighlighterCore>,
-  options: HighlighterOptions = {}
+  ) => Promise<Highlighter | HighlighterCore>
 ) => {
   const [highlightedCode, setHighlightedCode] = useState<
     ReactNode | string | null
@@ -125,7 +125,7 @@ export const useShikiHighlighter = (
 
       const highlighter = stableOpts.highlighter
         ? stableOpts.highlighter
-        : await createHighlighter(
+        : await highlighterFactory(
             langsToLoad as ShikiLanguageRegistration,
             themesToLoad
           );

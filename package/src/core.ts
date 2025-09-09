@@ -54,10 +54,16 @@ export const useShikiHighlighter: UseShikiHighlighter = (
   // Validate that highlighter is provided
   const highlighter = validateCoreHighlighter(options.highlighter);
 
-  return useBaseHook(code, lang, themeInput, async () => highlighter, {
-    ...options,
-    highlighter,
-  });
+  return useBaseHook(
+    code,
+    lang,
+    themeInput,
+    {
+      ...options,
+      highlighter,
+    },
+    async () => highlighter
+  );
 };
 
 /**
