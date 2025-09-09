@@ -40,8 +40,8 @@ export const useShikiHighlighter: UseShikiHighlighter = (
     code,
     lang,
     themeInput,
-    createFullHighlighter,
-    options
+    options,
+    createFullHighlighter
   );
 };
 
