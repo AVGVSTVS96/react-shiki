@@ -25,5 +25,5 @@
     "changesets-changelog-clean": "^1.3.0",
     "typescript": "^5.9.2"
   },
-  "packageManager": "pnpm@10.12.1"
+  "packageManager": "pnpm@10.16.0"
 }
