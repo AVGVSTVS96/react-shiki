@@ -15,6 +15,8 @@ import type {
   CodeOptionsMultipleThemes,
   Highlighter,
   HighlighterCore,
+  Awaitable,
+  RegexEngine,
 } from 'shiki';
 
 import type { ShikiLanguageRegistration } from './extended-types';
@@ -53,7 +55,8 @@ export const useShikiHighlighter = (
   options: HighlighterOptions = {},
   highlighterFactory: (
     langsToLoad: ShikiLanguageRegistration,
-    themesToLoad: Theme[]
+    themesToLoad: Theme[],
+    engine?: Awaitable<RegexEngine>
   ) => Promise<Highlighter | HighlighterCore>
 ) => {
   const [highlightedCode, setHighlightedCode] = useState<
@@ -127,7 +130,8 @@ export const useShikiHighlighter = (
         ? stableOpts.highlighter
         : await highlighterFactory(
             langsToLoad as ShikiLanguageRegistration,
-            themesToLoad
+            themesToLoad,
+            stableOpts.engine
           );
 
       const loadedLanguages = highlighter.getLoadedLanguages();
