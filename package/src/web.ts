@@ -20,6 +20,11 @@ export type {
   HighlighterOptions,
 } from './lib/types';
 
+export {
+  createJavaScriptRegexEngine,
+  createJavaScriptRawEngine,
+} from 'shiki/engine/javascript';
+
 /**
  * A React hook that provides syntax highlighting using Shiki with the web bundle.
  * Includes web-focused languages (HTML, CSS, JS, TS, JSON, Markdown, Astro, JSX, Svelte, Vue etc.)

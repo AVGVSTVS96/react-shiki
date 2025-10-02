@@ -22,7 +22,10 @@ export type {
 
 export { createHighlighterCore } from 'shiki/core';
 export { createOnigurumaEngine } from 'shiki/engine/oniguruma';
-export { createJavaScriptRegexEngine } from 'shiki/engine/javascript';
+export {
+  createJavaScriptRegexEngine,
+  createJavaScriptRawEngine,
+} from 'shiki/engine/javascript';
 
 /**
  * A React hook that provides syntax highlighting using Shiki with a custom highlighter.
