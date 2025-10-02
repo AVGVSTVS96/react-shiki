@@ -97,15 +97,17 @@ import ShikiHighlighter from 'react-shiki';
 ```
 - **Size**: ~6.4MB minified, ~1.2MB gzipped (includes ~12KB react-shiki)
 - **Languages**: All Shiki languages and themes
+- **Exported engines**: `createJavaScriptRegexEngine`, `createJavaScriptRawEngine`
 - **Use case**: Unknown language requirements, maximum language support
 - **Setup**: Zero configuration required
 
-### `react-shiki/web` (Web Bundle)  
+### `react-shiki/web` (Web Bundle)
 ```tsx
 import ShikiHighlighter from 'react-shiki/web';
 ```
 - **Size**: ~3.8MB minified, ~707KB gzipped (includes ~12KB react-shiki)
 - **Languages**: Web-focused languages (HTML, CSS, JS, TS, JSON, Markdown, Vue, JSX, Svelte)
+- **Exported engines**: `createJavaScriptRegexEngine`, `createJavaScriptRawEngine`
 - **Use case**: Web applications with balanced size/functionality
 - **Setup**: Drop-in replacement for main entry point
 
@@ -137,11 +139,59 @@ const highlighter = await createHighlighterCore({
 
 ### RegExp Engines
 
-Shiki offers two built-in engines:
-- **Oniguruma** - default, uses the compiled Oniguruma WebAssembly, and offer maximum language support
-- **JavaScript** - smaller bundle, faster startup, recommended when running highlighting on the client
+Shiki offers three built-in engines for syntax highlighting:
+- **Oniguruma** - Default engine using compiled WebAssembly, offers maximum language support
+- **JavaScript RegExp** - Smaller bundle, faster startup, compiles patterns on-the-fly, recommended for client-side highlighting
+- **JavaScript Raw** - For [pre-compiled languages](https://shiki.style/guide/regex-engines#pre-compiled-languages), skips transpilation step for best performance
 
-Unlike the Oniguruma engine, the JavaScript engine is [strict by default](https://shiki.style/guide/regex-engines#use-with-unsupported-languages). It will throw an error if it encounters an invalid Oniguruma pattern or a pattern that it cannot convert. If you want best-effort results for unsupported grammars, you can enable the forgiving option to suppress any conversion errors:
+#### Using Engines with Full and Web Bundles
+
+The full and web bundles use Oniguruma by default, but you can override this with the `engine` option:
+
+```tsx
+import {
+  useShikiHighlighter,
+  createJavaScriptRegexEngine,
+  createJavaScriptRawEngine
+} from 'react-shiki';
+
+// Hook with JavaScript RegExp engine
+const highlightedCode = useShikiHighlighter(code, 'typescript', 'github-dark', {
+  engine: createJavaScriptRegexEngine()
+});
+
+// Component with JavaScript Raw engine (for pre-compiled languages)
+// See https://shiki.style/guide/regex-engines#pre-compiled-languages
+<ShikiHighlighter
+  language="typescript"
+  theme="github-dark"
+  engine={createJavaScriptRawEngine()}
+>
+  {code}
+</ShikiHighlighter>
+```
+
+#### Using Engines with Core Bundle
+
+When using the core bundle, you must specify an engine:
+
+```tsx
+import {
+  createHighlighterCore,
+  createOnigurumaEngine,
+  createJavaScriptRegexEngine
+} from 'react-shiki/core';
+
+const highlighter = await createHighlighterCore({
+  themes: [import('@shikijs/themes/nord')],
+  langs: [import('@shikijs/langs/typescript')],
+  engine: createJavaScriptRegexEngine() // or createOnigurumaEngine(import('shiki/wasm'))
+});
+```
+
+#### Engine Options
+
+The JavaScript RegExp engine is [strict by default](https://shiki.style/guide/regex-engines#use-with-unsupported-languages). For best-effort results with unsupported grammars, enable the `forgiving` option:
 
 ```tsx
 createJavaScriptRegexEngine({ forgiving: true });
@@ -163,6 +213,7 @@ See [Shiki - RegExp Engines](https://shiki.style/guide/regex-engines) for more i
 | `delay`             | `number`           | `0`             | Delay between highlights (in milliseconds)                                    |
 | `customLanguages`   | `array`            | `[]`            | Array of custom languages to preload                                          |
 | `langAlias`         | `object`           | `{}`            | Map of language aliases                                                       |
+| `engine`            | `RegexEngine`      | Oniguruma       | RegExp engine for syntax highlighting (Oniguruma, JavaScript RegExp, or JavaScript Raw) |
 | `showLineNumbers`   | `boolean`          | `false`         | Display line numbers alongside code                                           |
 | `startingLineNumber` | `number`           | `1`             | Starting line number when line numbers are enabled                           |
 | `transformers`      | `array`            | `[]`            | Custom Shiki transformers for modifying the highlighting output               |
