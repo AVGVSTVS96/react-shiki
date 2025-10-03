@@ -156,7 +156,6 @@ interface TimeoutState {
 
 /**
  * Public API signature for the useShikiHighlighter hook.
- * This ensures all entry points have consistent signatures.
  */
 export type UseShikiHighlighter = (
   code: string,
