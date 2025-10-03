@@ -1,6 +1,6 @@
 import React, { useRef } from 'react';
 import { render, waitFor } from '@testing-library/react';
-import { ShikiHighlighter } from '../src/index';
+import { ShikiHighlighter, createJavaScriptRegexEngine } from '../src/index';
 
 // Test fixtures
 const codeSample = 'console.log("Hello World");';
@@ -276,6 +276,29 @@ describe('ShikiHighlighter Component', () => {
         expect(typeof refCurrent?.focus).toBe('function');
         expect(typeof refCurrent?.getBoundingClientRect).toBe('function');
         expect(refCurrent?.tagName.toLowerCase()).toBe('pre');
+      });
+    });
+  });
+
+  describe('Engine Configuration', () => {
+    test('accepts custom engine prop and highlights code', async () => {
+      const { container } = render(
+        <ShikiHighlighter
+          language="javascript"
+          theme="github-dark"
+          engine={createJavaScriptRegexEngine()}
+        >
+          {codeSample}
+        </ShikiHighlighter>
+      );
+
+      await waitFor(() => {
+        const shikiContainer = getContainer(container);
+        expect(shikiContainer).toBeInTheDocument();
+
+        const code = shikiContainer?.querySelector('code');
+        const spans = code?.querySelectorAll('span');
+        expect(spans && spans.length).toBeGreaterThan(0);
       });
     });
   });
