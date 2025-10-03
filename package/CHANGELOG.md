@@ -4,7 +4,7 @@
 
 ### Minor Changes
 
-- Feat: support custom regex engine selection for full (main) and web bundles _[`#100`](https://github.com/AVGVSTVS96/react-shiki/pull/100) [`2ffcdcd`](https://github.com/avgvstvs96/react-shiki/commit/2ffcdcdd42c75e90e633f82a4b9f838ab413f44a) [@AVGVSTVS96](https://github.com/AVGVSTVS96)_
+- Add support for custom regex engine selection for full (main) and web bundles _[`#100`](https://github.com/AVGVSTVS96/react-shiki/pull/100) [`2ffcdcd`](https://github.com/avgvstvs96/react-shiki/commit/2ffcdcdd42c75e90e633f82a4b9f838ab413f44a) [@AVGVSTVS96](https://github.com/AVGVSTVS96)_
 
 ## 0.8.0
 
