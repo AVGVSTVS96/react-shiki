@@ -1,6 +1,6 @@
 import { render, waitFor } from '@testing-library/react';
 import { vi } from 'vitest';
-import { useShikiHighlighter } from '../src/index';
+import { useShikiHighlighter, createJavaScriptRegexEngine } from '../src/index';
 import type { Language, Theme, Themes } from '../src/lib/types';
 import type { ShikiTransformer } from 'shiki';
 import { throttleHighlighting } from '../src/lib/utils';
@@ -495,6 +495,34 @@ describe('useShikiHighlighter Hook', () => {
         
         // Verify the code content is preserved
         expect(container.textContent).toContain('const x = 1;');
+      });
+    });
+  });
+
+  describe('Engine Configuration', () => {
+    test('accepts custom engine option and highlights code', async () => {
+      const TestComponent = () => {
+        const highlighted = useShikiHighlighter(
+          'const add = (a, b) => a + b;',
+          'javascript',
+          'github-dark',
+          {
+            engine: createJavaScriptRegexEngine()
+          }
+        );
+
+        return <div data-testid="highlighted">{highlighted}</div>;
+      };
+
+      const { getByTestId } = render(<TestComponent />);
+
+      await waitFor(() => {
+        const container = getByTestId('highlighted');
+        expect(container).toBeInTheDocument();
+
+        // Verify syntax highlighting occurred
+        const spans = container.querySelectorAll('span[style*="color"]');
+        expect(spans.length).toBeGreaterThan(0);
       });
     });
   });

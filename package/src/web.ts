@@ -20,15 +20,33 @@ export type {
   HighlighterOptions,
 } from './lib/types';
 
+export {
+  createJavaScriptRegexEngine,
+  createJavaScriptRawEngine,
+} from 'shiki/engine/javascript';
+
 /**
- * A React hook that provides syntax highlighting using Shiki with the web bundle.
- * Includes web-focused languages (HTML, CSS, JS, TS, JSON, Markdown, Astro, JSX, Svelte, Vue etc.)
+ * Highlight code with shiki (web bundle)
  *
- * Bundle size: ~3.8MB minified (695KB gzipped)
+ * @param code - Code to highlight
+ * @param lang - Language (bundled or custom)
+ * @param theme - Theme (bundled, multi-theme, or custom)
+ * @param options - react-shiki options + shiki options
+ * @returns Highlighted code as React elements or HTML string
  *
- * For other options, consider:
- * - `react-shiki` for full shiki bundle (~6.4MB minified, 1.2MB gzipped)
- * - `react-shiki/core` for custom fine-grained bundle
+ * @example
+ * ```tsx
+ * const highlighted = useShikiHighlighter(
+ *   'const x = 1;',
+ *   'typescript',
+ *   {
+ *     light: 'github-light',
+ *     dark: 'github-dark'
+ *   }
+ * );
+ * ```
+ *
+ * Web bundle (~3.8MB minified, 695KB gzipped). For other bundles: `react-shiki` or `react-shiki/core`
  */
 export const useShikiHighlighter: UseShikiHighlighter = (
   code,

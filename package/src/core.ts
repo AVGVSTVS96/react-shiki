@@ -22,28 +22,43 @@ export type {
 
 export { createHighlighterCore } from 'shiki/core';
 export { createOnigurumaEngine } from 'shiki/engine/oniguruma';
-export { createJavaScriptRegexEngine } from 'shiki/engine/javascript';
+export {
+  createJavaScriptRegexEngine,
+  createJavaScriptRawEngine,
+} from 'shiki/engine/javascript';
 
 /**
- * A React hook that provides syntax highlighting using Shiki with a custom highlighter.
- * Requires a highlighter to be provided in options for minimal bundle size.
+ * Highlight code with shiki (core bundle)
+ *
+ * @param code - Code to highlight
+ * @param lang - Language (bundled or custom)
+ * @param theme - Theme (bundled, multi-theme, or custom)
+ * @param options - react-shiki options + shiki options
+ * @returns Highlighted code as React elements or HTML string
  *
  * @example
- * ```ts
+ * ```tsx
  * import { createHighlighterCore, createOnigurumaEngine } from 'react-shiki/core';
  *
+ *
  * const highlighter = await createHighlighterCore({
- *   themes: [import('@shikijs/themes/nord')],
+ *   themes: [import('@shikijs/themes/github-light'), import('@shikijs/themes/github-dark')],
  *   langs: [import('@shikijs/langs/typescript')],
  *   engine: createOnigurumaEngine(import('shiki/wasm'))
  * });
  *
- * const code = useShikiHighlighter(code, 'typescript', 'nord', { highlighter });
+ * const highlighted = useShikiHighlighter(
+ *   'const x = 1;',
+ *   'typescript',
+ *   {
+ *     light: 'github-light',
+ *     dark: 'github-dark'
+ *   },
+ *   { highlighter }
+ * );
  * ```
  *
- * For plug-and-play usage, consider:
- * - `react-shiki` for full shiki bundle (~6.4MB minified, 1.2MB gzipped)
- * - `react-shiki/web` for smaller shiki web bundle (~3.8MB minified, 695KB gzipped)
+ * Core bundle (minimal). For plug-and-play: `react-shiki` or `react-shiki/web`
  */
 export const useShikiHighlighter: UseShikiHighlighter = (
   code,

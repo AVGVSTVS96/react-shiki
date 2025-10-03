@@ -9,6 +9,8 @@ import type {
   Highlighter,
   HighlighterCore,
   BundledHighlighterOptions,
+  Awaitable,
+  RegexEngine,
 } from 'shiki';
 
 import type { ReactNode } from 'react';
@@ -133,7 +135,10 @@ interface HighlighterOptions
       'defaultColor' | 'cssVariablePrefix'
     >,
     Omit<CodeToHastOptions, 'lang' | 'theme' | 'themes'>,
-    Pick<BundledHighlighterOptions<string, string>, 'langAlias'> {}
+    Pick<
+      BundledHighlighterOptions<string, string>,
+      'langAlias' | 'engine'
+    > {}
 
 /**
  * State for the throttling logic
@@ -151,7 +156,6 @@ interface TimeoutState {
 
 /**
  * Public API signature for the useShikiHighlighter hook.
- * This ensures all entry points have consistent signatures.
  */
 export type UseShikiHighlighter = (
   code: string,

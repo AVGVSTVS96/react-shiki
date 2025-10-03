@@ -83,6 +83,29 @@ const highlighter = await createHighlighterCore({
 `.trim()}
 </ShikiHighlighter>
 
+### RegExp Engines
+[View docs →](https://github.com/avgvstvs96/react-shiki#regexp-engines)
+
+<ShikiHighlighter language="tsx" theme="one-dark-pro">
+{`
+import { useShikiHighlighter, createJavaScriptRegexEngine } from 'react-shiki';
+
+// Use JavaScript RegExp engine (smaller bundle, no WASM)
+const highlightedCode = useShikiHighlighter(code, 'typescript', 'github-dark', {
+    engine: createJavaScriptRegexEngine()
+});
+
+// Component usage
+<ShikiHighlighter
+    language="typescript"
+    theme="github-dark"
+    engine={createJavaScriptRegexEngine()}
+>
+    {code}
+</ShikiHighlighter>
+`.trim()}
+</ShikiHighlighter>
+
 ### Multi-theme Support
 [View docs →](https://github.com/avgvstvs96/react-shiki#multi-theme-support)
 
