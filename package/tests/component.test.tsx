@@ -1,5 +1,6 @@
 import React, { useRef } from 'react';
 import { render, waitFor } from '@testing-library/react';
+import { vi } from 'vitest';
 import { ShikiHighlighter, createJavaScriptRegexEngine } from '../src/index';
 
 // Test fixtures
@@ -190,6 +191,26 @@ describe('ShikiHighlighter Component', () => {
         expect(container.querySelector('pre')).toBeInTheDocument();
         expect(container.querySelector('code')).toBeInTheDocument();
       });
+    });
+
+    test('throws an error when outputFormat is tokens', () => {
+      const spy = vi.spyOn(console, 'error').mockImplementation(() => {});
+
+      expect(() =>
+        render(
+          <ShikiHighlighter
+            language="javascript"
+            theme="github-dark"
+            outputFormat="tokens"
+          >
+            {codeSample}
+          </ShikiHighlighter>
+        )
+      ).toThrowError(
+        'ShikiHighlighter component does not support outputFormat="tokens". Use the useShikiHighlighter hook to access raw tokens.'
+      );
+
+      spy.mockRestore();
     });
   });
 

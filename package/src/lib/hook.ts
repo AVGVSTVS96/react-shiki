@@ -18,6 +18,10 @@ import type {
   Awaitable,
   RegexEngine,
   BundledTheme,
+  CodeToTokensBaseOptions,
+  CodeToTokensOptions,
+  TokensResult,
+  ThemedToken,
 } from 'shiki';
 
 import type { ShikiLanguageRegistration } from './extended-types';
@@ -61,7 +65,7 @@ export const useShikiHighlighter = (
   ) => Promise<Highlighter | HighlighterCore>
 ) => {
   const [highlightedCode, setHighlightedCode] = useState<
-    ReactNode | string | null
+    ReactNode | string | ThemedToken[][] | null
   >(null);
 
   // Stabilize options, language and theme inputs to prevent unnecessary
@@ -108,8 +112,10 @@ export const useShikiHighlighter = (
           theme: singleTheme || DEFAULT_THEMES.dark,
         } as CodeOptionsSingleTheme<BundledTheme>);
 
-    const transformers = restOptions.transformers || [];
-    if (showLineNumbers) {
+    const isTokensOutput = stableOpts.outputFormat === 'tokens';
+    const transformers = [...(restOptions.transformers || [])];
+
+    if (showLineNumbers && !isTokensOutput) {
       transformers.push(lineNumbersTransformer(startingLineNumber));
     }
 
@@ -142,15 +148,33 @@ export const useShikiHighlighter = (
       const finalOptions = { ...shikiOptions, lang: langToUse };
 
       if (isMounted) {
-        const output =
-          stableOpts.outputFormat === 'html'
-            ? highlighter.codeToHtml(code, finalOptions)
-            : toJsxRuntime(highlighter.codeToHast(code, finalOptions), {
-                jsx,
-                jsxs,
-                Fragment,
-              });
-        setHighlightedCode(output);
+        if (stableOpts.outputFormat === 'tokens') {
+          const tokensOutput = isMultiTheme
+            ? highlighter.codeToTokens(
+                code,
+                finalOptions as CodeToTokensOptions
+              )
+            : highlighter.codeToTokensBase(
+                code,
+                finalOptions as CodeToTokensBaseOptions
+              );
+
+          const tokens = (
+            (tokensOutput as TokensResult).tokens ?? tokensOutput
+          ) as ThemedToken[][];
+
+          setHighlightedCode(tokens);
+        } else {
+          const output =
+            stableOpts.outputFormat === 'html'
+              ? highlighter.codeToHtml(code, finalOptions)
+              : toJsxRuntime(highlighter.codeToHast(code, finalOptions), {
+                  jsx,
+                  jsxs,
+                  Fragment,
+                });
+          setHighlightedCode(output);
+        }
       }
     };
 
