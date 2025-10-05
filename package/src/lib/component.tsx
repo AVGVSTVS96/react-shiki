@@ -136,6 +136,12 @@ export const createShikiHighlighterComponent = (
         ...shikiOptions,
       };
 
+      if (options.outputFormat === 'tokens') {
+        throw new Error(
+          'ShikiHighlighter component does not support outputFormat="tokens". Use the useShikiHighlighter hook to access raw tokens.'
+        );
+      }
+
       // Use resolveLanguage to get displayLanguageId directly
       const { displayLanguageId } = resolveLanguage(
         language,

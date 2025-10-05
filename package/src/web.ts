@@ -18,6 +18,7 @@ export type {
   Themes,
   Element,
   HighlighterOptions,
+  ThemedToken,
 } from './lib/types';
 
 export {

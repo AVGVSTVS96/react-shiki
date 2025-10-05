@@ -1,10 +1,15 @@
-import { render, waitFor } from '@testing-library/react';
+import { render, renderHook, waitFor } from '@testing-library/react';
 import { vi } from 'vitest';
 import {
   useShikiHighlighter,
   createJavaScriptRegexEngine,
 } from '../src/index';
-import type { Language, Theme, Themes } from '../src/lib/types';
+import type {
+  Language,
+  Theme,
+  Themes,
+  ThemedToken,
+} from '../src/lib/types';
 import type { ShikiTransformer } from 'shiki';
 import { throttleHighlighting } from '../src/lib/utils';
 
@@ -16,7 +21,7 @@ interface TestComponentProps {
   langAlias?: Record<string, string>;
   showLineNumbers?: boolean;
   startingLineNumber?: number;
-  outputFormat?: 'react' | 'html';
+  outputFormat?: 'react' | 'html' | 'tokens';
   defaultColor?: string;
   cssVariablePrefix?: string;
   mergeWhitespaces?: boolean;
@@ -457,6 +462,29 @@ describe('useShikiHighlighter Hook', () => {
         const markElement = container.querySelector('mark.highlighted');
         expect(markElement).toBeInTheDocument();
       });
+    });
+  });
+
+  describe('Token Output Format', () => {
+    test('returns themed tokens when outputFormat is tokens', async () => {
+      const code = 'console.log("token test");';
+
+      const { result } = renderHook(() =>
+        useShikiHighlighter(code, 'javascript', 'github-dark', {
+          outputFormat: 'tokens',
+        })
+      );
+
+      await waitFor(() => {
+        expect(result.current).not.toBeNull();
+      });
+
+      const tokens = result.current as ThemedToken[][];
+
+      expect(Array.isArray(tokens)).toBe(true);
+      expect(tokens.length).toBeGreaterThan(0);
+      expect(Array.isArray(tokens[0])).toBe(true);
+      expect(tokens[0]?.[0]?.content).toBeDefined();
     });
   });
 

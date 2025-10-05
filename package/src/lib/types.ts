@@ -11,6 +11,7 @@ import type {
   BundledHighlighterOptions,
   Awaitable,
   RegexEngine,
+  ThemedToken,
 } from 'shiki';
 
 import type { ReactNode } from 'react';
@@ -78,9 +79,10 @@ interface ReactShikiOptions {
    * Output format for the highlighted code.
    * - 'react': Returns React nodes (default, safer)
    * - 'html': Returns HTML string (~15-45% faster, requires dangerouslySetInnerHTML)
+   * - 'tokens': Returns raw Shiki tokens (array of themed tokens per line)
    * @default 'react'
    */
-  outputFormat?: 'react' | 'html';
+  outputFormat?: 'react' | 'html' | 'tokens';
 
   /**
    * Custom Shiki highlighter instance to use instead of the default one.
@@ -162,7 +164,7 @@ export type UseShikiHighlighter = (
   lang: Language,
   themeInput: Theme | Themes,
   options?: HighlighterOptions
-) => ReactNode | string | null;
+) => ReactNode | string | ThemedToken[][] | null;
 
 export type {
   Language,
@@ -171,4 +173,5 @@ export type {
   Element,
   TimeoutState,
   HighlighterOptions,
+  ThemedToken,
 };
