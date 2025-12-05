@@ -63,11 +63,9 @@ export const useShikiHighlighter = (
     ReactNode | string | null
   >(null);
 
-  // Stabilize options, language and theme inputs to prevent unnecessary
-  // re-renders or recalculations when object references change
-  const [stableLang, langRev] = useStableOptions(lang);
-  const [stableTheme, themeRev] = useStableOptions(themeInput);
-  const [stableOpts, optsRev] = useStableOptions(options);
+  const stableLang = useStableOptions(lang);
+  const stableTheme = useStableOptions(themeInput);
+  const stableOpts = useStableOptions(options);
 
   const { languageId, langsToLoad } = useMemo(
     () =>
