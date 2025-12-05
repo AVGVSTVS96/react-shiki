@@ -19,9 +19,7 @@ import type { LanguageRegistration } from './extended-types';
 
 import type { Element as HastElement } from 'hast';
 
-/**
- * HTML Element, use to type `node` from react-markdown
- */
+/** Use to type `node` from react-markdown */
 type Element = HastElement;
 
 /**
@@ -59,28 +57,14 @@ type Themes = {
   [key: string]: ThemeRegistrationAny | StringLiteralUnion<BundledTheme>;
 };
 
-/**
- * Mapping of output format names to their return types.
- * Used for generic type narrowing in the hook signature.
- */
 type OutputFormatMap = {
-  /** React nodes via HAST transformation (default, safest) */
   react: ReactNode;
-  /** HTML string (~15-45% faster, requires dangerouslySetInnerHTML) */
   html: string;
-  /** Full token result including bg/fg colors and tokens array */
   tokens: TokensResult;
 };
 
-/**
- * Available output format options
- */
 type OutputFormat = keyof OutputFormatMap;
 
-/**
- * Configuration options specific to react-shiki.
- * Generic parameter enables type-safe return values based on outputFormat.
- */
 interface ReactShikiOptions<F extends OutputFormat = 'react'> {
   /**
    * Minimum time (in milliseconds) between highlight operations.
@@ -144,11 +128,6 @@ interface ReactShikiOptions<F extends OutputFormat = 'react'> {
   startingLineNumber?: number;
 }
 
-/**
- * Configuration options for the syntax highlighter.
- * Parameterized by output format for type-safe return values.
- * Extends CodeToHastOptions to allow passing any Shiki options directly.
- */
 interface HighlighterOptions<F extends OutputFormat = 'react'>
   extends ReactShikiOptions<F>,
     Pick<
@@ -161,17 +140,8 @@ interface HighlighterOptions<F extends OutputFormat = 'react'>
       'langAlias' | 'engine'
     > {}
 
-/**
- * State for the throttling logic
- */
 interface TimeoutState {
-  /**
-   * Id of the timeout that is currently scheduled
-   */
   timeoutId: NodeJS.Timeout | undefined;
-  /**
-   * Next time when the timeout can be scheduled
-   */
   nextAllowedTime: number;
 }
 

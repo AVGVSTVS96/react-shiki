@@ -12,16 +12,9 @@ import type {
 import type { ReactNode } from 'react';
 import { forwardRef } from 'react';
 
-/**
- * Output formats the component can render.
- * 'tokens' returns raw data requiring custom rendering - use the hook directly.
- */
+// 'tokens' not included: returns raw data, use hook directly for custom rendering
 type ComponentRenderableFormat = 'react' | 'html';
 
-/**
- * Props for the ShikiHighlighter component.
- * Extends HighlighterOptions but restricts outputFormat to component-supported values.
- */
 export interface ShikiHighlighterProps
   extends Omit<HighlighterOptions, 'outputFormat'> {
   /**
@@ -113,10 +106,6 @@ export interface ShikiHighlighterProps
   as?: React.ElementType;
 }
 
-/**
- * Base ShikiHighlighter component factory.
- * Creates a component that uses the provided hook implementation.
- */
 export const createShikiHighlighterComponent = (
   useShikiHighlighterImpl: UseShikiHighlighter
 ) => {

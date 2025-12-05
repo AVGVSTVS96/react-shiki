@@ -24,20 +24,13 @@ import { resolveLanguage, resolveTheme } from './resolvers';
 import { buildShikiOptions } from './options';
 import { transformOutput } from './output';
 
-/**
- * Factory function type for creating highlighter instances.
- * Different entry points provide different implementations.
- */
+// Each entry point (index, web, core) provides a different factory for bundle optimization
 type HighlighterFactory = (
   langsToLoad: ShikiLanguageRegistration,
   themesToLoad: Theme[],
   engine?: Awaitable<RegexEngine>
 ) => Promise<Highlighter | HighlighterCore>;
 
-/**
- * Base hook for syntax highlighting using Shiki.
- * Generic parameter narrows return type based on outputFormat option.
- */
 export const useShikiHighlighter = <F extends OutputFormat = 'react'>(
   code: string,
   lang: Language,
@@ -73,6 +66,7 @@ export const useShikiHighlighter = <F extends OutputFormat = 'react'>(
 
   const shikiOptions = useMemo(
     () => buildShikiOptions(languageId, themeResult, stableOpts),
+    // Revs ensure recompute even if useStableOptions returns same reference
     [languageId, themeResult, langRev, themeRev, optsRev]
   );
 

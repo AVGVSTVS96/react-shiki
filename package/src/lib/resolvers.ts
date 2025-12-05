@@ -2,24 +2,12 @@ import type { Language, Theme, Themes } from './types';
 import type { ThemeRegistrationAny } from 'shiki/core';
 import type { LanguageRegistration } from './extended-types';
 
-/**
- * Resolved languages and metadata
- */
 type LanguageResult = {
   languageId: string;
   displayLanguageId: string | null;
   langsToLoad: Language;
 };
 
-/**
- * Resolves the language input to standardized IDs and objects for Shiki and UI display
- * @param lang The language input from props
- * @param customLanguages An array of custom textmate grammar objects or a single grammar object
- * @returns A LanguageResult object containing:
- *   - languageId: The resolved language ID
- *   - displayLanguageId: The display language ID
- *   - langToLoad: The language object or string id to load
- */
 export const resolveLanguage = (
   lang: Language,
   customLanguages?: LanguageRegistration | LanguageRegistration[],
@@ -31,7 +19,6 @@ export const resolveLanguage = (
       : [customLanguages]
     : [];
 
-  // Language is null or empty string
   if (lang == null || (typeof lang === 'string' && !lang.trim())) {
     return {
       languageId: 'plaintext',
@@ -40,7 +27,6 @@ export const resolveLanguage = (
     };
   }
 
-  // Language is custom
   if (typeof lang === 'object') {
     return {
       languageId: lang.name,
@@ -49,12 +35,10 @@ export const resolveLanguage = (
     };
   }
 
-  // Language is string
   const lowerLang = lang.toLowerCase();
   const matches = (str: string | undefined): boolean =>
     str?.toLowerCase() === lowerLang;
 
-  // Check if the string identifies a provided custom language
   const customMatch = normalizedCustomLangs.find(
     (cl) =>
       matches(cl.name) ||
@@ -72,7 +56,6 @@ export const resolveLanguage = (
     };
   }
 
-  // Check if language is aliased
   if (langAliases?.[lang]) {
     return {
       languageId: langAliases[lang],
@@ -81,8 +64,7 @@ export const resolveLanguage = (
     };
   }
 
-  // For any other string, pass it through,
-  // fallback is handled in highlighter factories
+  // Fallback handled in highlighter factories
   return {
     languageId: lang,
     displayLanguageId: lang,
@@ -90,9 +72,6 @@ export const resolveLanguage = (
   };
 };
 
-/**
- * Resolved themes and metadata
- */
 export interface ThemeResult {
   isMultiTheme: boolean;
   themeId: Theme;
@@ -101,23 +80,13 @@ export interface ThemeResult {
   themesToLoad: Theme[];
 }
 
-/**
- * Determines theme configuration and returns the resolved theme with metadata
- * @param themeInput - The theme input, either as a string name or theme object
- * @returns Object containing:
- *   - isMultiTheme: If theme input is a multi-theme configuration
- *   - themeId: Theme reference identifier
- *   - multiTheme: The multi-theme config if it exists
- *   - singleTheme: The single theme if it exists
- *   - themesToLoad: The themes to load when creating the highlighter
- */
 export function resolveTheme(themeInput: Theme | Themes): ThemeResult {
   const isTextmateTheme =
     typeof themeInput === 'object' &&
     'tokenColors' in themeInput &&
     Array.isArray(themeInput.tokenColors);
 
-  // Assume non textmate objects are multi theme configs
+  // Non-textmate objects are assumed to be multi-theme configs
   const isMultiThemeConfig =
     typeof themeInput === 'object' &&
     themeInput !== null &&
@@ -148,7 +117,7 @@ export function resolveTheme(themeInput: Theme | Themes): ThemeResult {
           .join('-')}`
       : 'multi-default';
 
-    // If config is invalid, return null to handle fallback in `buildShikiOptions()`
+    // Invalid config returns null; fallback handled in buildShikiOptions
     return {
       isMultiTheme: true,
       themeId,
