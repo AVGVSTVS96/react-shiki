@@ -1,7 +1,10 @@
 import './styles.css';
 import { clsx } from 'clsx';
 import { resolveLanguage } from './language';
-import { useDeferredRender } from './utils';
+import {
+  useDeferredRender,
+  type UseDeferredRenderOptions,
+} from './hooks/use-deferred-render';
 
 import type {
   HighlighterOptions,
@@ -10,9 +13,8 @@ import type {
   Themes,
   UseShikiHighlighter,
 } from './types';
-import type { UseDeferredRenderOptions } from './utils';
 import type { ReactNode } from 'react';
-import { forwardRef, useRef, useImperativeHandle } from 'react';
+import { forwardRef, useImperativeHandle } from 'react';
 
 // 'tokens' not included: returns raw data, use hook directly for custom rendering
 type ComponentRenderableFormat = 'react' | 'html';
@@ -145,9 +147,6 @@ export const createShikiHighlighterComponent = (
       },
       ref
     ) => {
-      const containerRef = useRef<HTMLElement>(null);
-      useImperativeHandle(ref, () => containerRef.current as HTMLElement);
-
       const deferOptions: UseDeferredRenderOptions =
         deferRender === true
           ? { immediate: false }
@@ -155,7 +154,8 @@ export const createShikiHighlighterComponent = (
             ? { immediate: true }
             : deferRender;
 
-      const shouldRender = useDeferredRender(containerRef, deferOptions);
+      const { shouldRender, containerRef } = useDeferredRender(deferOptions);
+      useImperativeHandle(ref, () => containerRef.current as HTMLElement);
 
       const options: HighlighterOptions<ComponentRenderableFormat> = {
         delay,

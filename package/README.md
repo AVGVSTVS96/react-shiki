@@ -631,7 +631,9 @@ For pages with many code blocks, defer syntax highlighting until blocks enter th
 </ShikiHighlighter>
 ```
 
-This uses Intersection Observer + debounce + `requestIdleCallback` for optimal performance. Inspired by [streamdown's approach](https://github.com/vercel/streamdown).
+This uses Intersection Observer + debounce + `requestIdleCallback` for optimal performance.
+
+> **Note**: `deferRender` is only available on the `ShikiHighlighter` component. For the hook, use the exported `useDeferredRender` hook directly.
 
 ### Throttling Real-time Highlighting
 
