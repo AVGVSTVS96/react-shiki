@@ -9,9 +9,8 @@ import type {
   Highlighter,
   HighlighterCore,
   BundledHighlighterOptions,
-  Awaitable,
-  RegexEngine,
   ThemedToken,
+  TokensResult,
 } from 'shiki';
 
 import type { ReactNode } from 'react';
@@ -61,9 +60,28 @@ type Themes = {
 };
 
 /**
- * Configuration options specific to react-shiki
+ * Mapping of output format names to their return types.
+ * Used for generic type narrowing in the hook signature.
  */
-interface ReactShikiOptions {
+type OutputFormatMap = {
+  /** React nodes via HAST transformation (default, safest) */
+  react: ReactNode;
+  /** HTML string (~15-45% faster, requires dangerouslySetInnerHTML) */
+  html: string;
+  /** Full token result including bg/fg colors and tokens array */
+  tokens: TokensResult;
+};
+
+/**
+ * Available output format options
+ */
+type OutputFormat = keyof OutputFormatMap;
+
+/**
+ * Configuration options specific to react-shiki.
+ * Generic parameter enables type-safe return values based on outputFormat.
+ */
+interface ReactShikiOptions<F extends OutputFormat = 'react'> {
   /**
    * Minimum time (in milliseconds) between highlight operations.
    * @default undefined (no throttling)
@@ -79,10 +97,10 @@ interface ReactShikiOptions {
    * Output format for the highlighted code.
    * - 'react': Returns React nodes (default, safer)
    * - 'html': Returns HTML string (~15-45% faster, requires dangerouslySetInnerHTML)
-    * - 'tokens': Returns raw Shiki tokens (array of themed tokens per line)
+   * - 'tokens': Returns raw Shiki tokens (array of themed tokens per line)
    * @default 'react'
    */
-  outputFormat?: 'react' | 'html' | 'tokens';
+  outputFormat?: F;
 
   /**
    * Custom Shiki highlighter instance to use instead of the default one.
@@ -127,11 +145,12 @@ interface ReactShikiOptions {
 }
 
 /**
- * Configuration options for the syntax highlighter
- * Extends CodeToHastOptions to allow passing any Shiki options directly
+ * Configuration options for the syntax highlighter.
+ * Parameterized by output format for type-safe return values.
+ * Extends CodeToHastOptions to allow passing any Shiki options directly.
  */
-interface HighlighterOptions
-  extends ReactShikiOptions,
+interface HighlighterOptions<F extends OutputFormat = 'react'>
+  extends ReactShikiOptions<F>,
     Pick<
       CodeOptionsMultipleThemes<BundledTheme>,
       'defaultColor' | 'cssVariablePrefix'
@@ -158,13 +177,24 @@ interface TimeoutState {
 
 /**
  * Public API signature for the useShikiHighlighter hook.
+ * Generic parameter narrows return type based on outputFormat option.
+ *
+ * @example
+ * // Returns ReactNode | null
+ * const jsx = useShikiHighlighter(code, 'ts', 'nord');
+ *
+ * // Returns string | null
+ * const html = useShikiHighlighter(code, 'ts', 'nord', { outputFormat: 'html' });
+ *
+ * // Returns TokensResult | null
+ * const result = useShikiHighlighter(code, 'ts', 'nord', { outputFormat: 'tokens' });
  */
-export type UseShikiHighlighter = (
+export type UseShikiHighlighter = <F extends OutputFormat = 'react'>(
   code: string,
   lang: Language,
   themeInput: Theme | Themes,
-  options?: HighlighterOptions
-) => ReactNode | string | ThemedToken[][] | null;
+  options?: HighlighterOptions<F>
+) => OutputFormatMap[F] | null;
 
 export type {
   Language,
@@ -173,5 +203,8 @@ export type {
   Element,
   TimeoutState,
   HighlighterOptions,
+  OutputFormat,
+  OutputFormatMap,
   ThemedToken,
+  TokensResult,
 };
