@@ -114,5 +114,6 @@ export const transformOutput = <F extends OutputFormat>(
     options,
     isMultiTheme,
   };
+  // Cast okay: registry keys match OutputFormat and each transformer returns its corresponding type
   return outputTransformers[format](context) as OutputFormatMap[F];
 };

@@ -13,10 +13,10 @@ import type { ReactNode } from 'react';
 import { forwardRef } from 'react';
 
 /**
- * Output formats supported by the component.
- * Token output is not supported - use the hook directly for that.
+ * Output formats the component can render.
+ * 'tokens' returns raw data requiring custom rendering - use the hook directly.
  */
-type ComponentOutputFormat = 'react' | 'html';
+type ComponentRenderableFormat = 'react' | 'html';
 
 /**
  * Props for the ShikiHighlighter component.
@@ -51,14 +51,13 @@ export interface ShikiHighlighterProps
 
   /**
    * Output format for the highlighted code.
-   * - 'react': Returns React nodes (default, safer)
-   * - 'html': Returns HTML string (~15-45% faster, requires dangerouslySetInnerHTML)
+   * - 'react': React nodes (default)
+   * - 'html': HTML string (faster, uses dangerouslySetInnerHTML)
    *
-   * Note: 'tokens' output is not supported by the component.
-   * Use the useShikiHighlighter hook directly for token access.
+   * For 'tokens' output, use useShikiHighlighter hook directly.
    * @default 'react'
    */
-  outputFormat?: ComponentOutputFormat;
+  outputFormat?: ComponentRenderableFormat;
 
   /**
    * Controls the application of default styles to the generated code blocks
@@ -146,7 +145,7 @@ export const createShikiHighlighterComponent = (
       },
       ref
     ) => {
-      const options: HighlighterOptions<ComponentOutputFormat> = {
+      const options: HighlighterOptions<ComponentRenderableFormat> = {
         delay,
         transformers,
         customLanguages,
