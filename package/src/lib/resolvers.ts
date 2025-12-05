@@ -93,7 +93,7 @@ export const resolveLanguage = (
 /**
  * Resolved themes and metadata
  */
-interface ThemeResult {
+export interface ThemeResult {
   isMultiTheme: boolean;
   themeId: Theme;
   multiTheme?: Themes | ThemeRegistrationAny | null;

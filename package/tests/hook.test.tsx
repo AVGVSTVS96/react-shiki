@@ -9,6 +9,7 @@ import type {
   Theme,
   Themes,
   ThemedToken,
+  TokensResult,
 } from '../src/lib/types';
 import type { ShikiTransformer } from 'shiki';
 import { throttleHighlighting } from '../src/lib/utils';
@@ -466,7 +467,7 @@ describe('useShikiHighlighter Hook', () => {
   });
 
   describe('Token Output Format', () => {
-    test('returns themed tokens when outputFormat is tokens', async () => {
+    test('returns TokensResult when outputFormat is tokens', async () => {
       const code = 'console.log("token test");';
 
       const { result } = renderHook(() =>
@@ -479,12 +480,17 @@ describe('useShikiHighlighter Hook', () => {
         expect(result.current).not.toBeNull();
       });
 
-      const tokens = result.current as ThemedToken[][];
+      const tokensResult = result.current as TokensResult;
 
-      expect(Array.isArray(tokens)).toBe(true);
-      expect(tokens.length).toBeGreaterThan(0);
-      expect(Array.isArray(tokens[0])).toBe(true);
-      expect(tokens[0]?.[0]?.content).toBeDefined();
+      // Should have bg/fg colors from theme
+      expect(tokensResult.bg).toBeDefined();
+      expect(tokensResult.fg).toBeDefined();
+
+      // Should have tokens array
+      expect(Array.isArray(tokensResult.tokens)).toBe(true);
+      expect(tokensResult.tokens.length).toBeGreaterThan(0);
+      expect(Array.isArray(tokensResult.tokens[0])).toBe(true);
+      expect(tokensResult.tokens[0]?.[0]?.content).toBeDefined();
     });
   });
 

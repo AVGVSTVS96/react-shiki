@@ -9,12 +9,21 @@ import type {
   Themes,
   UseShikiHighlighter,
 } from './types';
+import type { ReactNode } from 'react';
 import { forwardRef } from 'react';
 
 /**
- * Props for the ShikiHighlighter component
+ * Output formats supported by the component.
+ * Token output is not supported - use the hook directly for that.
  */
-export interface ShikiHighlighterProps extends HighlighterOptions {
+type ComponentOutputFormat = 'react' | 'html';
+
+/**
+ * Props for the ShikiHighlighter component.
+ * Extends HighlighterOptions but restricts outputFormat to component-supported values.
+ */
+export interface ShikiHighlighterProps
+  extends Omit<HighlighterOptions, 'outputFormat'> {
   /**
    * The programming language for syntax highlighting
    * Supports custom textmate grammar objects in addition to Shiki's bundled languages
@@ -41,9 +50,21 @@ export interface ShikiHighlighterProps extends HighlighterOptions {
   theme: Theme | Themes;
 
   /**
+   * Output format for the highlighted code.
+   * - 'react': Returns React nodes (default, safer)
+   * - 'html': Returns HTML string (~15-45% faster, requires dangerouslySetInnerHTML)
+   *
+   * Note: 'tokens' output is not supported by the component.
+   * Use the useShikiHighlighter hook directly for token access.
+   * @default 'react'
+   */
+  outputFormat?: ComponentOutputFormat;
+
+  /**
    * Controls the application of default styles to the generated code blocks
    *
-   * Default styles include padding, overflow handling, border radius, language label styling, and font settings
+   * Default styles include padding, overflow handling, border radius,
+   * language label styling, and font settings
    * @default true
    */
   addDefaultStyles?: boolean;
@@ -95,7 +116,7 @@ export interface ShikiHighlighterProps extends HighlighterOptions {
 
 /**
  * Base ShikiHighlighter component factory.
- * This creates a component that uses the provided hook implementation.
+ * Creates a component that uses the provided hook implementation.
  */
 export const createShikiHighlighterComponent = (
   useShikiHighlighterImpl: UseShikiHighlighter
@@ -117,6 +138,7 @@ export const createShikiHighlighterComponent = (
         showLanguage = true,
         showLineNumbers = false,
         startingLineNumber = 1,
+        outputFormat,
         children: code,
         as: Element = 'pre',
         customLanguages,
@@ -124,8 +146,7 @@ export const createShikiHighlighterComponent = (
       },
       ref
     ) => {
-      // Destructure some options for use in hook
-      const options: HighlighterOptions = {
+      const options: HighlighterOptions<ComponentOutputFormat> = {
         delay,
         transformers,
         customLanguages,
@@ -133,16 +154,10 @@ export const createShikiHighlighterComponent = (
         defaultColor,
         cssVariablePrefix,
         startingLineNumber,
+        outputFormat,
         ...shikiOptions,
       };
 
-      if (options.outputFormat === 'tokens') {
-        throw new Error(
-          'ShikiHighlighter component does not support outputFormat="tokens". Use the useShikiHighlighter hook to access raw tokens.'
-        );
-      }
-
-      // Use resolveLanguage to get displayLanguageId directly
       const { displayLanguageId } = resolveLanguage(
         language,
         customLanguages
@@ -153,7 +168,7 @@ export const createShikiHighlighterComponent = (
         language,
         theme,
         options
-      );
+      ) as ReactNode | string | null;
 
       const isHtmlOutput = typeof highlightedCode === 'string';
 

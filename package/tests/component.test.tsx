@@ -195,26 +195,6 @@ describe('ShikiHighlighter Component', () => {
         expect(container.querySelector('code')).toBeInTheDocument();
       });
     });
-
-    test('throws an error when outputFormat is tokens', () => {
-      const spy = vi.spyOn(console, 'error').mockImplementation(() => {});
-
-      expect(() =>
-        render(
-          <ShikiHighlighter
-            language="javascript"
-            theme="github-dark"
-            outputFormat="tokens"
-          >
-            {codeSample}
-          </ShikiHighlighter>
-        )
-      ).toThrowError(
-        'ShikiHighlighter component does not support outputFormat="tokens". Use the useShikiHighlighter hook to access raw tokens.'
-      );
-
-      spy.mockRestore();
-    });
   });
 
   describe('Ref Forwarding', () => {

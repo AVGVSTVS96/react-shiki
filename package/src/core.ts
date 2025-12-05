@@ -1,6 +1,14 @@
 import { useShikiHighlighter as useBaseHook } from './lib/hook';
 import { validateCoreHighlighter } from './bundles/core';
-import type { UseShikiHighlighter } from './lib/types';
+import type {
+  UseShikiHighlighter,
+  OutputFormat,
+  OutputFormatMap,
+  Language,
+  Theme,
+  Themes,
+  HighlighterOptions,
+} from './lib/types';
 
 export { isInlineCode, rehypeInlineCodeProperty } from './lib/plugins';
 
@@ -18,7 +26,10 @@ export type {
   Themes,
   Element,
   HighlighterOptions,
+  OutputFormat,
+  OutputFormatMap,
   ThemedToken,
+  TokensResult,
 } from './lib/types';
 
 export { createHighlighterCore } from 'shiki/core';
@@ -34,13 +45,15 @@ export {
  * @param code - Code to highlight
  * @param lang - Language (bundled or custom)
  * @param theme - Theme (bundled, multi-theme, or custom)
- * @param options - react-shiki options + shiki options
- * @returns Highlighted code as React elements or HTML string
+ * @param options - react-shiki options + shiki options (highlighter required)
+ * @returns Highlighted code based on outputFormat option:
+ *   - 'react' (default): ReactNode
+ *   - 'html': string
+ *   - 'tokens': TokensResult
  *
  * @example
  * ```tsx
  * import { createHighlighterCore, createOnigurumaEngine } from 'react-shiki/core';
- *
  *
  * const highlighter = await createHighlighterCore({
  *   themes: [import('@shikijs/themes/github-light'), import('@shikijs/themes/github-dark')],
@@ -48,25 +61,26 @@ export {
  *   engine: createOnigurumaEngine(import('shiki/wasm'))
  * });
  *
- * const highlighted = useShikiHighlighter(
- *   'const x = 1;',
- *   'typescript',
- *   {
- *     light: 'github-light',
- *     dark: 'github-dark'
- *   },
- *   { highlighter }
- * );
+ * // Default React output
+ * const highlighted = useShikiHighlighter(code, 'typescript', 'github-dark', {
+ *   highlighter
+ * });
+ *
+ * // Token output for custom rendering
+ * const tokens = useShikiHighlighter(code, 'typescript', 'github-dark', {
+ *   highlighter,
+ *   outputFormat: 'tokens'
+ * });
  * ```
  *
  * Core bundle (minimal). For plug-and-play: `react-shiki` or `react-shiki/web`
  */
-export const useShikiHighlighter: UseShikiHighlighter = (
-  code,
-  lang,
-  themeInput,
-  options = {}
-) => {
+export const useShikiHighlighter = <F extends OutputFormat = 'react'>(
+  code: string,
+  lang: Language,
+  themeInput: Theme | Themes,
+  options: HighlighterOptions<F> = {} as HighlighterOptions<F>
+): OutputFormatMap[F] | null => {
   // Validate that highlighter is provided
   const highlighter = validateCoreHighlighter(options.highlighter);
 
@@ -74,13 +88,14 @@ export const useShikiHighlighter: UseShikiHighlighter = (
     code,
     lang,
     themeInput,
-    {
-      ...options,
-      highlighter,
-    },
+    { ...options, highlighter },
     async () => highlighter
   );
 };
+
+// Type assertion to satisfy UseShikiHighlighter contract
+const _typeCheck: UseShikiHighlighter = useShikiHighlighter;
+void _typeCheck;
 
 /**
  * ShikiHighlighter component using a custom highlighter.
