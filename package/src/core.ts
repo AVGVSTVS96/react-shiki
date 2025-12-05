@@ -93,10 +93,6 @@ export const useShikiHighlighter = <F extends OutputFormat = 'react'>(
   );
 };
 
-// Type assertion to satisfy UseShikiHighlighter contract
-const _typeCheck: UseShikiHighlighter = useShikiHighlighter;
-void _typeCheck;
-
 /**
  * ShikiHighlighter component using a custom highlighter.
  * Requires a highlighter to be provided.

@@ -1,6 +1,5 @@
 /**
  * Output transformers for converting Shiki highlighter output to different formats.
- * Each transformer is a pure function that takes highlighter output and returns the desired format.
  */
 
 import type { ReactNode } from 'react';
@@ -11,14 +10,27 @@ import type {
   Highlighter,
   HighlighterCore,
   CodeToHastOptions,
+  CodeToTokensOptions,
+  CodeToTokensBaseOptions,
   TokensResult,
   ThemedToken,
 } from 'shiki';
 
 import type { OutputFormat, OutputFormatMap } from './types';
 
+/**
+ * Highlighter with loosened method signatures for dynamic language/theme usage.
+ */
+type LooseHighlighter = (Highlighter | HighlighterCore) & {
+  codeToTokens(code: string, options: CodeToTokensOptions): TokensResult;
+  codeToTokensBase(
+    code: string,
+    options: CodeToTokensBaseOptions
+  ): ThemedToken[][];
+};
+
 type TransformContext = {
-  highlighter: Highlighter | HighlighterCore;
+  highlighter: LooseHighlighter;
   code: string;
   options: CodeToHastOptions;
   isMultiTheme: boolean;
@@ -57,18 +69,15 @@ const transformToTokens = ({
   isMultiTheme,
 }: TransformContext): TokensResult => {
   if (isMultiTheme) {
-    return (highlighter as any).codeToTokens(
-      code,
-      options
-    ) as TokensResult;
+    return highlighter.codeToTokens(code, options as CodeToTokensOptions);
   }
 
-  const tokens = (highlighter as any).codeToTokensBase(
+  const tokens = highlighter.codeToTokensBase(
     code,
-    options
-  ) as ThemedToken[][];
+    options as CodeToTokensBaseOptions
+  );
 
-  const themeId = (options as { theme?: string }).theme;
+  const themeId = (options as CodeToTokensBaseOptions).theme;
   const theme = themeId ? highlighter.getTheme(themeId) : undefined;
 
   return {
@@ -93,7 +102,6 @@ const outputTransformers = {
 
 /**
  * Transform highlighter output to the specified format.
- * Uses the transformer registry for clean dispatch without conditionals.
  */
 export const transformOutput = <F extends OutputFormat>(
   format: F,
@@ -103,7 +111,7 @@ export const transformOutput = <F extends OutputFormat>(
   isMultiTheme: boolean
 ): OutputFormatMap[F] => {
   const context: TransformContext = {
-    highlighter,
+    highlighter: highlighter as LooseHighlighter,
     code,
     options,
     isMultiTheme,
