@@ -1,8 +1,3 @@
-/**
- * Options builder for constructing Shiki configuration from react-shiki options.
- * Extracts option building logic from the hook for cleaner separation of concerns.
- */
-
 import type {
   CodeToHastOptions,
   CodeOptionsSingleTheme,
@@ -19,9 +14,6 @@ const DEFAULT_THEMES: Themes = {
   dark: 'github-dark',
 };
 
-/**
- * Build theme options for Shiki based on theme configuration
- */
 const buildThemeOptions = (
   themeResult: ThemeResult
 ):
@@ -40,10 +32,6 @@ const buildThemeOptions = (
   } as CodeOptionsSingleTheme<BundledTheme>;
 };
 
-/**
- * Build complete Shiki options from react-shiki options.
- * Handles theme configuration, transformers, and format-specific logic.
- */
 export const buildShikiOptions = <F extends OutputFormat>(
   languageId: string,
   themeResult: ThemeResult,
