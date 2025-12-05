@@ -1,6 +1,7 @@
 import './styles.css';
 import { clsx } from 'clsx';
 import { resolveLanguage } from './language';
+import { useDeferredRender } from './utils';
 
 import type {
   HighlighterOptions,
@@ -9,8 +10,9 @@ import type {
   Themes,
   UseShikiHighlighter,
 } from './types';
+import type { UseDeferredRenderOptions } from './utils';
 import type { ReactNode } from 'react';
-import { forwardRef } from 'react';
+import { forwardRef, useRef, useImperativeHandle } from 'react';
 
 // 'tokens' not included: returns raw data, use hook directly for custom rendering
 type ComponentRenderableFormat = 'react' | 'html';
@@ -104,6 +106,14 @@ export interface ShikiHighlighterProps
    * @default 'pre'
    */
   as?: React.ElementType;
+
+  /**
+   * Defer rendering until element enters viewport.
+   * Pass `true` for defaults or an options object.
+   * Uses Intersection Observer + requestIdleCallback for optimal performance.
+   * @default false
+   */
+  deferRender?: boolean | UseDeferredRenderOptions;
 }
 
 export const createShikiHighlighterComponent = (
@@ -130,10 +140,23 @@ export const createShikiHighlighterComponent = (
         children: code,
         as: Element = 'pre',
         customLanguages,
+        deferRender = false,
         ...shikiOptions
       },
       ref
     ) => {
+      const containerRef = useRef<HTMLElement>(null);
+      useImperativeHandle(ref, () => containerRef.current as HTMLElement);
+
+      const deferOptions: UseDeferredRenderOptions =
+        deferRender === true
+          ? { immediate: false }
+          : deferRender === false
+            ? { immediate: true }
+            : deferRender;
+
+      const shouldRender = useDeferredRender(containerRef, deferOptions);
+
       const options: HighlighterOptions<ComponentRenderableFormat> = {
         delay,
         transformers,
@@ -146,13 +169,10 @@ export const createShikiHighlighterComponent = (
         ...shikiOptions,
       };
 
-      const { displayLanguageId } = resolveLanguage(
-        language,
-        customLanguages
-      );
+      const { displayLanguageId } = resolveLanguage(language, customLanguages);
 
       const highlightedCode = useShikiHighlighterImpl(
-        code,
+        shouldRender ? code : '',
         language,
         theme,
         options
@@ -162,7 +182,7 @@ export const createShikiHighlighterComponent = (
 
       return (
         <Element
-          ref={ref}
+          ref={containerRef}
           data-testid="shiki-container"
           className={clsx(
             'relative',
@@ -182,11 +202,13 @@ export const createShikiHighlighterComponent = (
               {displayLanguageId}
             </span>
           ) : null}
-          {isHtmlOutput ? (
-            <div dangerouslySetInnerHTML={{ __html: highlightedCode }} />
-          ) : (
-            highlightedCode
-          )}
+          {shouldRender ? (
+            isHtmlOutput ? (
+              <div dangerouslySetInnerHTML={{ __html: highlightedCode }} />
+            ) : (
+              highlightedCode
+            )
+          ) : null}
         </Element>
       );
     }
