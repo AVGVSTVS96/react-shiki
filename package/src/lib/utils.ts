@@ -18,12 +18,8 @@ export const useStableOptions = <T>(value: T): T => {
     return value;
   }
 
-  // Reference equality check before expensive deep comparison
-  if (value !== ref.current) {
-    if (!dequal(value, ref.current)) {
-      ref.current = value;
-      revision.current += 1;
-    }
+  if (value !== ref.current && !dequal(value, ref.current)) {
+    ref.current = value;
   }
 
   return ref.current;
