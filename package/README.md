@@ -633,7 +633,39 @@ For pages with many code blocks, defer syntax highlighting until blocks enter th
 
 This uses Intersection Observer + debounce + `requestIdleCallback` for optimal performance.
 
-> **Note**: `deferRender` is only available on the `ShikiHighlighter` component. For the hook, use the exported `useDeferredRender` hook directly.
+#### Using with the Hook
+
+The `deferRender` prop is component-only. When using `useShikiHighlighter`, use the exported `useDeferredRender` hook directly:
+
+```tsx
+import { useShikiHighlighter, useDeferredRender } from "react-shiki";
+
+function DeferredCodeBlock({ code, language }) {
+  const { shouldRender, containerRef } = useDeferredRender();
+
+  const highlighted = useShikiHighlighter(
+    shouldRender ? code : '',
+    language,
+    "github-dark"
+  );
+
+  return (
+    <pre ref={containerRef}>
+      {shouldRender ? highlighted : null}
+    </pre>
+  );
+}
+```
+
+With custom options:
+
+```tsx
+const { shouldRender, containerRef } = useDeferredRender({
+  rootMargin: '500px',
+  debounceDelay: 200,
+  idleTimeout: 300
+});
+```
 
 ### Throttling Real-time Highlighting
 

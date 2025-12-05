@@ -11,6 +11,10 @@ import type {
 } from './lib/types';
 
 export { isInlineCode, rehypeInlineCodeProperty } from './lib/plugins';
+export {
+  useDeferredRender,
+  type UseDeferredRenderOptions,
+} from './lib/hooks/use-deferred-render';
 
 import {
   createShikiHighlighterComponent,
