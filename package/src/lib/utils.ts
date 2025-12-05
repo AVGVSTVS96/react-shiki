@@ -3,16 +3,18 @@ import { dequal } from 'dequal';
 
 import type { TimeoutState } from './types';
 
-export const useStableOptions = <T>(value: T) => {
+/**
+ * Returns a stable reference that only changes when content changes (deep equality).
+ * Prevents unnecessary re-renders when objects are recreated with identical content.
+ */
+export const useStableOptions = <T>(value: T): T => {
   const ref = useRef(value);
-  const revision = useRef(0);
 
   if (typeof value !== 'object' || value === null) {
     if (value !== ref.current) {
       ref.current = value;
-      revision.current += 1;
     }
-    return [value, revision.current] as const;
+    return value;
   }
 
   if (value !== ref.current) {
@@ -22,7 +24,7 @@ export const useStableOptions = <T>(value: T) => {
     }
   }
 
-  return [ref.current, revision.current] as const;
+  return ref.current;
 };
 
 export const throttleHighlighting = (

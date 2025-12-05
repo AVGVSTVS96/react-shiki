@@ -41,9 +41,9 @@ export const useShikiHighlighter = <F extends OutputFormat = 'react'>(
 ): OutputFormatMap[F] | null => {
   const [output, setOutput] = useState<OutputFormatMap[F] | null>(null);
 
-  const [stableLang, langRev] = useStableOptions(lang);
-  const [stableTheme, themeRev] = useStableOptions(themeInput);
-  const [stableOpts, optsRev] = useStableOptions(options);
+  const stableLang = useStableOptions(lang);
+  const stableTheme = useStableOptions(themeInput);
+  const stableOpts = useStableOptions(options);
 
   const { languageId, langsToLoad } = useMemo(
     () =>
