@@ -1,7 +1,15 @@
-import { render, waitFor } from '@testing-library/react';
+import { render, renderHook, waitFor } from '@testing-library/react';
 import { vi } from 'vitest';
-import { useShikiHighlighter, createJavaScriptRegexEngine } from '../src/index';
-import type { Language, Theme, Themes } from '../src/lib/types';
+import {
+  useShikiHighlighter,
+  createJavaScriptRegexEngine,
+} from '../src/index';
+import type {
+  Language,
+  Theme,
+  Themes,
+  TokensResult,
+} from '../src/lib/types';
 import type { ShikiTransformer } from 'shiki';
 import { throttleHighlighting } from '../src/lib/utils';
 
@@ -13,7 +21,7 @@ interface TestComponentProps {
   langAlias?: Record<string, string>;
   showLineNumbers?: boolean;
   startingLineNumber?: number;
-  outputFormat?: 'react' | 'html';
+  outputFormat?: 'react' | 'html' | 'tokens';
   defaultColor?: string;
   cssVariablePrefix?: string;
   mergeWhitespaces?: boolean;
@@ -406,6 +414,34 @@ describe('useShikiHighlighter Hook', () => {
     });
   });
 
+  describe('Token Output Format', () => {
+    test('returns TokensResult when outputFormat is tokens', async () => {
+      const code = 'console.log("token test");';
+
+      const { result } = renderHook(() =>
+        useShikiHighlighter(code, 'javascript', 'github-dark', {
+          outputFormat: 'tokens',
+        })
+      );
+
+      await waitFor(() => {
+        expect(result.current).not.toBeNull();
+      });
+
+      const tokensResult = result.current as TokensResult;
+
+      // Should have bg/fg colors from theme
+      expect(tokensResult.bg).toBeDefined();
+      expect(tokensResult.fg).toBeDefined();
+
+      // Should have tokens array
+      expect(Array.isArray(tokensResult.tokens)).toBe(true);
+      expect(tokensResult.tokens.length).toBeGreaterThan(0);
+      expect(Array.isArray(tokensResult.tokens[0])).toBe(true);
+      expect(tokensResult.tokens[0]?.[0]?.content).toBeDefined();
+    });
+  });
+
   describe('Output Format', () => {
     const sampleCode = 'const x = 1;\nconst y = 2;';
 
@@ -487,12 +523,12 @@ describe('useShikiHighlighter Hook', () => {
         // Verify HTML string contains syntax highlighting elements
         expect(capturedOutput).toContain('style=');
         expect(capturedOutput).toContain('color:');
-        
+
         // Verify rendered DOM has highlighted spans
         const container = getByTestId('output');
         const spans = container.querySelectorAll('span[style*="color"]');
         expect(spans.length).toBeGreaterThan(0);
-        
+
         // Verify the code content is preserved
         expect(container.textContent).toContain('const x = 1;');
       });
@@ -507,7 +543,7 @@ describe('useShikiHighlighter Hook', () => {
           'javascript',
           'github-dark',
           {
-            engine: createJavaScriptRegexEngine()
+            engine: createJavaScriptRegexEngine(),
           }
         );
 

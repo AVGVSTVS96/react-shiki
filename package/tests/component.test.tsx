@@ -1,6 +1,9 @@
 import React, { useRef } from 'react';
 import { render, waitFor } from '@testing-library/react';
-import { ShikiHighlighter, createJavaScriptRegexEngine } from '../src/index';
+import {
+  ShikiHighlighter,
+  createJavaScriptRegexEngine,
+} from '../src/index';
 
 // Test fixtures
 const codeSample = 'console.log("Hello World");';
@@ -298,7 +301,7 @@ describe('ShikiHighlighter Component', () => {
 
         const code = shikiContainer?.querySelector('code');
         const spans = code?.querySelectorAll('span');
-        expect(spans && spans.length).toBeGreaterThan(0);
+        expect(spans?.length).toBeGreaterThan(0);
       });
     });
   });

@@ -40,7 +40,7 @@ A performant client-side syntax highlighting component and hook for React, built
 ## Features
 
 - 🖼️ Provides both a `ShikiHighlighter` component and a `useShikiHighlighter` hook for more flexibility
-- 🔐 Flexible output: Choose between React elements (no `dangerouslySetInnerHTML`) or HTML strings for better performance
+- 🔐 Flexible output: React elements (safe), HTML strings (fast), or raw tokens (custom rendering)
 - 📦 Multiple bundle options: Full bundle (~1.2MB gz), web bundle (~695KB gz), or minimal core bundle for fine-grained bundle control
 - 🖌️ Full support for custom TextMate themes and languages
 - 🔧 Supports passing custom Shiki transformers to the highlighter, in addition to all other options supported by `codeToHast`
@@ -219,7 +219,7 @@ See [Shiki - RegExp Engines](https://shiki.style/guide/regex-engines) for more i
 | `transformers`      | `array`            | `[]`            | Custom Shiki transformers for modifying the highlighting output               |
 | `cssVariablePrefix` | `string`           | `'--shiki'`     | Prefix for CSS variables storing theme colors                                 |
 | `defaultColor`      | `string \| false`  | `'light'`       | Default theme mode when using multiple themes, can also disable default theme |
-| `outputFormat`      | `string`           | `'react'`       | Output format: 'react' for React nodes, 'html' for HTML string                 |
+| `outputFormat`      | `string`           | `'react'`       | Output format: `'react'`, `'html'`, or `'tokens'` (hook only)                  |
 | `tabindex`          | `number`           | `0`             | Tab index for the code block                                                  |
 | `decorations`       | `array`            | `[]`            | Custom decorations to wrap the highlighted tokens with                        |
 | `structure`        | `string`           | `classic`  | The structure of the generated HAST and HTML - `classic` or `inline`               |
@@ -623,33 +623,44 @@ const highlightedCode = useShikiHighlighter(code, "tsx", "github-dark", {
 
 ### Output Format Optimization
 
-`react-shiki` provides two output formats to balance safety and performance:
+`react-shiki` provides three output formats:
 
 **React Nodes (Default)** - Safer, no `dangerouslySetInnerHTML` required
 ```tsx
-// Hook
 const highlightedCode = useShikiHighlighter(code, "tsx", "github-dark");
-
-// Component
-<ShikiHighlighter language="tsx" theme="github-dark">
-  {code}
-</ShikiHighlighter>
+// Returns: ReactNode
 ```
 
-**HTML String** - 15-45% faster performance
+**HTML String** - Faster, requires `dangerouslySetInnerHTML`
 ```tsx
-// Hook (returns HTML string, use dangerouslySetInnerHTML to render)
-const highlightedCode = useShikiHighlighter(code, "tsx", "github-dark", {
+const html = useShikiHighlighter(code, "tsx", "github-dark", {
   outputFormat: 'html'
 });
-
-// Component (automatically uses dangerouslySetInnerHTML when outputFormat is 'html')
-<ShikiHighlighter language="tsx" theme="github-dark" outputFormat="html">
-  {code}
-</ShikiHighlighter>
+// Returns: string
 ```
 
-Choose HTML output when performance is critical and you trust the code source. Use the default React output when handling untrusted content or when security is the primary concern.
+**Tokens** - Raw token data for custom rendering (hook only)
+```tsx
+import { useShikiHighlighter, type TokensResult } from "react-shiki";
+
+const result = useShikiHighlighter(code, "tsx", "github-dark", {
+  outputFormat: 'tokens'
+});
+// Returns: TokensResult { tokens, fg, bg, themeName, rootStyle }
+
+// Build your own rendering
+result?.tokens.map((line, i) => (
+  <div key={i}>
+    {line.map((token, j) => (
+      <span key={j} style={{ color: token.color }}>{token.content}</span>
+    ))}
+  </div>
+));
+```
+
+The component supports `'react'` and `'html'` formats. For `'tokens'`, use the hook directly.
+
+Choose HTML when performance is critical and you trust the source. Use tokens when you need full control over rendering.
 
 ---
 
