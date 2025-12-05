@@ -116,7 +116,7 @@ export const useShikiHighlighter = (
       ...restOptions,
       transformers,
     };
-  }, [languageId, themeId, langRev, themeRev, optsRev]);
+  }, [languageId, isMultiTheme, multiTheme, singleTheme, stableOpts]);
 
   useEffect(() => {
     let isMounted = true;
