@@ -26,13 +26,12 @@
   "type": "module",
   "main": "./dist/index.js",
   "types": "./dist/index.d.ts",
-  "files": [
-    "dist",
-    "src/lib/styles.css"
-  ],
-  "sideEffects": [
-    "src/lib/styles.css"
-  ],
+  "files": ["dist", "src/lib/styles.css"],
+  "sideEffects": ["src/lib/styles.css"],
+  "publishConfig": {
+    "access": "public",
+    "provenance": true
+  },
   "exports": {
     ".": {
       "types": "./dist/index.d.ts",
