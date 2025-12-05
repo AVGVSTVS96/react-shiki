@@ -67,8 +67,8 @@ export const useShikiHighlighter = <F extends OutputFormat = 'react'>(
 
   const shikiOptions = useMemo(
     () => buildShikiOptions(languageId, themeResult, stableOpts),
-    // Revs ensure recompute even if useStableOptions returns same reference
-    [languageId, themeResult, langRev, themeRev, optsRev]
+    // Stable references ensure recompute when content changes
+    [languageId, themeResult, stableLang, stableTheme, stableOpts]
   );
 
   useEffect(() => {
