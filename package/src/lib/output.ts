@@ -19,14 +19,12 @@ import type {
 import type { OutputFormat, OutputFormatMap } from './types';
 
 /**
- * Highlighter with loosened method signatures for dynamic language/theme usage.
+ * Shiki's Highlighter methods are parameterized by BundledLanguage/BundledTheme,
+ * but we accept dynamic string values. This type widens the method signatures.
  */
 type LooseHighlighter = (Highlighter | HighlighterCore) & {
   codeToTokens(code: string, options: CodeToTokensOptions): TokensResult;
-  codeToTokensBase(
-    code: string,
-    options: CodeToTokensBaseOptions
-  ): ThemedToken[][];
+  codeToTokensBase(code: string, options: CodeToTokensBaseOptions): ThemedToken[][];
 };
 
 type TransformContext = {
