@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useRef, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 
 import type {
   Highlighter,
@@ -13,13 +13,12 @@ import type {
   Language,
   Theme,
   HighlighterOptions,
-  TimeoutState,
   Themes,
   OutputFormat,
   OutputFormatMap,
 } from './types';
 
-import { throttleHighlighting, useStableOptions } from './utils';
+import { useStableOptions, useThrottledDebounce } from './utils';
 import { resolveLanguage } from './language';
 import { resolveTheme } from './theme';
 import { buildShikiOptions } from './options';
@@ -51,6 +50,9 @@ export const useShikiHighlighter = <F extends OutputFormat = 'react'>(
   const stableTheme = useStableOptions(themeInput);
   const stableOpts = useStableOptions(options);
 
+  // Throttle code changes when delay is specified
+  const throttledCode = useThrottledDebounce(code, stableOpts.delay);
+
   const { languageId, langsToLoad } = useMemo(
     () =>
       resolveLanguage(
@@ -66,14 +68,8 @@ export const useShikiHighlighter = <F extends OutputFormat = 'react'>(
     [stableTheme]
   );
 
-  const timeoutControl = useRef<TimeoutState>({
-    nextAllowedTime: 0,
-    timeoutId: undefined,
-  });
-
   const shikiOptions = useMemo(
     () => buildShikiOptions(languageId, themeResult, stableOpts),
-    // Stable references ensure recompute when content changes
     [languageId, themeResult, stableLang, stableTheme, stableOpts]
   );
 
@@ -102,7 +98,7 @@ export const useShikiHighlighter = <F extends OutputFormat = 'react'>(
         const result = transformOutput(
           format,
           highlighter,
-          code,
+          throttledCode,
           finalOptions,
           themeResult.isMultiTheme
         );
@@ -110,22 +106,14 @@ export const useShikiHighlighter = <F extends OutputFormat = 'react'>(
       }
     };
 
-    const { delay } = stableOpts;
-
-    if (delay) {
-      throttleHighlighting(highlight, timeoutControl, delay);
-    } else {
-      highlight().catch(console.error);
-    }
+    highlight().catch(console.error);
 
     return () => {
       isMounted = false;
-      clearTimeout(timeoutControl.current.timeoutId);
     };
   }, [
-    code,
+    throttledCode,
     shikiOptions,
-    stableOpts.delay,
     stableOpts.highlighter,
     stableOpts.outputFormat,
     langsToLoad,

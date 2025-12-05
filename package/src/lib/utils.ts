@@ -1,7 +1,5 @@
-import { useRef } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { dequal } from 'dequal';
-
-import type { TimeoutState } from './types';
 
 /**
  * Returns a stable reference that only changes when content changes (deep equality).
@@ -24,17 +22,51 @@ export const useStableOptions = <T>(value: T): T => {
   return ref.current;
 };
 
-export const throttleHighlighting = (
-  performHighlight: () => Promise<void>,
-  timeoutControl: React.RefObject<TimeoutState>,
-  throttleMs: number
-) => {
-  const now = Date.now();
-  clearTimeout(timeoutControl.current.timeoutId);
+/**
+ * Hybrid throttle+debounce hook for rate-limiting value updates.
+ * - If throttle window has passed: updates immediately
+ * - Otherwise: debounces to catch final state
+ */
+export const useThrottledDebounce = <T>(
+  value: T,
+  throttleMs: number | undefined,
+  debounceMs = 50
+): T => {
+  const [processedValue, setProcessedValue] = useState(value);
+  const lastRunTime = useRef(0);
+  const timeoutRef = useRef<ReturnType<typeof setTimeout> | undefined>(
+    undefined
+  );
 
-  const delay = Math.max(0, timeoutControl.current.nextAllowedTime - now);
-  timeoutControl.current.timeoutId = setTimeout(() => {
-    performHighlight().catch(console.error);
-    timeoutControl.current.nextAllowedTime = now + throttleMs;
-  }, delay);
+  useEffect(() => {
+    if (!throttleMs) {
+      setProcessedValue(value);
+      return;
+    }
+
+    const now = Date.now();
+    const timeSinceLastRun = now - lastRunTime.current;
+
+    if (timeoutRef.current) {
+      clearTimeout(timeoutRef.current);
+    }
+
+    if (timeSinceLastRun >= throttleMs) {
+      setProcessedValue(value);
+      lastRunTime.current = now;
+    } else {
+      timeoutRef.current = setTimeout(() => {
+        setProcessedValue(value);
+        lastRunTime.current = Date.now();
+      }, debounceMs);
+    }
+
+    return () => {
+      if (timeoutRef.current) {
+        clearTimeout(timeoutRef.current);
+      }
+    };
+  }, [value, throttleMs, debounceMs]);
+
+  return processedValue;
 };
