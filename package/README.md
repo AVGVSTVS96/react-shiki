@@ -32,6 +32,7 @@ A performant client-side syntax highlighting component and hook for React, built
     - [Integration with react-markdown](#integration-with-react-markdown)
     - [Handling Inline Code](#handling-inline-code)
   - [Performance](#performance)
+    - [Deferred Rendering](#deferred-rendering)
     - [Throttling Real-time Highlighting](#throttling-real-time-highlighting)
     - [Output Format Optimization](#output-format-optimization)
     - [Streaming and LLM Chat UI](#streaming-and-llm-chat-ui)
@@ -229,15 +230,16 @@ See [Shiki - RegExp Engines](https://shiki.style/guide/regex-engines) for more i
 
 The `ShikiHighlighter` component offers minimal built-in styling and customization options out-of-the-box:
 
-| Prop               | Type      | Default | Description                                                |
-| ------------------ | --------- | ------- | ---------------------------------------------------------- |
-| `showLanguage`     | `boolean` | `true`  | Displays language label in top-right corner                |
-| `addDefaultStyles` | `boolean` | `true`  | Adds minimal default styling to the highlighted code block |
-| `as`               | `string`  | `'pre'` | Component's Root HTML element                              |
-| `className`        | `string`  | -       | Custom class name for the code block                       |
-| `langClassName`    | `string`  | -       | Class name for styling the language label                  |
-| `style`            | `object`  | -       | Inline style object for the code block                     |
-| `langStyle`        | `object`  | -       | Inline style object for the language label                 |
+| Prop               | Type                 | Default | Description                                                |
+| ------------------ | -------------------- | ------- | ---------------------------------------------------------- |
+| `showLanguage`     | `boolean`            | `true`  | Displays language label in top-right corner                |
+| `addDefaultStyles` | `boolean`            | `true`  | Adds minimal default styling to the highlighted code block |
+| `as`               | `string`             | `'pre'` | Component's Root HTML element                              |
+| `className`        | `string`             | -       | Custom class name for the code block                       |
+| `langClassName`    | `string`             | -       | Class name for styling the language label                  |
+| `style`            | `object`             | -       | Inline style object for the code block                     |
+| `langStyle`        | `object`             | -       | Inline style object for the language label                 |
+| `deferRender`      | `boolean \| object`  | `false` | Defer rendering until element enters viewport              |
 
 ### Multi-theme Support
 
@@ -604,6 +606,32 @@ const CodeHighlight = ({
 ```
 
 ## Performance
+
+### Deferred Rendering
+
+For pages with many code blocks, defer syntax highlighting until blocks enter the viewport:
+
+```tsx
+// Enable with defaults (300px root margin, 300ms debounce)
+<ShikiHighlighter deferRender language="tsx" theme="github-dark">
+  {code}
+</ShikiHighlighter>
+
+// With custom options
+<ShikiHighlighter
+  deferRender={{
+    rootMargin: '500px',    // Start loading 500px before viewport
+    debounceDelay: 200,     // Debounce delay in ms
+    idleTimeout: 300        // requestIdleCallback timeout in ms
+  }}
+  language="tsx"
+  theme="github-dark"
+>
+  {code}
+</ShikiHighlighter>
+```
+
+This uses Intersection Observer + debounce + `requestIdleCallback` for optimal performance. Inspired by [streamdown's approach](https://github.com/vercel/streamdown).
 
 ### Throttling Real-time Highlighting
 
