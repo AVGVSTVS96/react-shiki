@@ -154,7 +154,8 @@ export const createShikiHighlighterComponent = (
             ? { immediate: true }
             : deferRender;
 
-      const { shouldRender, containerRef } = useDeferredRender(deferOptions);
+      const { shouldRender, containerRef } =
+        useDeferredRender(deferOptions);
       useImperativeHandle(ref, () => containerRef.current as HTMLElement);
 
       const options: HighlighterOptions<ComponentRenderableFormat> = {
@@ -169,7 +170,10 @@ export const createShikiHighlighterComponent = (
         ...shikiOptions,
       };
 
-      const { displayLanguageId } = resolveLanguage(language, customLanguages);
+      const { displayLanguageId } = resolveLanguage(
+        language,
+        customLanguages
+      );
 
       const highlightedCode = useShikiHighlighterImpl(
         shouldRender ? code : '',
@@ -204,7 +208,9 @@ export const createShikiHighlighterComponent = (
           ) : null}
           {shouldRender ? (
             isHtmlOutput ? (
-              <div dangerouslySetInnerHTML={{ __html: highlightedCode }} />
+              <div
+                dangerouslySetInnerHTML={{ __html: highlightedCode }}
+              />
             ) : (
               highlightedCode
             )

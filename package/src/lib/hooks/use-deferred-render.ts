@@ -57,7 +57,9 @@ export type UseDeferredRenderOptions = {
  * )
  * ```
  */
-export function useDeferredRender(options: UseDeferredRenderOptions = {}) {
+export function useDeferredRender(
+  options: UseDeferredRenderOptions = {}
+) {
   const {
     immediate = false,
     debounceDelay = DEFERRED_RENDER_DEBOUNCE_DELAY,
@@ -169,7 +171,8 @@ export function useDeferredRender(options: UseDeferredRenderOptions = {}) {
         // If no records, element hasn't changed state (still intersecting)
         // If records exist, check the latest intersection state
         const isStillInView =
-          records.length === 0 || (records.at(-1)?.isIntersecting ?? false);
+          records.length === 0 ||
+          (records.at(-1)?.isIntersecting ?? false);
 
         if (isStillInView) {
           scheduleRender(obs);

@@ -592,7 +592,12 @@ describe('useShikiHighlighter Hook', () => {
       const code2 = 'const b = 2;';
 
       const { getByTestId, rerender } = render(
-        <TestComponent code={code1} language="javascript" theme="github-dark" delay={100} />
+        <TestComponent
+          code={code1}
+          language="javascript"
+          theme="github-dark"
+          delay={100}
+        />
       );
 
       // Wait for initial render
@@ -602,7 +607,12 @@ describe('useShikiHighlighter Hook', () => {
 
       // Change code - should be throttled
       rerender(
-        <TestComponent code={code2} language="javascript" theme="github-dark" delay={100} />
+        <TestComponent
+          code={code2}
+          language="javascript"
+          theme="github-dark"
+          delay={100}
+        />
       );
 
       // Eventually should show new code
