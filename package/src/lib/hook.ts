@@ -20,7 +20,8 @@ import type {
 } from './types';
 
 import { throttleHighlighting, useStableOptions } from './utils';
-import { resolveLanguage, resolveTheme } from './resolvers';
+import { resolveLanguage } from './language';
+import { resolveTheme } from './theme';
 import { buildShikiOptions } from './options';
 import { transformOutput } from './output';
 
