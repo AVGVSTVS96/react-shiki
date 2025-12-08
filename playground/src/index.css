@@ -4,18 +4,20 @@
 @custom-variant dark (&:where(.dark, .dark *));
 
 :root {
-  --bg: #0a0a0a;
-  --bg-secondary: #111111;
-  --border: rgba(255, 255, 255, 0.1);
-  --text: rgba(255, 255, 255, 0.9);
-  --text-secondary: rgba(255, 255, 255, 0.6);
-  --text-muted: rgba(255, 255, 255, 0.4);
-  --accent: #a78bfa;
+  --bg: #fafafa;
+  --bg-secondary: #f5f5f5;
+  --border: #e5e5e5;
+  --border-dashed: #d4d4d4;
+  --text: #171717;
+  --text-secondary: #525252;
+  --text-muted: #a3a3a3;
+  --accent: #16a34a;
+  --grid-color: #e5e5e5;
 
   font-family: Inter, system-ui, -apple-system, sans-serif;
   line-height: 1.6;
   font-weight: 400;
-  color-scheme: dark;
+  color-scheme: light;
   color: var(--text);
   background-color: var(--bg);
 
@@ -25,12 +27,16 @@
   -moz-osx-font-smoothing: grayscale;
 }
 
+/* Subtle dot grid background */
 body {
   margin: 0;
   min-height: 100vh;
-  background: var(--bg);
+  background-color: var(--bg);
+  background-image: radial-gradient(circle, var(--grid-color) 1px, transparent 1px);
+  background-size: 24px 24px;
 }
 
+/* Links */
 a {
   color: var(--accent);
   text-decoration: none;
@@ -38,48 +44,52 @@ a {
 }
 
 a:hover {
-  opacity: 0.8;
+  opacity: 0.7;
 }
 
+/* Typography */
 h1 {
-  font-size: 2rem;
-  font-weight: 600;
-  letter-spacing: -0.02em;
-  line-height: 1.2;
+  font-size: 2.5rem;
+  font-weight: 700;
+  letter-spacing: -0.03em;
+  line-height: 1.1;
   color: var(--text);
 }
 
 h2 {
-  font-size: 1.125rem;
+  font-size: 1.25rem;
   font-weight: 600;
-  letter-spacing: -0.01em;
+  letter-spacing: -0.02em;
   color: var(--text);
-  margin-top: 3rem;
-  padding-top: 1.5rem;
-  border-top: 1px solid var(--border);
+  margin-top: 0;
+  margin-bottom: 1rem;
 }
 
 h3 {
   font-size: 0.875rem;
   font-weight: 500;
   color: var(--text-secondary);
-  margin-top: 2rem;
+  letter-spacing: 0.025em;
+  text-transform: uppercase;
+  margin-top: 0;
+  margin-bottom: 0.75rem;
 }
 
-/* Prose */
+/* Prose overrides */
 .prose {
   --tw-prose-body: var(--text-secondary);
   --tw-prose-headings: var(--text);
   --tw-prose-links: var(--accent);
   --tw-prose-bold: var(--text);
   --tw-prose-code: var(--text);
-  --tw-prose-pre-bg: var(--bg-secondary);
-  --tw-prose-hr: var(--border);
+  --tw-prose-pre-bg: #1e1e1e;
 }
 
 .prose :where(p):not(:where([class~="not-prose"], [class~="not-prose"] *)) {
   color: var(--text-secondary);
   font-size: 0.9375rem;
+  margin-top: 0;
+  margin-bottom: 1rem;
 }
 
 .prose :where(strong):not(:where([class~="not-prose"], [class~="not-prose"] *)) {
@@ -89,32 +99,39 @@ h3 {
 .prose :where(ul):not(:where([class~="not-prose"], [class~="not-prose"] *)) {
   color: var(--text-secondary);
   font-size: 0.9375rem;
+  margin-top: 0;
+  margin-bottom: 1.5rem;
 }
 
 .prose :where(li):not(:where([class~="not-prose"], [class~="not-prose"] *)) {
   color: var(--text-secondary);
+  margin-top: 0.25rem;
+  margin-bottom: 0.25rem;
 }
 
-/* Code blocks with border */
+/* Code blocks */
 .prose :where(pre):not(:where([class~="not-prose"], [class~="not-prose"] *)) {
-  background: var(--bg-secondary);
-  border: 1px solid var(--border);
-  border-radius: 8px;
+  background: #1e1e1e;
+  border: 1px dashed var(--border-dashed);
+  border-radius: 0;
   padding: 0;
-  margin: 1.5rem 0;
+  margin: 1rem 0;
 }
 
 .prose :where(code):not(:where([class~="not-prose"], [class~="not-prose"] *)) {
   font-size: 0.8125rem;
   font-weight: 400;
+  font-family: "SF Mono", "Fira Code", "Fira Mono", Menlo, Monaco, monospace;
 }
 
 /* Inline code */
 .prose :where(code):not(:where(pre code, [class~="not-prose"], [class~="not-prose"] *)) {
-  background: rgba(255, 255, 255, 0.06);
-  padding: 0.15em 0.4em;
-  border-radius: 4px;
+  background: var(--bg-secondary);
+  border: 1px solid var(--border);
+  padding: 0.125em 0.375em;
+  border-radius: 0;
   font-weight: 400;
+  color: var(--text);
 }
 
 .prose :where(code):not(:where(pre code, [class~="not-prose"], [class~="not-prose"] *))::before,
@@ -130,5 +147,21 @@ h3 {
 
 /* Selection */
 ::selection {
-  background: rgba(167, 139, 250, 0.3);
+  background: rgba(22, 163, 74, 0.2);
+}
+
+/* Section styling */
+.section {
+  border: 1px dashed var(--border-dashed);
+  background: white;
+  padding: 1.5rem;
+  margin: 1.5rem 0;
+}
+
+/* Monospace labels */
+.mono {
+  font-family: "SF Mono", "Fira Code", monospace;
+  font-size: 0.75rem;
+  color: var(--text-muted);
+  letter-spacing: 0.05em;
 }
