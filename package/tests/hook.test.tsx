@@ -3,6 +3,7 @@ import { vi } from 'vitest';
 import {
   useShikiHighlighter,
   createJavaScriptRegexEngine,
+  TokenRenderer,
 } from '../src/index';
 import type {
   Language,
@@ -491,6 +492,250 @@ describe('useShikiHighlighter Hook', () => {
       expect(tokensResult.tokens.length).toBeGreaterThan(0);
       expect(Array.isArray(tokensResult.tokens[0])).toBe(true);
       expect(tokensResult.tokens[0]?.[0]?.content).toBeDefined();
+    });
+
+    test('returns tokens with htmlStyle for multi-theme', async () => {
+      const code = 'const x = 1;';
+      const themes = { light: 'github-light', dark: 'github-dark' };
+
+      const { result } = renderHook(() =>
+        useShikiHighlighter(code, 'javascript', themes, {
+          outputFormat: 'tokens',
+        })
+      );
+
+      // Wait for highlighting to complete (htmlStyle appears on tokens)
+      await waitFor(() => {
+        const tokensResult = result.current as TokensResult;
+        const styledToken = tokensResult.tokens[0]?.find(
+          (t) => t.htmlStyle !== undefined
+        );
+        expect(styledToken).toBeDefined();
+      });
+
+      const tokensResult = result.current as TokensResult;
+      const styledToken = tokensResult.tokens[0]?.find(
+        (t) => t.htmlStyle !== undefined
+      );
+
+      // Multi-theme tokens should have htmlStyle with CSS variables
+      expect(styledToken?.htmlStyle).toBeDefined();
+      // Default is light, so dark becomes CSS variable
+      expect(styledToken?.htmlStyle?.['--shiki-dark']).toBeDefined();
+    });
+
+    test('multi-theme tokens respect defaultColor option', async () => {
+      const code = 'const x = 1;';
+      const themes = { light: 'github-light', dark: 'github-dark' };
+
+      const { result } = renderHook(() =>
+        useShikiHighlighter(code, 'javascript', themes, {
+          outputFormat: 'tokens',
+          defaultColor: 'dark',
+        })
+      );
+
+      // Wait for highlighting to complete
+      await waitFor(() => {
+        const tokensResult = result.current as TokensResult;
+        const styledToken = tokensResult.tokens[0]?.find(
+          (t) => t.htmlStyle !== undefined
+        );
+        expect(styledToken).toBeDefined();
+      });
+
+      const tokensResult = result.current as TokensResult;
+      const styledToken = tokensResult.tokens[0]?.find(
+        (t) => t.htmlStyle !== undefined
+      );
+
+      // When dark is default, light becomes the CSS variable
+      expect(styledToken?.htmlStyle?.['--shiki-light']).toBeDefined();
+    });
+
+    test('multi-theme tokens respect cssVariablePrefix option', async () => {
+      const code = 'const x = 1;';
+      const themes = { light: 'github-light', dark: 'github-dark' };
+
+      const { result } = renderHook(() =>
+        useShikiHighlighter(code, 'javascript', themes, {
+          outputFormat: 'tokens',
+          cssVariablePrefix: '--theme-',
+        })
+      );
+
+      // Wait for highlighting to complete
+      await waitFor(() => {
+        const tokensResult = result.current as TokensResult;
+        const styledToken = tokensResult.tokens[0]?.find(
+          (t) => t.htmlStyle !== undefined
+        );
+        expect(styledToken).toBeDefined();
+      });
+
+      const tokensResult = result.current as TokensResult;
+      const styledToken = tokensResult.tokens[0]?.find(
+        (t) => t.htmlStyle !== undefined
+      );
+
+      // Should use custom prefix
+      expect(styledToken?.htmlStyle?.['--theme-dark']).toBeDefined();
+    });
+  });
+
+  describe('TokenRenderer DOM Output', () => {
+    // Integration test: hook + TokenRenderer together
+    const TokenRendererTestComponent = ({
+      code,
+      language,
+      theme,
+      defaultColor,
+      cssVariablePrefix,
+    }: {
+      code: string;
+      language: Language;
+      theme: Theme | Themes;
+      defaultColor?: string;
+      cssVariablePrefix?: string;
+    }) => {
+      const result = useShikiHighlighter(code, language, theme, {
+        outputFormat: 'tokens',
+        defaultColor,
+        cssVariablePrefix,
+      });
+      return (
+        <div data-testid="token-container">
+          <TokenRenderer tokens={result} />
+        </div>
+      );
+    };
+
+    test('TokenRenderer renders multi-theme styles with CSS variables', async () => {
+      const themes = { light: 'github-light', dark: 'github-dark' };
+
+      const { container } = render(
+        <TokenRendererTestComponent
+          code="const x = 1;"
+          language="javascript"
+          theme={themes}
+        />
+      );
+
+      // Wait for highlighting to complete - spans should have style attributes
+      await waitFor(() => {
+        const styledSpans = container.querySelectorAll(
+          'span[style*="--shiki-dark"]'
+        );
+        expect(styledSpans.length).toBeGreaterThan(0);
+      });
+
+      // Verify the DOM has correct CSS variables
+      const styledSpans = container.querySelectorAll(
+        'span[style*="--shiki-dark"]'
+      );
+      expect(styledSpans.length).toBeGreaterThan(0);
+
+      const firstStyledSpan = styledSpans[0];
+      const style = firstStyledSpan?.getAttribute('style');
+      expect(style).toContain('color:');
+      expect(style).toContain('--shiki-dark:');
+    });
+
+    test('TokenRenderer with single theme renders color styles', async () => {
+      const { container } = render(
+        <TokenRendererTestComponent
+          code="const x = 1;"
+          language="javascript"
+          theme="github-dark"
+        />
+      );
+
+      // Wait for highlighting - spans should have color styles
+      await waitFor(() => {
+        const styledSpans = container.querySelectorAll(
+          'span[style*="color"]'
+        );
+        expect(styledSpans.length).toBeGreaterThan(0);
+      });
+
+      // Verify single-theme output has color but no CSS variables
+      const spans = container.querySelectorAll('.line span[style]');
+      expect(spans.length).toBeGreaterThan(0);
+
+      const firstSpan = spans[0];
+      const style = firstSpan?.getAttribute('style');
+      expect(style).toContain('color:');
+      expect(style).not.toContain('--shiki-');
+    });
+
+    test('TokenRenderer with defaultColor=dark uses light as CSS variable', async () => {
+      const themes = { light: 'github-light', dark: 'github-dark' };
+
+      const { container } = render(
+        <TokenRendererTestComponent
+          code="const x = 1;"
+          language="javascript"
+          theme={themes}
+          defaultColor="dark"
+        />
+      );
+
+      await waitFor(() => {
+        const styledSpans = container.querySelectorAll(
+          'span[style*="--shiki-light"]'
+        );
+        expect(styledSpans.length).toBeGreaterThan(0);
+      });
+    });
+
+    test('TokenRenderer with custom cssVariablePrefix', async () => {
+      const themes = { light: 'github-light', dark: 'github-dark' };
+
+      const { container } = render(
+        <TokenRendererTestComponent
+          code="const x = 1;"
+          language="javascript"
+          theme={themes}
+          cssVariablePrefix="--custom-"
+        />
+      );
+
+      await waitFor(() => {
+        const styledSpans = container.querySelectorAll(
+          'span[style*="--custom-dark"]'
+        );
+        expect(styledSpans.length).toBeGreaterThan(0);
+      });
+    });
+
+    test('TokenRenderer renders multi-theme background color with CSS variable', async () => {
+      const themes = { light: 'github-light', dark: 'github-dark' };
+
+      const { container } = render(
+        <TokenRendererTestComponent
+          code="const x = 1;"
+          language="javascript"
+          theme={themes}
+        />
+      );
+
+      // Wait for highlighting to complete - must wait for CSS variable, not just background-color
+      // (fallback has background-color: transparent which would pass early)
+      await waitFor(() => {
+        const pre = container.querySelector('pre');
+        const style = pre?.getAttribute('style');
+        expect(style).toContain('--shiki-dark-bg');
+      });
+
+      const pre = container.querySelector('pre');
+      const style = pre?.getAttribute('style');
+
+      // Multi-theme: pre should have background-color AND --shiki-dark-bg variable
+      expect(style).toContain('background-color');
+      expect(style).toContain('--shiki-dark-bg');
+      // Also should have color and --shiki-dark for foreground
+      expect(style).toContain('color');
+      expect(style).toContain('--shiki-dark');
     });
   });
 

@@ -11,6 +11,10 @@ import type {
 } from './lib/types';
 
 export { isInlineCode, rehypeInlineCodeProperty } from './lib/plugins';
+export {
+  TokenRenderer,
+  type TokenRendererProps,
+} from './lib/token-renderer';
 
 import {
   createShikiHighlighterComponent,
@@ -43,7 +47,7 @@ export const useShikiHighlighter = <F extends OutputFormat = 'react'>(
   lang: Language,
   themeInput: Theme | Themes,
   options: HighlighterOptions<F> = {} as HighlighterOptions<F>
-): OutputFormatMap[F] | null => {
+): OutputFormatMap[F] => {
   return useBaseHook(
     code,
     lang,

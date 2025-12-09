@@ -24,6 +24,7 @@ import { resolveLanguage } from './language';
 import { resolveTheme } from './theme';
 import { buildShikiOptions } from './options';
 import { transformOutput } from './output';
+import { createFallback } from './fallback';
 
 // Each entry point (index, web, core) provides a different factory for bundle optimization
 type HighlighterFactory = (
@@ -38,8 +39,13 @@ export const useShikiHighlighter = <F extends OutputFormat = 'react'>(
   themeInput: Theme | Themes,
   options: HighlighterOptions<F> = {} as HighlighterOptions<F>,
   highlighterFactory: HighlighterFactory
-): OutputFormatMap[F] | null => {
-  const [output, setOutput] = useState<OutputFormatMap[F] | null>(null);
+): OutputFormatMap[F] => {
+  const format = (options.outputFormat ?? 'react') as F;
+
+  // Initialize with fallback - never null
+  const [output, setOutput] = useState<OutputFormatMap[F]>(() =>
+    createFallback(format, code)
+  );
 
   const [stableLang, langRev] = useStableOptions(lang);
   const [stableTheme, themeRev] = useStableOptions(themeInput);
@@ -93,7 +99,6 @@ export const useShikiHighlighter = <F extends OutputFormat = 'react'>(
       const finalOptions = { ...shikiOptions, lang: langToUse };
 
       if (isMounted) {
-        const format = (stableOpts.outputFormat ?? 'react') as F;
         const result = transformOutput(
           format,
           highlighter,

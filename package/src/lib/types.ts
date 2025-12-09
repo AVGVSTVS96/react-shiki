@@ -149,14 +149,17 @@ interface TimeoutState {
  * Public API signature for the useShikiHighlighter hook.
  * Generic parameter narrows return type based on outputFormat option.
  *
+ * Returns immediately with a fallback (unstyled code) while highlighting
+ * is in progress - never returns null.
+ *
  * @example
- * // Returns ReactNode | null
+ * // Returns ReactNode
  * const jsx = useShikiHighlighter(code, 'ts', 'nord');
  *
- * // Returns string | null
+ * // Returns string
  * const html = useShikiHighlighter(code, 'ts', 'nord', { outputFormat: 'html' });
  *
- * // Returns TokensResult | null
+ * // Returns TokensResult
  * const result = useShikiHighlighter(code, 'ts', 'nord', { outputFormat: 'tokens' });
  */
 export type UseShikiHighlighter = <F extends OutputFormat = 'react'>(
@@ -164,7 +167,7 @@ export type UseShikiHighlighter = <F extends OutputFormat = 'react'>(
   lang: Language,
   themeInput: Theme | Themes,
   options?: HighlighterOptions<F>
-) => OutputFormatMap[F] | null;
+) => OutputFormatMap[F];
 
 export type {
   Language,
