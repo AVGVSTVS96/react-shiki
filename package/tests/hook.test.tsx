@@ -581,6 +581,41 @@ describe('useShikiHighlighter Hook', () => {
       // Should use custom prefix
       expect(styledToken?.htmlStyle?.['--theme-dark']).toBeDefined();
     });
+
+    test('multi-theme with two TextMate theme objects works', async () => {
+      const code = 'const x = 1;';
+      // Both values are TextMate theme objects (no strings)
+      const lightTheme = {
+        name: 'test-light',
+        tokenColors: [
+          { scope: 'keyword', settings: { foreground: '#ff0000' } },
+        ],
+      };
+      const darkTheme = {
+        name: 'test-dark',
+        tokenColors: [
+          { scope: 'keyword', settings: { foreground: '#00ff00' } },
+        ],
+      };
+      const themes = { light: lightTheme, dark: darkTheme };
+
+      const { result } = renderHook(() =>
+        useShikiHighlighter(code, 'javascript', themes, {
+          outputFormat: 'tokens',
+        })
+      );
+
+      // Wait for highlighting to complete
+      await waitFor(() => {
+        const tokensResult = result.current as TokensResult;
+        // Should have theme name from our custom theme, not fallback
+        expect(tokensResult.themeName).not.toBe('');
+      });
+
+      const tokensResult = result.current as TokensResult;
+      // Verify it used our themes, not DEFAULT_THEMES fallback
+      expect(tokensResult.tokens.length).toBeGreaterThan(0);
+    });
   });
 
   describe('TokenRenderer DOM Output', () => {

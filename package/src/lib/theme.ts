@@ -23,31 +23,34 @@ export type ThemeShikiOptions =
   | CodeOptionsSingleTheme<BundledTheme>
   | CodeOptionsMultipleThemes<BundledTheme>;
 
+const isTextmateTheme = (value: unknown): value is ThemeRegistrationAny =>
+  typeof value === 'object' &&
+  value !== null &&
+  'tokenColors' in value &&
+  Array.isArray((value as ThemeRegistrationAny).tokenColors);
+
 export function resolveTheme(
   themeInput: Theme | Themes
 ): ThemeResolution {
-  const isTextmateTheme =
-    typeof themeInput === 'object' &&
-    'tokenColors' in themeInput &&
-    Array.isArray(themeInput.tokenColors);
+  const inputIsTextmateTheme = isTextmateTheme(themeInput);
 
   // Non-textmate objects are assumed to be multi-theme configs
   const isMultiThemeConfig =
     typeof themeInput === 'object' &&
     themeInput !== null &&
-    !isTextmateTheme;
+    !inputIsTextmateTheme;
 
   const validMultiThemeObj =
     typeof themeInput === 'object' &&
     themeInput !== null &&
-    !isTextmateTheme &&
+    !inputIsTextmateTheme &&
     Object.entries(themeInput).some(
       ([key, value]) =>
         key &&
         value &&
         key.trim() !== '' &&
         value !== '' &&
-        (typeof value === 'string' || isTextmateTheme)
+        (typeof value === 'string' || isTextmateTheme(value))
     );
 
   if (isMultiThemeConfig) {
