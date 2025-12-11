@@ -1,7 +1,6 @@
 import { useShikiHighlighter as useBaseHook } from './lib/hook';
 import { createWebHighlighter } from './bundles/web';
 import type {
-  UseShikiHighlighter,
   OutputFormat,
   OutputFormatMap,
   Language,
