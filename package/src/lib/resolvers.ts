@@ -111,29 +111,32 @@ interface ThemeResult {
  *   - singleTheme: The single theme if it exists
  *   - themesToLoad: The themes to load when creating the highlighter
  */
+const isTextmateTheme = (value: unknown): value is ThemeRegistrationAny =>
+  typeof value === 'object' &&
+  value !== null &&
+  'tokenColors' in value &&
+  Array.isArray((value as ThemeRegistrationAny).tokenColors);
+
 export function resolveTheme(themeInput: Theme | Themes): ThemeResult {
-  const isTextmateTheme =
-    typeof themeInput === 'object' &&
-    'tokenColors' in themeInput &&
-    Array.isArray(themeInput.tokenColors);
+  const inputIsTextmateTheme = isTextmateTheme(themeInput);
 
   // Assume non textmate objects are multi theme configs
   const isMultiThemeConfig =
     typeof themeInput === 'object' &&
     themeInput !== null &&
-    !isTextmateTheme;
+    !inputIsTextmateTheme;
 
   const validMultiThemeObj =
     typeof themeInput === 'object' &&
     themeInput !== null &&
-    !isTextmateTheme &&
+    !inputIsTextmateTheme &&
     Object.entries(themeInput).some(
       ([key, value]) =>
         key &&
         value &&
         key.trim() !== '' &&
         value !== '' &&
-        (typeof value === 'string' || isTextmateTheme)
+        (typeof value === 'string' || isTextmateTheme(value))
     );
 
   if (isMultiThemeConfig) {
