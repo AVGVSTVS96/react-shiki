@@ -144,8 +144,9 @@ export function resolveTheme(themeInput: Theme | Themes): ThemeResult {
       ? `multi-${Object.values(themeInput)
           .map(
             (theme) =>
-              (typeof theme === 'string' ? theme : theme?.name) ||
-              'custom'
+              (typeof theme === 'string'
+                ? theme
+                : (theme as { name?: string })?.name) || 'custom'
           )
           .sort()
           .join('-')}`

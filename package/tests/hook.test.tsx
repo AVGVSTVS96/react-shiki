@@ -1,6 +1,9 @@
 import { render, waitFor } from '@testing-library/react';
 import { vi } from 'vitest';
-import { useShikiHighlighter, createJavaScriptRegexEngine } from '../src/index';
+import {
+  useShikiHighlighter,
+  createJavaScriptRegexEngine,
+} from '../src/index';
 import type { Language, Theme, Themes } from '../src/lib/types';
 import type { ShikiTransformer } from 'shiki';
 import { throttleHighlighting } from '../src/lib/utils';
@@ -372,7 +375,9 @@ describe('useShikiHighlighter Hook', () => {
         const container = getByTestId('highlighted');
         const pre = container.querySelector('pre');
         // Should have multi-theme CSS variables
-        const spans = container.querySelectorAll('span[style*="--shiki-"]');
+        const spans = container.querySelectorAll(
+          'span[style*="--shiki-"]'
+        );
         expect(spans.length).toBeGreaterThan(0);
         expect(pre).toBeInTheDocument();
       });
@@ -520,12 +525,12 @@ describe('useShikiHighlighter Hook', () => {
         // Verify HTML string contains syntax highlighting elements
         expect(capturedOutput).toContain('style=');
         expect(capturedOutput).toContain('color:');
-        
+
         // Verify rendered DOM has highlighted spans
         const container = getByTestId('output');
         const spans = container.querySelectorAll('span[style*="color"]');
         expect(spans.length).toBeGreaterThan(0);
-        
+
         // Verify the code content is preserved
         expect(container.textContent).toContain('const x = 1;');
       });
@@ -540,7 +545,7 @@ describe('useShikiHighlighter Hook', () => {
           'javascript',
           'github-dark',
           {
-            engine: createJavaScriptRegexEngine()
+            engine: createJavaScriptRegexEngine(),
           }
         );
 
