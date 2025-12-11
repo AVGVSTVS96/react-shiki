@@ -344,6 +344,39 @@ describe('useShikiHighlighter Hook', () => {
         expect(style).not.toContain('--shiki-dark');
       });
     });
+
+    test('multi-theme with two TextMate theme objects works', async () => {
+      const code = 'const x = 1;';
+      // Both values are TextMate theme objects (no strings)
+      const lightTheme = {
+        name: 'test-light',
+        tokenColors: [
+          { scope: 'keyword', settings: { foreground: '#ff0000' } },
+        ],
+      };
+      const darkTheme = {
+        name: 'test-dark',
+        tokenColors: [
+          { scope: 'keyword', settings: { foreground: '#00ff00' } },
+        ],
+      };
+      const themes = { light: lightTheme, dark: darkTheme };
+
+      const { getByTestId } = renderComponent({
+        code,
+        language: 'javascript',
+        theme: themes,
+      });
+
+      await waitFor(() => {
+        const container = getByTestId('highlighted');
+        const pre = container.querySelector('pre');
+        // Should have multi-theme CSS variables
+        const spans = container.querySelectorAll('span[style*="--shiki-"]');
+        expect(spans.length).toBeGreaterThan(0);
+        expect(pre).toBeInTheDocument();
+      });
+    });
   });
 
   describe('Rendering Options', () => {
