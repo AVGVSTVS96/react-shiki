@@ -1,5 +1,11 @@
 # react-shiki
 
+## 0.9.1
+
+### Patch Changes
+
+- Fixes highlighting failure when using multiple custom textmate themes _[`#115`](https://github.com/AVGVSTVS96/react-shiki/pull/115) [`74e21df`](https://github.com/avgvstvs96/react-shiki/commit/74e21df452b6c28752a2afddf2b7ae745c6d28da) [@AVGVSTVS96](https://github.com/AVGVSTVS96)_
+
 ## 0.9.0
 
 ### Minor Changes
