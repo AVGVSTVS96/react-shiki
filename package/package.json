@@ -11,7 +11,7 @@
   "repository": {
     "type": "git",
     "directory": "package",
-    "url": "git+https://github.com/avgvstvs96/react-shiki.git"
+    "url": "https://github.com/AVGVSTVS96/react-shiki"
   },
   "homepage": "https://react-shiki.vercel.app/",
   "keywords": [
