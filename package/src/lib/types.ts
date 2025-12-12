@@ -9,8 +9,8 @@ import type {
   Highlighter,
   HighlighterCore,
   BundledHighlighterOptions,
-  Awaitable,
-  RegexEngine,
+  ThemedToken,
+  TokensResult,
 } from 'shiki';
 
 import type { ReactNode } from 'react';
@@ -19,9 +19,7 @@ import type { LanguageRegistration } from './extended-types';
 
 import type { Element as HastElement } from 'hast';
 
-/**
- * HTML Element, use to type `node` from react-markdown
- */
+/** Use to type `node` from react-markdown */
 type Element = HastElement;
 
 /**
@@ -59,10 +57,15 @@ type Themes = {
   [key: string]: ThemeRegistrationAny | StringLiteralUnion<BundledTheme>;
 };
 
-/**
- * Configuration options specific to react-shiki
- */
-interface ReactShikiOptions {
+type OutputFormatMap = {
+  react: ReactNode;
+  html: string;
+  tokens: TokensResult;
+};
+
+type OutputFormat = keyof OutputFormatMap;
+
+interface ReactShikiOptions<F extends OutputFormat = 'react'> {
   /**
    * Minimum time (in milliseconds) between highlight operations.
    * @default undefined (no throttling)
@@ -78,9 +81,10 @@ interface ReactShikiOptions {
    * Output format for the highlighted code.
    * - 'react': Returns React nodes (default, safer)
    * - 'html': Returns HTML string (~15-45% faster, requires dangerouslySetInnerHTML)
+   * - 'tokens': Returns raw Shiki tokens (array of themed tokens per line)
    * @default 'react'
    */
-  outputFormat?: 'react' | 'html';
+  outputFormat?: F;
 
   /**
    * Custom Shiki highlighter instance to use instead of the default one.
@@ -124,12 +128,8 @@ interface ReactShikiOptions {
   startingLineNumber?: number;
 }
 
-/**
- * Configuration options for the syntax highlighter
- * Extends CodeToHastOptions to allow passing any Shiki options directly
- */
-interface HighlighterOptions
-  extends ReactShikiOptions,
+interface HighlighterOptions<F extends OutputFormat = 'react'>
+  extends ReactShikiOptions<F>,
     Pick<
       CodeOptionsMultipleThemes<BundledTheme>,
       'defaultColor' | 'cssVariablePrefix'
@@ -140,29 +140,34 @@ interface HighlighterOptions
       'langAlias' | 'engine'
     > {}
 
-/**
- * State for the throttling logic
- */
 interface TimeoutState {
-  /**
-   * Id of the timeout that is currently scheduled
-   */
   timeoutId: NodeJS.Timeout | undefined;
-  /**
-   * Next time when the timeout can be scheduled
-   */
   nextAllowedTime: number;
 }
 
 /**
  * Public API signature for the useShikiHighlighter hook.
+ * Generic parameter narrows return type based on outputFormat option.
+ *
+ * Returns immediately with a fallback (unstyled code) while highlighting
+ * is in progress - never returns null.
+ *
+ * @example
+ * // Returns ReactNode
+ * const jsx = useShikiHighlighter(code, 'ts', 'nord');
+ *
+ * // Returns string
+ * const html = useShikiHighlighter(code, 'ts', 'nord', { outputFormat: 'html' });
+ *
+ * // Returns TokensResult
+ * const result = useShikiHighlighter(code, 'ts', 'nord', { outputFormat: 'tokens' });
  */
-export type UseShikiHighlighter = (
+export type UseShikiHighlighter = <F extends OutputFormat = 'react'>(
   code: string,
   lang: Language,
   themeInput: Theme | Themes,
-  options?: HighlighterOptions
-) => ReactNode | string | null;
+  options?: HighlighterOptions<F>
+) => OutputFormatMap[F];
 
 export type {
   Language,
@@ -171,4 +176,8 @@ export type {
   Element,
   TimeoutState,
   HighlighterOptions,
+  OutputFormat,
+  OutputFormatMap,
+  ThemedToken,
+  TokensResult,
 };

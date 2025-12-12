@@ -1,5 +1,6 @@
 import React, { useRef } from 'react';
 import { render, waitFor } from '@testing-library/react';
+import { vi } from 'vitest';
 import {
   ShikiHighlighter,
   createJavaScriptRegexEngine,
