@@ -24,7 +24,7 @@ jobs:
           git config --global user.name  "github-actions[bot]"
           git config --global user.email "41898282+github-actions[bot]@users.noreply.github.com"
 
-      - uses: pnpm/action-setup@v4.1.0
+      - uses: pnpm/action-setup@v4.2.0
 
       - name: Run changesets-renovate
         run: pnpm dlx @scaleway/changesets-renovate
