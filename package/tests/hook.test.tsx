@@ -1,6 +1,9 @@
 import { render, waitFor } from '@testing-library/react';
 import { vi } from 'vitest';
-import { useShikiHighlighter, createJavaScriptRegexEngine } from '../src/index';
+import {
+  useShikiHighlighter,
+  createJavaScriptRegexEngine,
+} from '../src/index';
 import type { Language, Theme, Themes } from '../src/lib/types';
 import type { ShikiTransformer } from 'shiki';
 import { throttleHighlighting } from '../src/lib/utils';
@@ -254,7 +257,26 @@ describe('useShikiHighlighter Hook', () => {
     const code = 'console.log("test");';
     const themes = { light: 'github-light', dark: 'github-dark' };
 
-    test('renders CSS variables for non-default theme', async () => {
+    const customLightTheme = {
+      name: 'custom-light',
+      tokenColors: [
+        { scope: 'keyword', settings: { foreground: '#ff0000' } },
+      ],
+    };
+    const customDarkTheme = {
+      name: 'custom-dark',
+      tokenColors: [
+        { scope: 'keyword', settings: { foreground: '#00ff00' } },
+      ],
+    };
+    const customDimTheme = {
+      name: 'custom-dim',
+      tokenColors: [
+        { scope: 'keyword', settings: { foreground: '#888888' } },
+      ],
+    };
+
+    test('renders with light as default and CSS variables for other themes', async () => {
       const { getByTestId } = renderComponent({
         code,
         language: 'javascript',
@@ -268,33 +290,12 @@ describe('useShikiHighlighter Hook', () => {
         expect(pre).toBeInTheDocument();
         expect(pre).toHaveClass('shiki');
 
-        // Find spans with CSS variables
         const spans = container.querySelectorAll(
           'span[style*="--shiki-"]'
         );
         expect(spans.length).toBeGreaterThan(0);
 
-        // When no defaultColor is specified, light is default, so we should have --shiki-dark
-        const span = spans[0];
-        const style = span?.getAttribute('style');
-        expect(style).toContain('--shiki-dark');
-      });
-    });
-
-    test('uses light as default when no defaultColor is passed', async () => {
-      const { getByTestId } = renderComponent({
-        code,
-        language: 'javascript',
-        theme: themes,
-      });
-
-      await waitFor(() => {
-        const container = getByTestId('highlighted');
-        const spans = container.querySelectorAll(
-          'span[style*="--shiki-"]'
-        );
-        expect(spans.length).toBeGreaterThan(0);
-
+        // Light is default, so we should have --shiki-dark CSS variable
         const span = spans[0];
         const style = span?.getAttribute('style');
         expect(style).toContain('--shiki-dark');
@@ -342,6 +343,59 @@ describe('useShikiHighlighter Hook', () => {
         const style = span?.getAttribute('style');
         expect(style).toContain('--custom-dark');
         expect(style).not.toContain('--shiki-dark');
+      });
+    });
+
+    test.each([
+      {
+        name: 'two bundled string themes',
+        theme: { light: 'github-light', dark: 'github-dark' },
+      },
+      {
+        name: 'two custom TextMate objects',
+        theme: { light: customLightTheme, dark: customDarkTheme },
+      },
+      {
+        name: 'mixed: bundled string + custom object',
+        theme: { light: 'github-light', dark: customDarkTheme },
+      },
+      {
+        name: 'mixed: custom object + bundled string',
+        theme: { light: customLightTheme, dark: 'github-dark' },
+      },
+      {
+        name: 'three themes with custom dim',
+        theme: {
+          light: 'github-light',
+          dark: 'github-dark',
+          dim: customDimTheme,
+        },
+      },
+      {
+        name: 'three custom TextMate objects',
+        theme: {
+          light: customLightTheme,
+          dark: customDarkTheme,
+          dim: customDimTheme,
+        },
+      },
+    ])('works with $name', async ({ theme }) => {
+      const { getByTestId } = renderComponent({
+        code: 'const x = 1;',
+        language: 'javascript',
+        theme,
+      });
+
+      await waitFor(() => {
+        const container = getByTestId('highlighted');
+        const pre = container.querySelector('pre');
+        expect(pre).toBeInTheDocument();
+        expect(pre).toHaveClass('shiki');
+
+        const spans = container.querySelectorAll(
+          'span[style*="--shiki-"]'
+        );
+        expect(spans.length).toBeGreaterThan(0);
       });
     });
   });
@@ -487,12 +541,12 @@ describe('useShikiHighlighter Hook', () => {
         // Verify HTML string contains syntax highlighting elements
         expect(capturedOutput).toContain('style=');
         expect(capturedOutput).toContain('color:');
-        
+
         // Verify rendered DOM has highlighted spans
         const container = getByTestId('output');
         const spans = container.querySelectorAll('span[style*="color"]');
         expect(spans.length).toBeGreaterThan(0);
-        
+
         // Verify the code content is preserved
         expect(container.textContent).toContain('const x = 1;');
       });
@@ -507,7 +561,7 @@ describe('useShikiHighlighter Hook', () => {
           'javascript',
           'github-dark',
           {
-            engine: createJavaScriptRegexEngine()
+            engine: createJavaScriptRegexEngine(),
           }
         );
 
