@@ -3,10 +3,10 @@ packages:
   - playground
 
 catalog:
-  react: ^19.1.1
-  react-dom: ^19.1.1
-  "@types/react": ^19.1.10
-  "@types/react-dom": ^19.1.7
+  react: ^19.2.3
+  react-dom: ^19.2.3
+  "@types/react": ^19.2.7
+  "@types/react-dom": ^19.2.3
 
 onlyBuiltDependencies:
   - "@biomejs/biome"
