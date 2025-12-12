@@ -1,4 +1,5 @@
 import { render, renderHook, waitFor } from '@testing-library/react';
+import { useRef } from 'react';
 import { vi } from 'vitest';
 import {
   useShikiHighlighter,
@@ -13,7 +14,7 @@ import type {
   TokensResult,
 } from '../src/lib/types';
 import type { ShikiTransformer } from 'shiki';
-import { throttleHighlighting } from '../src/lib/utils';
+import { throttleHighlighting, useStableOptions } from '../src/lib/utils';
 
 interface TestComponentProps {
   code: string;
@@ -947,6 +948,109 @@ describe('useShikiHighlighter Hook', () => {
 
       // Restore original Date.now
       Date.now = originalDateNow;
+    });
+  });
+
+  describe('Stable Options', () => {
+    test('returns same reference for identical object content', () => {
+      const { result, rerender } = renderHook(
+        ({ options }) => useStableOptions(options),
+        { initialProps: { options: { delay: 100 } } }
+      );
+
+      const firstRef = result.current;
+
+      // Rerender with new object, same content
+      rerender({ options: { delay: 100 } });
+      expect(result.current).toBe(firstRef);
+
+      // Rerender with different content
+      rerender({ options: { delay: 200 } });
+      expect(result.current).not.toBe(firstRef);
+      expect(result.current).toEqual({ delay: 200 });
+    });
+
+    test('returns same reference for identical nested objects', () => {
+      const { result, rerender } = renderHook(
+        ({ options }) => useStableOptions(options),
+        {
+          initialProps: {
+            options: {
+              themes: { light: 'github-light', dark: 'github-dark' },
+            },
+          },
+        }
+      );
+
+      const firstRef = result.current;
+
+      // Rerender with new object, same nested content
+      rerender({
+        options: {
+          themes: { light: 'github-light', dark: 'github-dark' },
+        },
+      });
+      expect(result.current).toBe(firstRef);
+    });
+
+    test('handles primitive values correctly', () => {
+      const { result, rerender } = renderHook(
+        ({ value }) => useStableOptions(value),
+        { initialProps: { value: 'typescript' } }
+      );
+
+      expect(result.current).toBe('typescript');
+
+      rerender({ value: 'typescript' });
+      expect(result.current).toBe('typescript');
+
+      rerender({ value: 'javascript' });
+      expect(result.current).toBe('javascript');
+    });
+
+    test('hook does not re-highlight when options object is recreated with same content', async () => {
+      let highlightCount = 0;
+
+      const CountingComponent = ({ options }: { options: object }) => {
+        const highlighted = useShikiHighlighter(
+          'const x = 1;',
+          'javascript',
+          'github-dark',
+          options
+        );
+
+        // Count when we get a new result (indicates highlight ran)
+        const prevRef = useRef(highlighted);
+        if (highlighted !== null && highlighted !== prevRef.current) {
+          highlightCount++;
+          prevRef.current = highlighted;
+        }
+
+        return <div>{highlighted}</div>;
+      };
+
+      const { rerender } = render(
+        <CountingComponent options={{ delay: undefined }} />
+      );
+
+      // Wait for initial highlight
+      await waitFor(() => {
+        expect(highlightCount).toBe(1);
+      });
+
+      // Rerender with new object, same content - should NOT re-highlight
+      rerender(<CountingComponent options={{ delay: undefined }} />);
+
+      // Small wait to ensure no additional highlights triggered
+      await new Promise((r) => setTimeout(r, 50));
+      expect(highlightCount).toBe(1);
+
+      // Rerender with different content - SHOULD re-highlight
+      rerender(<CountingComponent options={{ showLineNumbers: true }} />);
+
+      await waitFor(() => {
+        expect(highlightCount).toBe(2);
+      });
     });
   });
 });
