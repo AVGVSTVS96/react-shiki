@@ -140,11 +140,6 @@ interface HighlighterOptions<F extends OutputFormat = 'react'>
       'langAlias' | 'engine'
     > {}
 
-interface TimeoutState {
-  timeoutId: NodeJS.Timeout | undefined;
-  nextAllowedTime: number;
-}
-
 /**
  * Public API signature for the useShikiHighlighter hook.
  * Generic parameter narrows return type based on outputFormat option.
@@ -174,7 +169,6 @@ export type {
   Theme,
   Themes,
   Element,
-  TimeoutState,
   HighlighterOptions,
   OutputFormat,
   OutputFormatMap,

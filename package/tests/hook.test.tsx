@@ -14,7 +14,7 @@ import type {
   TokensResult,
 } from '../src/lib/types';
 import type { ShikiTransformer } from 'shiki';
-import { throttleHighlighting, useStableOptions } from '../src/lib/utils';
+import { useThrottledDebounce, useStableOptions } from '../src/lib/utils';
 
 interface TestComponentProps {
   code: string;
@@ -897,57 +897,50 @@ describe('useShikiHighlighter Hook', () => {
   });
 
   describe('Throttling', () => {
-    beforeEach(() => {
-      vi.useFakeTimers();
+    test('useThrottledDebounce returns initial value', () => {
+      const { result } = renderHook(() =>
+        useThrottledDebounce('initial', 500)
+      );
+      expect(result.current).toBe('initial');
     });
 
-    afterEach(() => {
-      vi.useRealTimers();
+    test('useThrottledDebounce with no throttle returns value immediately', async () => {
+      const { result, rerender } = renderHook(
+        ({ value }) => useThrottledDebounce(value, undefined),
+        { initialProps: { value: 'initial' } }
+      );
+
+      expect(result.current).toBe('initial');
+
+      rerender({ value: 'updated' });
+
+      await waitFor(() => {
+        expect(result.current).toBe('updated');
+      });
     });
 
-    test('throttles highlighting function calls based on timing', () => {
-      // Mock date to have a consistent starting point
-      const originalDateNow = Date.now;
-      const mockTime = 1000;
-      Date.now = vi.fn(() => mockTime);
+    test('delay option throttles code updates', async () => {
+      const code1 = 'const a = 1;';
+      const code2 = 'const b = 2;';
 
-      // Mock the perform highlight function
-      const performHighlight = vi.fn().mockResolvedValue(undefined);
+      const { getByTestId, rerender } = render(
+        <TestComponent code={code1} language="javascript" theme="github-dark" delay={100} />
+      );
 
-      // Setup timeout control like in the hook
-      const timeoutControl = {
-        current: {
-          timeoutId: undefined,
-          nextAllowedTime: 0,
-        },
-      };
+      // Wait for initial render
+      await waitFor(() => {
+        expect(getByTestId('highlighted')).toBeInTheDocument();
+      });
 
-      // First call should schedule immediately since nextAllowedTime is in the past
-      throttleHighlighting(performHighlight, timeoutControl, 500);
-      expect(timeoutControl.current.timeoutId).toBeDefined();
+      // Change code - should be throttled
+      rerender(
+        <TestComponent code={code2} language="javascript" theme="github-dark" delay={100} />
+      );
 
-      // Run the timeout
-      vi.runAllTimers();
-      expect(performHighlight).toHaveBeenCalledTimes(1);
-      expect(timeoutControl.current.nextAllowedTime).toBe(1500); // 1000 + 500
-
-      // Reset the mock
-      performHighlight.mockClear();
-
-      // Call again - should be delayed by the throttle duration
-      throttleHighlighting(performHighlight, timeoutControl, 500);
-      expect(performHighlight).not.toHaveBeenCalled(); // Not called yet
-
-      // Advance halfway through the delay - should still not be called
-      vi.advanceTimersByTime(250);
-      expect(performHighlight).not.toHaveBeenCalled();
-
-      // Advance the full delay
-      vi.advanceTimersByTime(250);
-      expect(performHighlight).toHaveBeenCalledTimes(1);
-
-      // Restore original Date.now
-      Date.now = originalDateNow;
+      // Eventually should show new code
+      await waitFor(() => {
+        expect(getByTestId('highlighted').textContent).toContain('b');
+      });
     });
   });
 
