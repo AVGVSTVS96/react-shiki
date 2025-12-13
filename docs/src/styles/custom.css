@@ -1,0 +1,36 @@
+/* Custom styles for react-shiki documentation */
+
+:root {
+  --sl-color-accent-low: #1e3a5f;
+  --sl-color-accent: #3b82f6;
+  --sl-color-accent-high: #93c5fd;
+  --sl-color-white: #ffffff;
+  --sl-color-gray-1: #eceef2;
+  --sl-color-gray-2: #c0c2c7;
+  --sl-color-gray-3: #888b96;
+  --sl-color-gray-4: #545861;
+  --sl-color-gray-5: #353841;
+  --sl-color-gray-6: #24272f;
+  --sl-color-black: #17181c;
+}
+
+:root[data-theme='light'] {
+  --sl-color-accent-low: #c7d9f0;
+  --sl-color-accent: #2563eb;
+  --sl-color-accent-high: #1d4ed8;
+}
+
+/* Code block styling */
+.sl-markdown-content pre {
+  border-radius: 0.5rem;
+}
+
+/* Table styling improvements */
+.sl-markdown-content table {
+  font-size: 0.875rem;
+}
+
+.sl-markdown-content th,
+.sl-markdown-content td {
+  padding: 0.75rem 1rem;
+}
