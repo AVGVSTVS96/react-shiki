@@ -1,0 +1,56 @@
+---
+title: react-shiki
+description: A performant client-side syntax highlighting component and hook for React, built with Shiki.
+template: splash
+hero:
+  tagline: A performant client-side syntax highlighting component and hook for React, built with Shiki.
+  image:
+    file: ../../assets/shiki-logo.svg
+  actions:
+    - text: Get Started
+      link: /getting-started/introduction/
+      icon: right-arrow
+    - text: View on GitHub
+      link: https://github.com/AVGVSTVS96/react-shiki
+      icon: external
+      variant: minimal
+---
+
+import { Card, CardGrid } from '@astrojs/starlight/components';
+
+## Features
+
+<CardGrid stagger>
+  <Card title="Component & Hook" icon="puzzle">
+    Use the `ShikiHighlighter` component for quick setup or the `useShikiHighlighter` hook for more flexibility.
+  </Card>
+  <Card title="Flexible Output" icon="setting">
+    Choose between React elements (no `dangerouslySetInnerHTML`) or HTML strings for better performance.
+  </Card>
+  <Card title="Multiple Bundles" icon="seti:html">
+    Full bundle (~1.2MB gz), web bundle (~695KB gz), or minimal core bundle for fine-grained control.
+  </Card>
+  <Card title="Custom Themes & Languages" icon="star">
+    Full support for custom TextMate themes and languages.
+  </Card>
+  <Card title="Streaming Support" icon="rocket">
+    Performant highlighting of streamed code with optional throttling.
+  </Card>
+  <Card title="Line Numbers" icon="list-format">
+    Optional CSS-based line numbers with customizable styling.
+  </Card>
+</CardGrid>
+
+## Quick Example
+
+```tsx
+import ShikiHighlighter from "react-shiki";
+
+function CodeBlock() {
+  return (
+    <ShikiHighlighter language="jsx" theme="ayu-dark">
+      {`const greeting = "Hello, World!";`}
+    </ShikiHighlighter>
+  );
+}
+```
