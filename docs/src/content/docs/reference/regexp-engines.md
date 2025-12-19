@@ -22,7 +22,7 @@ const engine = createOnigurumaEngine(import('shiki/wasm'));
 | **Compatibility** | Maximum (all TextMate grammars) |
 | **Bundle Size** | Larger (~1MB WASM) |
 | **Startup Time** | Slower (WASM initialization) |
-| **Use Case** | Server-side, complex grammars |
+| **Use Case** | Complex grammars requiring maximum compatibility |
 
 ### JavaScript RegExp
 
@@ -129,16 +129,9 @@ This allows the engine to gracefully handle grammars that use unsupported Onigur
 
 | Engine | Size Impact | Startup | Compatibility | Recommended For |
 |--------|-------------|---------|---------------|-----------------|
-| Oniguruma | +1MB WASM | Slower | Maximum | Server, exotic languages |
+| Oniguruma | +1MB WASM | Slower | Maximum | Exotic languages |
 | JavaScript | Minimal | Fast | Most languages | Client-side |
 | JavaScript Raw | Smallest | Fastest | Pre-compiled only | Known languages |
-
-## Recommendations
-
-1. **Client-side highlighting**: Use `createJavaScriptRegexEngine()`
-2. **Server-side rendering**: Use `createOnigurumaEngine()` for maximum compatibility
-3. **Known languages**: Consider `createJavaScriptRawEngine()` for best performance
-4. **Exotic/complex grammars**: Use Oniguruma if JavaScript engine has issues
 
 ## Further Reading
 

@@ -114,9 +114,3 @@ See the [RegExp Engines](/reference/regexp-engines/) reference for more details.
 | `react-shiki/web` | ~3.8MB | ~707KB | Web languages | None |
 | `react-shiki/core` | ~12KB | ~12KB | Custom | Required |
 
-## Recommendations
-
-- **Prototyping or internal tools**: Use the full bundle for convenience
-- **Web applications**: Use the web bundle for a good balance
-- **Production apps**: Consider the core bundle with only needed languages
-- **Static sites**: Core bundle with build-time highlighting setup

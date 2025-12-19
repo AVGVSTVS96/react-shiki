@@ -48,7 +48,7 @@ const highlighted = useShikiHighlighter(code, "typescript", "github-dark");
 
 ### HTML String Output
 
-For 15-45% faster performance, use HTML string output:
+For better performance, use HTML string output:
 
 ```tsx
 // Hook (returns HTML string)
@@ -68,15 +68,6 @@ const highlightedHtml = useShikiHighlighter(code, "typescript", "github-dark", {
   {code}
 </ShikiHighlighter>
 ```
-
-**Pros:**
-- 15-45% faster rendering
-- Lower memory usage
-- Better for large code blocks
-
-**Cons:**
-- Uses `dangerouslySetInnerHTML`
-- Only use with trusted content
 
 :::caution
 Only use HTML output when you trust the code source. For user-submitted code, use the default React output.
@@ -150,27 +141,3 @@ engine: createOnigurumaEngine(import('shiki/wasm'))
 
 For client-side highlighting, the JavaScript engine is recommended.
 
-## Memoization
-
-If your code prop doesn't change often, memoize the component:
-
-```tsx
-const MemoizedHighlighter = React.memo(ShikiHighlighter);
-
-function App() {
-  return (
-    <MemoizedHighlighter language="typescript" theme="github-dark">
-      {code}
-    </MemoizedHighlighter>
-  );
-}
-```
-
-## Best Practices Summary
-
-1. **Use throttling** for real-time/streaming scenarios
-2. **Choose HTML output** for trusted content and large code blocks
-3. **Use the web bundle** for web applications
-4. **Use the core bundle** for production with known languages
-5. **Prefer JavaScript engine** for client-side highlighting
-6. **Memoize components** when code doesn't change frequently

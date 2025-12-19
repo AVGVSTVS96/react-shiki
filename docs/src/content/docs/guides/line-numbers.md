@@ -96,13 +96,3 @@ Line numbers are styled using CSS variables. Customize them in your CSS or inlin
 </ShikiHighlighter>
 ```
 
-## CSS Implementation Details
-
-Line numbers use CSS counters, making them:
-- Non-selectable (won't be copied with code)
-- Performant (no extra DOM elements)
-- Easily customizable via CSS
-
-The implementation adds:
-- `.has-line-numbers` class to the container `<code>` element
-- `.line-numbers` class to each line `<span>`
