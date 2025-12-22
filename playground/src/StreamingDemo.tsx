@@ -109,9 +109,7 @@ export function StreamingDemo() {
     }
   }, [speed, playbackState, streamCode]);
 
-  const isPlaying = playbackState === 'playing';
   const canPlay = playbackState !== 'playing';
-  const canPause = playbackState === 'playing';
   const canReset = playbackState !== 'idle';
 
   return (
