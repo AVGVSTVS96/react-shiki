@@ -32,7 +32,10 @@ import type {
 
 import { throttleHighlighting, useStableOptions } from './utils';
 import { resolveLanguage, resolveTheme } from './resolvers';
-import { lineNumbersTransformer } from './transformers';
+import {
+  lineNumbersTransformer,
+  lineHighlightTransformer,
+} from './transformers';
 
 const DEFAULT_THEMES: Themes = {
   light: 'github-light',
@@ -95,6 +98,7 @@ export const useShikiHighlighter = (
       cssVariablePrefix,
       showLineNumbers,
       startingLineNumber,
+      highlightLineNumbers,
       ...restOptions
     } = stableOpts;
 
@@ -111,6 +115,11 @@ export const useShikiHighlighter = (
     const transformers = restOptions.transformers || [];
     if (showLineNumbers) {
       transformers.push(lineNumbersTransformer(startingLineNumber));
+    }
+    if (highlightLineNumbers && highlightLineNumbers.length > 0) {
+      transformers.push(
+        lineHighlightTransformer(highlightLineNumbers, startingLineNumber)
+      );
     }
 
     return {

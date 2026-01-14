@@ -1,6 +1,41 @@
 import type { ShikiTransformer } from 'shiki/core';
 
 /**
+ * Creates a transformer that highlights specified lines.
+ * Adds the `highlighted-line` class to lines that should be highlighted,
+ * and `has-line-highlights` class to the code block container.
+ *
+ * The highlighted lines can be styled using CSS variables:
+ * - `--line-highlight-background`: Background color for highlighted lines
+ * - `--line-highlight-border-color`: Left border color
+ * - `--line-highlight-border-width`: Left border width
+ *
+ * @param highlightLines - Array of line numbers to highlight (1-indexed)
+ * @param startLine - The starting line number for offset calculation (defaults to 1)
+ */
+export function lineHighlightTransformer(
+  highlightLines: number[],
+  startLine = 1
+): ShikiTransformer {
+  const highlightSet = new Set(highlightLines);
+  let currentLine = startLine;
+
+  return {
+    name: 'react-shiki:line-highlight',
+    code(node) {
+      this.addClassToHast(node, 'has-line-highlights');
+    },
+    line(node) {
+      if (highlightSet.has(currentLine)) {
+        this.addClassToHast(node, 'highlighted-line');
+      }
+      currentLine++;
+      return node;
+    },
+  };
+}
+
+/**
  * Creates a transformer that enables line numbers display
  * @param startLine - The starting line number (defaults to 1)
  */

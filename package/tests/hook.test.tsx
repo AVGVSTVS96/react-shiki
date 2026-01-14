@@ -16,6 +16,7 @@ interface TestComponentProps {
   langAlias?: Record<string, string>;
   showLineNumbers?: boolean;
   startingLineNumber?: number;
+  highlightLineNumbers?: number[];
   outputFormat?: 'react' | 'html';
   defaultColor?: string;
   cssVariablePrefix?: string;
@@ -249,6 +250,114 @@ describe('useShikiHighlighter Hook', () => {
           '[style*="--line-start"]'
         );
         expect(elementsWithStyle.length).toBe(0);
+      });
+    });
+  });
+
+  describe('Line Highlighting', () => {
+    const code = `function test() {
+  return 'hello';
+}
+console.log(test());`;
+
+    test('does not add highlight classes by default', async () => {
+      const { getByTestId } = renderComponent({
+        code,
+        language: 'javascript',
+      });
+
+      await waitFor(() => {
+        const container = getByTestId('highlighted');
+        const codeElement = container.querySelector('code');
+        expect(codeElement).not.toHaveClass('has-line-highlights');
+
+        const highlightedLines = container.querySelectorAll(
+          '.highlighted-line'
+        );
+        expect(highlightedLines).toHaveLength(0);
+      });
+    });
+
+    test('adds highlighted-line class to specified lines', async () => {
+      const { getByTestId } = renderComponent({
+        code,
+        language: 'javascript',
+        highlightLineNumbers: [1, 3],
+      });
+
+      await waitFor(() => {
+        const container = getByTestId('highlighted');
+        const codeElement = container.querySelector('code');
+        expect(codeElement).toHaveClass('has-line-highlights');
+
+        const highlightedLines = container.querySelectorAll(
+          '.highlighted-line'
+        );
+        expect(highlightedLines).toHaveLength(2);
+      });
+    });
+
+    test('does not add highlight classes for empty array', async () => {
+      const { getByTestId } = renderComponent({
+        code,
+        language: 'javascript',
+        highlightLineNumbers: [],
+      });
+
+      await waitFor(() => {
+        const container = getByTestId('highlighted');
+        const codeElement = container.querySelector('code');
+        expect(codeElement).not.toHaveClass('has-line-highlights');
+
+        const highlightedLines = container.querySelectorAll(
+          '.highlighted-line'
+        );
+        expect(highlightedLines).toHaveLength(0);
+      });
+    });
+
+    test('works with line numbers enabled', async () => {
+      const { getByTestId } = renderComponent({
+        code,
+        language: 'javascript',
+        showLineNumbers: true,
+        highlightLineNumbers: [2, 4],
+      });
+
+      await waitFor(() => {
+        const container = getByTestId('highlighted');
+        const codeElement = container.querySelector('code');
+        expect(codeElement).toHaveClass('has-line-numbers');
+        expect(codeElement).toHaveClass('has-line-highlights');
+
+        const highlightedLines = container.querySelectorAll(
+          '.highlighted-line'
+        );
+        expect(highlightedLines).toHaveLength(2);
+      });
+    });
+
+    test('respects starting line number for highlighting', async () => {
+      const { getByTestId } = renderComponent({
+        code,
+        language: 'javascript',
+        showLineNumbers: true,
+        startingLineNumber: 10,
+        highlightLineNumbers: [10, 12], // Should highlight 1st and 3rd actual lines
+      });
+
+      await waitFor(() => {
+        const container = getByTestId('highlighted');
+        const highlightedLines = container.querySelectorAll(
+          '.highlighted-line'
+        );
+        expect(highlightedLines).toHaveLength(2);
+
+        // Check that the starting line CSS variable is set
+        const elementsWithStyle = container.querySelectorAll(
+          '[style*="--line-start"]'
+        );
+        expect(elementsWithStyle.length).toBeGreaterThan(0);
       });
     });
   });
