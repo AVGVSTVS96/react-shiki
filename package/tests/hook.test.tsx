@@ -362,6 +362,70 @@ console.log(test());`;
     });
   });
 
+  describe('Notation-based Highlighting', () => {
+    test('works with transformerNotationHighlight from @shikijs/transformers', async () => {
+      const { transformerNotationHighlight } = await import(
+        '@shikijs/transformers'
+      );
+
+      const codeWithNotation = `const x = 1;
+const y = 2; // [!code highlight]
+const z = 3;`;
+
+      const { getByTestId } = renderComponent({
+        code: codeWithNotation,
+        language: 'javascript',
+        transformers: [transformerNotationHighlight()],
+      });
+
+      await waitFor(() => {
+        const container = getByTestId('highlighted');
+        // transformerNotationHighlight adds 'has-highlighted' to <pre>
+        const preElement = container.querySelector('pre');
+        expect(preElement).toHaveClass('has-highlighted');
+
+        const highlightedLines =
+          container.querySelectorAll('.highlighted');
+        expect(highlightedLines).toHaveLength(1);
+
+        // The notation comment should be removed from output
+        expect(container.textContent).not.toContain('[!code highlight]');
+      });
+    });
+
+    test('can combine prop-based and notation-based highlighting', async () => {
+      const { transformerNotationHighlight } = await import(
+        '@shikijs/transformers'
+      );
+
+      const codeWithNotation = `const a = 1;
+const b = 2; // [!code highlight]
+const c = 3;
+const d = 4;`;
+
+      const { getByTestId } = renderComponent({
+        code: codeWithNotation,
+        language: 'javascript',
+        highlightLineNumbers: [1], // Highlight first line via prop
+        transformers: [transformerNotationHighlight()], // Highlight second line via notation
+      });
+
+      await waitFor(() => {
+        const container = getByTestId('highlighted');
+
+        // Should have both classes
+        const propHighlighted = container.querySelectorAll(
+          '.highlighted-line'
+        );
+        const notationHighlighted =
+          container.querySelectorAll('.highlighted');
+
+        expect(propHighlighted).toHaveLength(1);
+        expect(notationHighlighted).toHaveLength(1);
+      });
+    });
+  });
+
   describe('Multi-theme Support', () => {
     const code = 'console.log("test");';
     const themes = { light: 'github-light', dark: 'github-dark' };

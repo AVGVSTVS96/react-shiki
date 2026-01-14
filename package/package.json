@@ -77,6 +77,7 @@
     }
   },
   "dependencies": {
+    "@shikijs/transformers": "^3.21.0",
     "clsx": "^2.1.1",
     "dequal": "^2.0.3",
     "hast-util-to-jsx-runtime": "^2.3.6",

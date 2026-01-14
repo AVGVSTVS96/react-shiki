@@ -54,13 +54,19 @@
   --line-numbers-opacity: 1;
 }
 
-.has-line-highlights {
+/* Line highlight CSS variables - works with both:
+ * - react-shiki's highlightLineNumbers prop (.has-line-highlights, .highlighted-line)
+ * - @shikijs/transformers notation (.has-highlighted, .highlighted)
+ */
+.has-line-highlights,
+.has-highlighted {
   --line-highlight-background: transparent;
   --line-highlight-border-color: transparent;
   --line-highlight-border-width: 0;
 }
 
-.highlighted-line {
+.highlighted-line,
+.highlighted {
   background: var(--line-highlight-background);
   border-left: var(--line-highlight-border-width) solid
     var(--line-highlight-border-color);
