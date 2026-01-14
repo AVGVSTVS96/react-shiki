@@ -54,13 +54,13 @@
   --line-numbers-opacity: 1;
 }
 
-.has-line-highlights {
+.has-highlighted {
   --line-highlight-background: transparent;
   --line-highlight-border-color: transparent;
   --line-highlight-border-width: 0;
 }
 
-.highlighted-line {
+.highlighted {
   background: var(--line-highlight-background);
   border-left: var(--line-highlight-border-width) solid
     var(--line-highlight-border-color);

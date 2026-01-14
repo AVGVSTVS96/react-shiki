@@ -125,22 +125,11 @@ interface ReactShikiOptions {
 
   /**
    * Array of line numbers to highlight.
-   * Highlighted lines receive the `highlighted-line` class and can be styled
-   * using CSS variables:
-   * - `--line-highlight-background`: Background color for highlighted lines
-   * - `--line-highlight-border-color`: Left border color
-   * - `--line-highlight-border-width`: Left border width
-   *
-   * @example
-   * ```tsx
-   * <ShikiHighlighter
-   *   highlightLineNumbers={[2, 5, 6, 7]}
-   *   language="typescript"
-   *   theme="github-dark"
-   * >
-   *   {code}
-   * </ShikiHighlighter>
-   * ```
+   * Uses Shiki's default classes (`highlighted` on lines, `has-highlighted` on container).
+   * Style using CSS variables:
+   * - `--line-highlight-background`
+   * - `--line-highlight-border-color`
+   * - `--line-highlight-border-width`
    */
   highlightLineNumbers?: number[];
 }

@@ -268,17 +268,16 @@ console.log(test());`;
 
       await waitFor(() => {
         const container = getByTestId('highlighted');
-        const codeElement = container.querySelector('code');
-        expect(codeElement).not.toHaveClass('has-line-highlights');
+        const preElement = container.querySelector('pre');
+        expect(preElement).not.toHaveClass('has-highlighted');
 
-        const highlightedLines = container.querySelectorAll(
-          '.highlighted-line'
-        );
+        const highlightedLines =
+          container.querySelectorAll('.highlighted');
         expect(highlightedLines).toHaveLength(0);
       });
     });
 
-    test('adds highlighted-line class to specified lines', async () => {
+    test('adds highlighted class to specified lines', async () => {
       const { getByTestId } = renderComponent({
         code,
         language: 'javascript',
@@ -287,12 +286,11 @@ console.log(test());`;
 
       await waitFor(() => {
         const container = getByTestId('highlighted');
-        const codeElement = container.querySelector('code');
-        expect(codeElement).toHaveClass('has-line-highlights');
+        const preElement = container.querySelector('pre');
+        expect(preElement).toHaveClass('has-highlighted');
 
-        const highlightedLines = container.querySelectorAll(
-          '.highlighted-line'
-        );
+        const highlightedLines =
+          container.querySelectorAll('.highlighted');
         expect(highlightedLines).toHaveLength(2);
       });
     });
@@ -306,12 +304,11 @@ console.log(test());`;
 
       await waitFor(() => {
         const container = getByTestId('highlighted');
-        const codeElement = container.querySelector('code');
-        expect(codeElement).not.toHaveClass('has-line-highlights');
+        const preElement = container.querySelector('pre');
+        expect(preElement).not.toHaveClass('has-highlighted');
 
-        const highlightedLines = container.querySelectorAll(
-          '.highlighted-line'
-        );
+        const highlightedLines =
+          container.querySelectorAll('.highlighted');
         expect(highlightedLines).toHaveLength(0);
       });
     });
@@ -327,12 +324,12 @@ console.log(test());`;
       await waitFor(() => {
         const container = getByTestId('highlighted');
         const codeElement = container.querySelector('code');
+        const preElement = container.querySelector('pre');
         expect(codeElement).toHaveClass('has-line-numbers');
-        expect(codeElement).toHaveClass('has-line-highlights');
+        expect(preElement).toHaveClass('has-highlighted');
 
-        const highlightedLines = container.querySelectorAll(
-          '.highlighted-line'
-        );
+        const highlightedLines =
+          container.querySelectorAll('.highlighted');
         expect(highlightedLines).toHaveLength(2);
       });
     });
@@ -348,9 +345,8 @@ console.log(test());`;
 
       await waitFor(() => {
         const container = getByTestId('highlighted');
-        const highlightedLines = container.querySelectorAll(
-          '.highlighted-line'
-        );
+        const highlightedLines =
+          container.querySelectorAll('.highlighted');
         expect(highlightedLines).toHaveLength(2);
 
         // Check that the starting line CSS variable is set
@@ -382,11 +378,10 @@ const z = 3;`;
         const container = getByTestId('highlighted');
         // Uses same classes as highlightLineNumbers prop
         const preElement = container.querySelector('pre');
-        expect(preElement).toHaveClass('has-line-highlights');
+        expect(preElement).toHaveClass('has-highlighted');
 
-        const highlightedLines = container.querySelectorAll(
-          '.highlighted-line'
-        );
+        const highlightedLines =
+          container.querySelectorAll('.highlighted');
         expect(highlightedLines).toHaveLength(1);
 
         // The notation comment should be removed from output
@@ -413,10 +408,9 @@ const d = 4;`;
 
       await waitFor(() => {
         const container = getByTestId('highlighted');
-        // Both use the same .highlighted-line class
-        const highlightedLines = container.querySelectorAll(
-          '.highlighted-line'
-        );
+        // Both use the same .highlighted class
+        const highlightedLines =
+          container.querySelectorAll('.highlighted');
         expect(highlightedLines).toHaveLength(2);
       });
     });

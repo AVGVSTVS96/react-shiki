@@ -1,35 +1,11 @@
 import type { ShikiTransformer } from 'shiki/core';
-import { transformerNotationHighlight as shikiTransformerNotationHighlight } from '@shikijs/transformers';
 
-/**
- * Transformer for notation-based line highlighting using `// [!code highlight]` comments.
- * Pre-configured to use react-shiki's CSS classes and variables.
- *
- * @example
- * ```tsx
- * const code = `const x = 1; // [!code highlight]`;
- *
- * <ShikiHighlighter transformers={[transformerNotationHighlight()]}>
- *   {code}
- * </ShikiHighlighter>
- * ```
- */
-export function transformerNotationHighlight(): ShikiTransformer {
-  return shikiTransformerNotationHighlight({
-    classActiveLine: 'highlighted-line',
-    classActivePre: 'has-line-highlights',
-  });
-}
+// Re-export Shiki's transformer directly
+export { transformerNotationHighlight } from '@shikijs/transformers';
 
 /**
  * Creates a transformer that highlights specified lines.
- * Adds the `highlighted-line` class to lines that should be highlighted,
- * and `has-line-highlights` class to the code block container.
- *
- * The highlighted lines can be styled using CSS variables:
- * - `--line-highlight-background`: Background color for highlighted lines
- * - `--line-highlight-border-color`: Left border color
- * - `--line-highlight-border-width`: Left border width
+ * Uses Shiki's default classes: `highlighted` on lines, `has-highlighted` on container.
  *
  * @param highlightLines - Array of line numbers to highlight (1-indexed)
  * @param startLine - The starting line number for offset calculation (defaults to 1)
@@ -43,12 +19,12 @@ export function lineHighlightTransformer(
 
   return {
     name: 'react-shiki:line-highlight',
-    code(node) {
-      this.addClassToHast(node, 'has-line-highlights');
+    pre(node) {
+      this.addClassToHast(node, 'has-highlighted');
     },
     line(node) {
       if (highlightSet.has(currentLine)) {
-        this.addClassToHast(node, 'highlighted-line');
+        this.addClassToHast(node, 'highlighted');
       }
       currentLine++;
       return node;
