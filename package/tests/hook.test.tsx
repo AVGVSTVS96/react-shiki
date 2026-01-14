@@ -363,9 +363,9 @@ console.log(test());`;
   });
 
   describe('Notation-based Highlighting', () => {
-    test('works with transformerNotationHighlight from @shikijs/transformers', async () => {
+    test('works with transformerNotationHighlight', async () => {
       const { transformerNotationHighlight } = await import(
-        '@shikijs/transformers'
+        '../src/index'
       );
 
       const codeWithNotation = `const x = 1;
@@ -380,12 +380,13 @@ const z = 3;`;
 
       await waitFor(() => {
         const container = getByTestId('highlighted');
-        // transformerNotationHighlight adds 'has-highlighted' to <pre>
+        // Uses same classes as highlightLineNumbers prop
         const preElement = container.querySelector('pre');
-        expect(preElement).toHaveClass('has-highlighted');
+        expect(preElement).toHaveClass('has-line-highlights');
 
-        const highlightedLines =
-          container.querySelectorAll('.highlighted');
+        const highlightedLines = container.querySelectorAll(
+          '.highlighted-line'
+        );
         expect(highlightedLines).toHaveLength(1);
 
         // The notation comment should be removed from output
@@ -395,7 +396,7 @@ const z = 3;`;
 
     test('can combine prop-based and notation-based highlighting', async () => {
       const { transformerNotationHighlight } = await import(
-        '@shikijs/transformers'
+        '../src/index'
       );
 
       const codeWithNotation = `const a = 1;
@@ -412,16 +413,11 @@ const d = 4;`;
 
       await waitFor(() => {
         const container = getByTestId('highlighted');
-
-        // Should have both classes
-        const propHighlighted = container.querySelectorAll(
+        // Both use the same .highlighted-line class
+        const highlightedLines = container.querySelectorAll(
           '.highlighted-line'
         );
-        const notationHighlighted =
-          container.querySelectorAll('.highlighted');
-
-        expect(propHighlighted).toHaveLength(1);
-        expect(notationHighlighted).toHaveLength(1);
+        expect(highlightedLines).toHaveLength(2);
       });
     });
   });

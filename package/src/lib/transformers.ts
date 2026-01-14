@@ -1,4 +1,25 @@
 import type { ShikiTransformer } from 'shiki/core';
+import { transformerNotationHighlight as shikiTransformerNotationHighlight } from '@shikijs/transformers';
+
+/**
+ * Transformer for notation-based line highlighting using `// [!code highlight]` comments.
+ * Pre-configured to use react-shiki's CSS classes and variables.
+ *
+ * @example
+ * ```tsx
+ * const code = `const x = 1; // [!code highlight]`;
+ *
+ * <ShikiHighlighter transformers={[transformerNotationHighlight()]}>
+ *   {code}
+ * </ShikiHighlighter>
+ * ```
+ */
+export function transformerNotationHighlight(): ShikiTransformer {
+  return shikiTransformerNotationHighlight({
+    classActiveLine: 'highlighted-line',
+    classActivePre: 'has-line-highlights',
+  });
+}
 
 /**
  * Creates a transformer that highlights specified lines.

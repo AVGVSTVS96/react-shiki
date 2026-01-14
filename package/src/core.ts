@@ -27,24 +27,7 @@ export {
   createJavaScriptRawEngine,
 } from 'shiki/engine/javascript';
 
-// Re-export transformers from @shikijs/transformers for convenience
-export {
-  transformerNotationHighlight,
-  transformerNotationDiff,
-  transformerNotationFocus,
-  transformerNotationErrorLevel,
-  transformerMetaHighlight,
-  transformerMetaWordHighlight,
-} from '@shikijs/transformers';
-
-export type {
-  TransformerNotationHighlightOptions,
-  TransformerNotationDiffOptions,
-  TransformerNotationFocusOptions,
-  TransformerNotationErrorLevelOptions,
-  TransformerMetaHighlightOptions,
-  TransformerMetaWordHighlightOptions,
-} from '@shikijs/transformers';
+export { transformerNotationHighlight } from './lib/transformers';
 
 /**
  * Highlight code with shiki (core bundle)
