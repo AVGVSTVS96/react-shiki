@@ -30,7 +30,8 @@ type Element = HastElement;
  */
 type Language =
   | LanguageRegistration
-  | StringLiteralUnion<BundledLanguage | SpecialLanguage>
+  | StringLiteralUnion<BundledLanguage>
+  | SpecialLanguage
   | undefined;
 
 /**
