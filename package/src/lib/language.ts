@@ -1,6 +1,9 @@
 import type { Language } from './types';
 import { isSpecialLang } from 'shiki/core';
-import type { LanguageRegistration } from 'shiki';
+import type {
+  DynamicImportLanguageRegistration,
+  LanguageRegistration,
+} from 'shiki';
 
 export const FALLBACK_LANGUAGE = 'plaintext';
 
@@ -17,9 +20,9 @@ type LanguageResult = {
  * Used in factories to check if language is supported.
  * Objects are validated as grammar registrations (name + scopeName).
  */
-export const isLoadableLanguage = (
+export const isLoadableLanguage = <T extends string>(
   lang: Language,
-  bundledLanguages: Record<string, unknown>
+  bundledLanguages: Record<T, DynamicImportLanguageRegistration>
 ): lang is NonNullable<Language> => {
   if (lang == null) return false;
   if (typeof lang === 'string') return lang in bundledLanguages;
