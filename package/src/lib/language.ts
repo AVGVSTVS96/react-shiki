@@ -12,7 +12,6 @@ export const FALLBACK_LANGUAGE = 'plaintext';
  */
 type LanguageResult = {
   languageId: string;
-  displayLanguageId: string | null;
   langsToLoad: Language;
 };
 
@@ -44,13 +43,12 @@ export const resolveLoadedLanguage = (
     : FALLBACK_LANGUAGE;
 
 /**
- * Resolves the language input to standardized IDs and objects for Shiki and UI display
+ * Resolves the language input to standardized IDs and objects for Shiki
  * @param lang The language input from props
  * @param customLanguages An array of custom textmate grammar objects or a single grammar object
  * @returns A LanguageResult object containing:
  *   - languageId: The resolved language ID
- *   - displayLanguageId: The display language ID
- *   - langToLoad: The language object or string id to load
+ *   - langsToLoad: The language object or string id to load
  */
 export const resolveLanguage = (
   lang: Language,
@@ -67,7 +65,6 @@ export const resolveLanguage = (
   if (lang == null || (typeof lang === 'string' && !lang.trim())) {
     return {
       languageId: FALLBACK_LANGUAGE,
-      displayLanguageId: FALLBACK_LANGUAGE,
       langsToLoad: undefined,
     };
   }
@@ -76,7 +73,6 @@ export const resolveLanguage = (
   if (typeof lang === 'object') {
     return {
       languageId: lang.name,
-      displayLanguageId: lang.name || null,
       langsToLoad: lang,
     };
   }
@@ -99,7 +95,6 @@ export const resolveLanguage = (
   if (customMatch) {
     return {
       languageId: customMatch.name || lang,
-      displayLanguageId: lang,
       langsToLoad: customMatch,
     };
   }
@@ -108,7 +103,6 @@ export const resolveLanguage = (
   if (langAliases?.[lang]) {
     return {
       languageId: langAliases[lang],
-      displayLanguageId: lang,
       langsToLoad: langAliases[lang],
     };
   }
@@ -116,7 +110,6 @@ export const resolveLanguage = (
   // For any other string, pass it through to the factory
   return {
     languageId: lang,
-    displayLanguageId: lang,
     langsToLoad: lang,
   };
 };
