@@ -1,5 +1,10 @@
 import { describe, expect, test } from 'vitest';
-import { FALLBACK_LANGUAGE, isLoadableLanguage, resolveLanguage, resolveLoadedLanguage } from '../src/lib/language';
+import {
+  FALLBACK_LANGUAGE,
+  isLoadableLanguage,
+  resolveLanguage,
+  resolveLoadedLanguage,
+} from '../src/lib/language';
 
 const bundledLanguages = {
   javascript: {},
@@ -13,7 +18,9 @@ describe('isLoadableLanguage', () => {
   });
 
   test('returns false for unknown language strings', () => {
-    expect(isLoadableLanguage('unknownlang', bundledLanguages)).toBe(false);
+    expect(isLoadableLanguage('unknownlang', bundledLanguages)).toBe(
+      false
+    );
   });
 
   test('returns true for language registrations with required fields', () => {
@@ -50,9 +57,9 @@ describe('isLoadableLanguage', () => {
 
 describe('resolveLoadedLanguage', () => {
   test('returns loaded language when available', () => {
-    expect(resolveLoadedLanguage('javascript', ['javascript', 'typescript'])).toBe(
-      'javascript'
-    );
+    expect(
+      resolveLoadedLanguage('javascript', ['javascript', 'typescript'])
+    ).toBe('javascript');
   });
 
   test('falls back to plaintext when language is not loaded', () => {
@@ -97,9 +104,7 @@ describe('resolveLanguage', () => {
   });
 
   test('resolves custom language by name', () => {
-    expect(
-      resolveLanguage('my-language', customLanguage)
-    ).toEqual({
+    expect(resolveLanguage('my-language', customLanguage)).toEqual({
       languageId: 'my-language',
       langsToLoad: customLanguage,
     });
@@ -118,25 +123,28 @@ describe('resolveLanguage', () => {
   });
 
   test('resolves custom language by alias and file type', () => {
-    expect(resolveLanguage('my-lang', { ...customLanguage, aliases: ['My-Lang'] })).toEqual(
-      {
-        languageId: 'my-language',
-        langsToLoad: {
-          ...customLanguage,
-          aliases: ['My-Lang'],
-        },
-      }
-    );
+    expect(
+      resolveLanguage('my-lang', {
+        ...customLanguage,
+        aliases: ['My-Lang'],
+      })
+    ).toEqual({
+      languageId: 'my-language',
+      langsToLoad: {
+        ...customLanguage,
+        aliases: ['My-Lang'],
+      },
+    });
 
-    expect(resolveLanguage('ml', { ...customLanguage, fileTypes: ['ML'] })).toEqual(
-      {
-        languageId: 'my-language',
-        langsToLoad: {
-          ...customLanguage,
-          fileTypes: ['ML'],
-        },
-      }
-    );
+    expect(
+      resolveLanguage('ml', { ...customLanguage, fileTypes: ['ML'] })
+    ).toEqual({
+      languageId: 'my-language',
+      langsToLoad: {
+        ...customLanguage,
+        fileTypes: ['ML'],
+      },
+    });
   });
 
   test('resolves alias map before passing through', () => {
@@ -159,13 +167,9 @@ describe('resolveLanguage', () => {
 
   test('gives custom language precedence over alias map', () => {
     expect(
-      resolveLanguage(
-        'my-language',
-        customLanguage,
-        {
-          'my-language': 'typescript',
-        }
-      )
+      resolveLanguage('my-language', customLanguage, {
+        'my-language': 'typescript',
+      })
     ).toEqual({
       languageId: 'my-language',
       langsToLoad: customLanguage,
