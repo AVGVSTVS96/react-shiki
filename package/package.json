@@ -75,8 +75,8 @@
     "clsx": "^2.1.1",
     "dequal": "^2.0.3",
     "hast-util-to-jsx-runtime": "^2.3.6",
-    "shiki": "^3.11.0",
-    "unist-util-visit": "^5.0.0"
+    "shiki": "^3.23.0",
+    "unist-util-visit": "^5.1.0"
   },
   "devDependencies": {
     "@testing-library/jest-dom": "^6.8.0",
