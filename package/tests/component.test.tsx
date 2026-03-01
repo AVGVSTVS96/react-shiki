@@ -86,6 +86,30 @@ describe('ShikiHighlighter Component', () => {
       });
     });
 
+    test('keeps original alias string in label while highlighting alias target', async () => {
+      const { container } = render(
+        <ShikiHighlighter
+          language="golang"
+          theme="github-light"
+          langAlias={{ golang: 'go' }}
+        >
+          package main
+        </ShikiHighlighter>
+      );
+
+      await waitFor(() => {
+        const outerContainer = getContainer(container);
+        const langLabel = getLanguageLabel(outerContainer);
+        const highlightedKeyword = Array.from(
+          outerContainer?.querySelectorAll('span') || []
+        ).find((span) => span.textContent === 'package');
+
+        expect(langLabel).toBeInTheDocument();
+        expect(langLabel?.textContent).toBe('golang');
+        expect(highlightedKeyword).toHaveStyle('color: #D73A49');
+      });
+    });
+
     test('shows original language in label for unknown languages', async () => {
       const { container } = render(
         <ShikiHighlighter language="unknownlang" theme="github-light">
@@ -100,6 +124,26 @@ describe('ShikiHighlighter Component', () => {
         // Verify language label shows original language
         expect(langLabel).toBeInTheDocument();
         expect(langLabel?.textContent).toBe('unknownlang');
+      });
+    });
+
+    test('uses language object name for label rendering', async () => {
+      const customLanguage = {
+        name: 'my-language',
+        scopeName: 'source.my-language',
+      };
+      const { container } = render(
+        <ShikiHighlighter language={customLanguage} theme="github-light">
+          {codeSample}
+        </ShikiHighlighter>
+      );
+
+      await waitFor(() => {
+        const outerContainer = getContainer(container);
+        const langLabel = getLanguageLabel(outerContainer);
+
+        expect(langLabel).toBeInTheDocument();
+        expect(langLabel?.textContent).toBe('my-language');
       });
     });
 

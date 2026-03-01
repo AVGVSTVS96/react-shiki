@@ -103,6 +103,30 @@ describe('useShikiHighlighter Hook', () => {
         expect(lineSpan?.querySelectorAll('span[style]').length).toBe(0);
       });
     });
+
+    test('falls back to plaintext for malformed custom language objects', async () => {
+      const code = 'function test() { return true; }';
+      const malformedLanguage = { name: 'broken-lang' } as any;
+      const { getByTestId } = renderComponent({
+        code,
+        language: malformedLanguage,
+      });
+
+      await waitFor(() => {
+        const container = getByTestId('highlighted');
+        const preElement = container.querySelector(
+          'pre.shiki.github-light'
+        );
+        const codeElement = preElement?.querySelector('code');
+        const lineSpan = codeElement?.querySelector('span.line');
+
+        expect(preElement).toBeInTheDocument();
+        expect(codeElement).toBeInTheDocument();
+        expect(lineSpan).toBeInTheDocument();
+        expect(preElement?.textContent).toBe(code);
+        expect(lineSpan?.querySelectorAll('span[style]').length).toBe(0);
+      });
+    });
   });
 
   describe('Language Aliases', () => {
