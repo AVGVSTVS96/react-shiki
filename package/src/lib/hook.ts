@@ -31,7 +31,11 @@ import type {
 } from './types';
 
 import { throttleHighlighting, useStableOptions } from './utils';
-import { resolveLanguage, resolveTheme } from './resolvers';
+import {
+  resolveLanguage,
+  resolveTheme,
+  resolveLoadedLanguage,
+} from './resolvers';
 import { lineNumbersTransformer } from './transformers';
 
 const DEFAULT_THEMES: Themes = {
@@ -135,10 +139,10 @@ export const useShikiHighlighter = (
             stableOpts.engine
           );
 
-      const loadedLanguages = highlighter.getLoadedLanguages();
-      const langToUse = loadedLanguages.includes(languageId)
-        ? languageId
-        : 'plaintext';
+      const langToUse = resolveLoadedLanguage(
+        languageId,
+        highlighter.getLoadedLanguages()
+      );
       const finalOptions = { ...shikiOptions, lang: langToUse };
 
       if (isMounted) {

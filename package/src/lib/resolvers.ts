@@ -1,6 +1,9 @@
 import type { Language, Theme, Themes } from './types';
 import type { ThemeRegistrationAny } from 'shiki/core';
+import { isSpecialLang } from 'shiki/core';
 import type { LanguageRegistration } from './extended-types';
+
+export const FALLBACK_LANGUAGE = 'plaintext';
 
 /**
  * Resolved languages and metadata
@@ -34,8 +37,8 @@ export const resolveLanguage = (
   // Language is null or empty string
   if (lang == null || (typeof lang === 'string' && !lang.trim())) {
     return {
-      languageId: 'plaintext',
-      displayLanguageId: 'plaintext',
+      languageId: FALLBACK_LANGUAGE,
+      displayLanguageId: FALLBACK_LANGUAGE,
       langsToLoad: undefined,
     };
   }
@@ -81,14 +84,27 @@ export const resolveLanguage = (
     };
   }
 
-  // For any other string, pass it through,
-  // fallback is handled in highlighter factories
+  // For any other string, pass it through to the factory
   return {
     languageId: lang,
     displayLanguageId: lang,
     langsToLoad: lang,
   };
 };
+
+/**
+ * Resolves the final language to use for highlighting
+ * after the highlighter has been created.
+ * Checks if the language is a special language (always available)
+ * or has been loaded into the highlighter instance.
+ */
+export const resolveLoadedLanguage = (
+  languageId: string,
+  loadedLanguages: string[]
+): string =>
+  isSpecialLang(languageId) || loadedLanguages.includes(languageId)
+    ? languageId
+    : FALLBACK_LANGUAGE;
 
 /**
  * Resolved themes and metadata
