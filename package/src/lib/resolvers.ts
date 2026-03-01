@@ -15,6 +15,33 @@ type LanguageResult = {
 };
 
 /**
+ * Used in factories to check if language is supported.
+ * Objects are validated as grammar registrations (name + scopeName).
+ */
+export const isLoadableLanguage = (
+  lang: Language,
+  bundledLanguages: Record<string, unknown>
+): lang is NonNullable<Language> => {
+  if (lang == null) return false;
+  if (typeof lang === 'string') return lang in bundledLanguages;
+  return (
+    typeof lang.name === 'string' && typeof lang.scopeName === 'string'
+  );
+};
+
+/**
+ * Used in hook to resolve loaded language for highlighting.
+ * Falls back to "plaintext" if not supported.
+ */
+export const resolveLoadedLanguage = (
+  languageId: string,
+  loadedLanguages: string[]
+): string =>
+  isSpecialLang(languageId) || loadedLanguages.includes(languageId)
+    ? languageId
+    : FALLBACK_LANGUAGE;
+
+/**
  * Resolves the language input to standardized IDs and objects for Shiki and UI display
  * @param lang The language input from props
  * @param customLanguages An array of custom textmate grammar objects or a single grammar object
@@ -91,20 +118,6 @@ export const resolveLanguage = (
     langsToLoad: lang,
   };
 };
-
-/**
- * Resolves the final language to use for highlighting
- * after the highlighter has been created.
- * Checks if the language is a special language (always available)
- * or has been loaded into the highlighter instance.
- */
-export const resolveLoadedLanguage = (
-  languageId: string,
-  loadedLanguages: string[]
-): string =>
-  isSpecialLang(languageId) || loadedLanguages.includes(languageId)
-    ? languageId
-    : FALLBACK_LANGUAGE;
 
 /**
  * Resolved themes and metadata

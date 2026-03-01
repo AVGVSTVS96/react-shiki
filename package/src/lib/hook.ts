@@ -20,8 +20,6 @@ import type {
   BundledTheme,
 } from 'shiki';
 
-import type { ShikiLanguageRegistration } from './extended-types';
-
 import type {
   Language,
   Theme,
@@ -59,7 +57,7 @@ export const useShikiHighlighter = (
   themeInput: Theme | Themes,
   options: HighlighterOptions = {},
   highlighterFactory: (
-    langsToLoad: ShikiLanguageRegistration,
+    langsToLoad: Language,
     themesToLoad: Theme[],
     engine?: Awaitable<RegexEngine>
   ) => Promise<Highlighter | HighlighterCore>
@@ -134,7 +132,7 @@ export const useShikiHighlighter = (
       const highlighter = stableOpts.highlighter
         ? stableOpts.highlighter
         : await highlighterFactory(
-            langsToLoad as ShikiLanguageRegistration,
+            langsToLoad,
             themesToLoad,
             stableOpts.engine
           );
