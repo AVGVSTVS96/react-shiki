@@ -20,8 +20,6 @@ import type {
   BundledTheme,
 } from 'shiki';
 
-import type { ShikiLanguageRegistration } from './extended-types';
-
 import type {
   Language,
   Theme,
@@ -31,7 +29,8 @@ import type {
 } from './types';
 
 import { throttleHighlighting, useStableOptions } from './utils';
-import { resolveLanguage, resolveTheme } from './resolvers';
+import { resolveLanguage, resolveLoadedLanguage } from './language';
+import { resolveTheme } from './theme';
 import { lineNumbersTransformer } from './transformers';
 
 const DEFAULT_THEMES: Themes = {
@@ -55,7 +54,7 @@ export const useShikiHighlighter = (
   themeInput: Theme | Themes,
   options: HighlighterOptions = {},
   highlighterFactory: (
-    langsToLoad: ShikiLanguageRegistration,
+    langsToLoad: Language,
     themesToLoad: Theme[],
     engine?: Awaitable<RegexEngine>
   ) => Promise<Highlighter | HighlighterCore>
@@ -130,15 +129,15 @@ export const useShikiHighlighter = (
       const highlighter = stableOpts.highlighter
         ? stableOpts.highlighter
         : await highlighterFactory(
-            langsToLoad as ShikiLanguageRegistration,
+            langsToLoad,
             themesToLoad,
             stableOpts.engine
           );
 
-      const loadedLanguages = highlighter.getLoadedLanguages();
-      const langToUse = loadedLanguages.includes(languageId)
-        ? languageId
-        : 'plaintext';
+      const langToUse = resolveLoadedLanguage(
+        languageId,
+        highlighter.getLoadedLanguages()
+      );
       const finalOptions = { ...shikiOptions, lang: langToUse };
 
       if (isMounted) {

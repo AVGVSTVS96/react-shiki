@@ -9,13 +9,11 @@ import type {
   Highlighter,
   HighlighterCore,
   BundledHighlighterOptions,
-  Awaitable,
-  RegexEngine,
 } from 'shiki';
 
 import type { ReactNode } from 'react';
 
-import type { LanguageRegistration } from './extended-types';
+import type { LanguageRegistration } from 'shiki';
 
 import type { Element as HastElement } from 'hast';
 
@@ -30,7 +28,8 @@ type Element = HastElement;
  */
 type Language =
   | LanguageRegistration
-  | StringLiteralUnion<BundledLanguage | SpecialLanguage>
+  | StringLiteralUnion<BundledLanguage>
+  | SpecialLanguage
   | undefined;
 
 /**

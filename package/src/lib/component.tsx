@@ -1,6 +1,5 @@
 import './styles.css';
 import { clsx } from 'clsx';
-import { resolveLanguage } from './resolvers';
 
 import type {
   HighlighterOptions,
@@ -136,11 +135,10 @@ export const createShikiHighlighterComponent = (
         ...shikiOptions,
       };
 
-      // Use resolveLanguage to get displayLanguageId directly
-      const { displayLanguageId } = resolveLanguage(
-        language,
-        customLanguages
-      );
+      const displayLanguageId =
+        typeof language === 'object'
+          ? language.name || null
+          : language?.trim() || null;
 
       const highlightedCode = useShikiHighlighterImpl(
         code,
