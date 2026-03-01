@@ -1,6 +1,6 @@
 import './styles.css';
 import { clsx } from 'clsx';
-import { resolveLanguage } from './resolvers';
+import { resolveLanguage } from './language';
 
 import type {
   HighlighterOptions,

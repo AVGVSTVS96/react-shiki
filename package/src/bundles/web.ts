@@ -7,7 +7,7 @@ import {
 } from 'shiki/bundle/web';
 import { createOnigurumaEngine } from 'shiki/engine/oniguruma';
 import type { Language, Theme } from '../lib/types';
-import { isLoadableLanguage } from '../lib/resolvers';
+import { isLoadableLanguage } from '../lib/language';
 
 /**
  * Creates a highlighter using the web Shiki bundle with web-focused languages.

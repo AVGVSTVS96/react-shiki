@@ -29,11 +29,8 @@ import type {
 } from './types';
 
 import { throttleHighlighting, useStableOptions } from './utils';
-import {
-  resolveLanguage,
-  resolveTheme,
-  resolveLoadedLanguage,
-} from './resolvers';
+import { resolveLanguage, resolveLoadedLanguage } from './language';
+import { resolveTheme } from './theme';
 import { lineNumbersTransformer } from './transformers';
 
 const DEFAULT_THEMES: Themes = {
