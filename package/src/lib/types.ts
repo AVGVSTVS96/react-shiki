@@ -9,13 +9,11 @@ import type {
   Highlighter,
   HighlighterCore,
   BundledHighlighterOptions,
-  Awaitable,
-  RegexEngine,
 } from 'shiki';
 
 import type { ReactNode } from 'react';
 
-import type { LanguageRegistration } from './extended-types';
+import type { LanguageRegistration } from 'shiki';
 
 import type { Element as HastElement } from 'hast';
 

@@ -6,7 +6,6 @@ import {
   type RegexEngine,
 } from 'shiki/bundle/web';
 import { createOnigurumaEngine } from 'shiki/engine/oniguruma';
-import type { ShikiLanguageRegistration } from '../lib/extended-types';
 import type { Language, Theme } from '../lib/types';
 import { isLoadableLanguage } from '../lib/resolvers';
 
@@ -25,7 +24,7 @@ export async function createWebHighlighter(
     : [];
 
   return await getSingletonHighlighter({
-    langs: langs as (ShikiLanguageRegistration | string)[],
+    langs,
     themes: themesToLoad,
     engine: engine ?? createOnigurumaEngine(import('shiki/wasm')),
   });

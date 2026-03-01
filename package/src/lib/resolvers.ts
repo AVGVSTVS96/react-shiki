@@ -1,7 +1,7 @@
 import type { Language, Theme, Themes } from './types';
 import type { ThemeRegistrationAny } from 'shiki/core';
 import { isSpecialLang } from 'shiki/core';
-import type { LanguageRegistration } from './extended-types';
+import type { LanguageRegistration } from 'shiki';
 
 export const FALLBACK_LANGUAGE = 'plaintext';
 
