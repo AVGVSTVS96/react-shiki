@@ -25,6 +25,8 @@ export {
   createJavaScriptRawEngine,
 } from 'shiki/engine/javascript';
 
+export type { LanguageRegistration } from 'shiki';
+
 /**
  * Highlight code with shiki (full bundle)
  *
