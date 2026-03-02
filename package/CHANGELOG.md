@@ -1,5 +1,28 @@
 # react-shiki
 
+## 0.9.2
+
+### Patch Changes
+
+- Feat: auto-load embedded languages _[`#127`](https://github.com/AVGVSTVS96/react-shiki/pull/127) [`34a87b2`](https://github.com/avgvstvs96/react-shiki/commit/34a87b2c77b18794f59a97a31f45185b2c9c7ffa) [@AVGVSTVS96](https://github.com/AVGVSTVS96)_
+- Chore: update dependencies _[`#125`](https://github.com/AVGVSTVS96/react-shiki/pull/125) [`b691861`](https://github.com/avgvstvs96/react-shiki/commit/b691861446944712c389d4b1a4020cb38a462a82) [@AVGVSTVS96](https://github.com/AVGVSTVS96)_
+- Deprecate `customLanguages` in favor of `preloadLanguages` for language preloading. _[`#128`](https://github.com/AVGVSTVS96/react-shiki/pull/128) [`121517f`](https://github.com/avgvstvs96/react-shiki/commit/121517fcc1d1f8396c0b5de8d3a5b8121351c494) [@AVGVSTVS96](https://github.com/AVGVSTVS96)_
+
+  `preloadLanguages` supports both bundled language IDs and custom language registrations.
+  This also enables preloading bundled IDs directly (previously preloading focused on custom grammars).
+
+- Refactor: consolidate language resolution and use stricter Shiki type for grammars _[`#123`](https://github.com/AVGVSTVS96/react-shiki/pull/123) [`30024f7`](https://github.com/avgvstvs96/react-shiki/commit/30024f72fbe286b027a23283324a44d05887f888) [@AVGVSTVS96](https://github.com/AVGVSTVS96)_
+
+  - Use stricter Shiki `LanguageRegistration` type for textmate grammars
+  - Re-export `LanguageRegistration` type for convenience
+  - Replace try/catch error handling with proactive language validation
+  - Decouple display label from language resolver
+
+  BREAKING CHANGES:
+
+  - Custom grammars without top-level `'repository'` property need `LanguageRegistration` casting
+  - Component language display no longer shows 'plaintext' for invalid languages
+
 ## 0.9.1
 
 ### Patch Changes
