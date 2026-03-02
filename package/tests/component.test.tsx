@@ -179,7 +179,7 @@ describe('ShikiHighlighter Component', () => {
 
       await waitFor(() => {
         const outerContainer = getContainer(container);
-        expect(outerContainer).toHaveStyle('border: 1px solid red');
+        expect(outerContainer?.style.border).toBe('1px solid red');
       });
     });
 
@@ -205,7 +205,7 @@ describe('ShikiHighlighter Component', () => {
         const langLabel = getLanguageLabel(outerContainer);
 
         // Verify container styling
-        expect(outerContainer).toHaveStyle('border: 1px solid red');
+        expect(outerContainer?.style.border).toBe('1px solid red');
         expect(outerContainer?.className).toContain('custom-code-block');
 
         expect(langLabel).toHaveStyle('color: rgb(0, 0, 255)');
