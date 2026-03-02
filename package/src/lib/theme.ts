@@ -4,11 +4,11 @@ import type { ThemeRegistrationAny } from 'shiki/core';
 /**
  * Resolved themes and metadata
  */
-interface ThemeResult {
+export interface ThemeResult {
   isMultiTheme: boolean;
   themeId: Theme;
-  multiTheme?: Themes | ThemeRegistrationAny | null;
-  singleTheme?: Theme | undefined;
+  multiTheme?: Themes | null;
+  singleTheme?: Theme;
   themesToLoad: Theme[];
 }
 

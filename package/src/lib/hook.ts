@@ -10,15 +10,11 @@ import { jsx, jsxs, Fragment } from 'react/jsx-runtime';
 import { toJsxRuntime } from 'hast-util-to-jsx-runtime';
 
 import type {
-  CodeToHastOptions,
-  CodeOptionsSingleTheme,
-  CodeOptionsMultipleThemes,
   Highlighter,
   HighlighterCore,
   Awaitable,
   LanguageInput,
   RegexEngine,
-  BundledTheme,
 } from 'shiki';
 
 import { guessEmbeddedLanguages } from 'shiki/core';
@@ -34,12 +30,7 @@ import type {
 import { throttleHighlighting, useStableOptions } from './utils';
 import { resolveLanguage, resolveLoadedLanguage } from './language';
 import { resolveTheme } from './theme';
-import { lineNumbersTransformer } from './transformers';
-
-const DEFAULT_THEMES: Themes = {
-  light: 'github-light',
-  dark: 'github-dark',
-};
+import { buildShikiOptions } from './options';
 
 /**
  * Returns detected embedded languages that are available in the current bundle.
@@ -103,46 +94,26 @@ export const useShikiHighlighter = (
     ]
   );
 
-  const { isMultiTheme, themeId, multiTheme, singleTheme, themesToLoad } =
-    useMemo(() => resolveTheme(stableTheme), [stableTheme]);
+  const resolvedTheme = useMemo(
+    () => resolveTheme(stableTheme),
+    [stableTheme]
+  );
+  const { themeId, themesToLoad } = resolvedTheme;
 
   const timeoutControl = useRef<TimeoutState>({
     nextAllowedTime: 0,
     timeoutId: undefined,
   });
 
-  const shikiOptions = useMemo<CodeToHastOptions>(() => {
-    const languageOption = { lang: languageId };
-    const {
-      defaultColor,
-      cssVariablePrefix,
-      showLineNumbers,
-      startingLineNumber,
-      ...restOptions
-    } = stableOpts;
-
-    const themeOptions = isMultiTheme
-      ? ({
-          themes: multiTheme || DEFAULT_THEMES,
-          defaultColor,
-          cssVariablePrefix,
-        } as CodeOptionsMultipleThemes<BundledTheme>)
-      : ({
-          theme: singleTheme || DEFAULT_THEMES.dark,
-        } as CodeOptionsSingleTheme<BundledTheme>);
-
-    const transformers = restOptions.transformers || [];
-    if (showLineNumbers) {
-      transformers.push(lineNumbersTransformer(startingLineNumber));
-    }
-
-    return {
-      ...languageOption,
-      ...themeOptions,
-      ...restOptions,
-      transformers,
-    };
-  }, [languageId, themeId, langRev, themeRev, optsRev]);
+  const shikiOptions = useMemo(
+    () =>
+      buildShikiOptions({
+        languageId,
+        resolvedTheme,
+        options: stableOpts,
+      }),
+    [languageId, themeId, langRev, themeRev, optsRev]
+  );
 
   useEffect(() => {
     let isMounted = true;
