@@ -7,4 +7,3 @@ import tailwind from '@tailwindcss/vite';
 export default defineConfig({
   plugins: [react(), mdx(), tailwind()],
 });
-

@@ -29,7 +29,11 @@ beforeEach(() => {
 
 describe('full bundle factory', () => {
   test('passes bundled languages through as-is', async () => {
-    await createFullHighlighter('javascript', ['github-dark'], 'engine' as any);
+    await createFullHighlighter(
+      'javascript',
+      ['github-dark'],
+      'engine' as any
+    );
 
     expect(getSingletonHighlighterMock).toHaveBeenCalledWith({
       langs: ['javascript'],
@@ -39,7 +43,11 @@ describe('full bundle factory', () => {
   });
 
   test('does not pass unsupported string languages to shiki', async () => {
-    await createFullHighlighter('not-a-language', ['github-dark'], 'engine' as any);
+    await createFullHighlighter(
+      'not-a-language',
+      ['github-dark'],
+      'engine' as any
+    );
 
     expect(getSingletonHighlighterMock).toHaveBeenCalledWith({
       langs: [],
@@ -54,7 +62,11 @@ describe('full bundle factory', () => {
       scopeName: 'source.my-language',
     };
 
-    await createFullHighlighter(customLanguage as any, ['github-dark'], 'engine' as any);
+    await createFullHighlighter(
+      customLanguage as any,
+      ['github-dark'],
+      'engine' as any
+    );
 
     expect(getSingletonHighlighterMock).toHaveBeenCalledWith({
       langs: [customLanguage],
@@ -68,7 +80,11 @@ describe('full bundle factory', () => {
       name: 'broken-language',
     };
 
-    await createFullHighlighter(invalidCustomLanguage as any, ['github-dark'], 'engine' as any);
+    await createFullHighlighter(
+      invalidCustomLanguage as any,
+      ['github-dark'],
+      'engine' as any
+    );
 
     expect(getSingletonHighlighterMock).toHaveBeenCalledWith({
       langs: [],
@@ -90,7 +106,11 @@ describe('web bundle factory', () => {
   });
 
   test('does not pass unsupported string languages to shiki', async () => {
-    await createWebHighlighter('not-a-language', ['github-dark'], 'engine' as any);
+    await createWebHighlighter(
+      'not-a-language',
+      ['github-dark'],
+      'engine' as any
+    );
 
     expect(getSingletonHighlighterMock).toHaveBeenCalledWith({
       langs: [],
