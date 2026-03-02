@@ -4,11 +4,11 @@ import type { ThemeRegistrationAny } from 'shiki/core';
 /**
  * Resolved themes and metadata
  */
-interface ThemeResult {
+export interface ThemeResult {
   isMultiTheme: boolean;
   themeId: Theme;
-  multiTheme?: Themes | ThemeRegistrationAny | null;
-  singleTheme?: Theme | undefined;
+  multiTheme?: Themes | null;
+  singleTheme?: Theme;
   themesToLoad: Theme[];
 }
 
@@ -43,11 +43,9 @@ export function resolveTheme(themeInput: Theme | Themes): ThemeResult {
     !inputIsTextmateTheme &&
     Object.entries(themeInput).some(
       ([key, value]) =>
-        key &&
-        value &&
         key.trim() !== '' &&
-        value !== '' &&
-        (typeof value === 'string' || isTextmateTheme(value))
+        ((typeof value === 'string' && value.trim() !== '') ||
+          isTextmateTheme(value))
     );
 
   if (isMultiThemeConfig) {
