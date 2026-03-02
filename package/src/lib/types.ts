@@ -75,8 +75,8 @@ interface ReactShikiOptions {
   customLanguages?: LanguageRegistration | LanguageRegistration[];
 
   /**
-   * Textmate grammars or language ids to preload for highlighting.
-   * Use this to preload supported languages before runtime language selection.
+   * Preload custom grammars or bundled languages.
+   * Supports custom textmate grammars, replaces deprecated `customLanguages`
    */
   preloadLanguages?: Language | Language[];
 
