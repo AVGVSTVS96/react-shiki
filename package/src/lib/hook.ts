@@ -27,7 +27,7 @@ import type {
   Themes,
 } from './types';
 
-import { throttleHighlighting, useStableOptions } from './utils';
+import { throttleHighlighting, useStableValue } from './utils';
 import { resolveLanguage, resolveLoadedLanguage } from './language';
 import { resolveTheme } from './theme';
 import { buildShikiOptions } from './options';
@@ -74,9 +74,9 @@ export const useShikiHighlighter = (
 
   // Stabilize options, language and theme inputs to prevent unnecessary
   // re-renders or recalculations when object references change
-  const [stableLang, langRev] = useStableOptions(lang);
-  const [stableTheme, themeRev] = useStableOptions(themeInput);
-  const [stableOpts, optsRev] = useStableOptions(options);
+  const stableLang = useStableValue(lang);
+  const stableTheme = useStableValue(themeInput);
+  const stableOpts = useStableValue(options);
 
   const { languageId, langsToLoad } = useMemo(
     () =>
@@ -98,7 +98,7 @@ export const useShikiHighlighter = (
     () => resolveTheme(stableTheme),
     [stableTheme]
   );
-  const { themeId, themesToLoad } = resolvedTheme;
+  const { themesToLoad } = resolvedTheme;
 
   const timeoutControl = useRef<TimeoutState>({
     nextAllowedTime: 0,
@@ -112,7 +112,7 @@ export const useShikiHighlighter = (
         resolvedTheme,
         options: stableOpts,
       }),
-    [languageId, themeId, langRev, themeRev, optsRev]
+    [languageId, resolvedTheme, stableOpts]
   );
 
   useEffect(() => {

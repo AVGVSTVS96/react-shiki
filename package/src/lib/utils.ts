@@ -4,31 +4,17 @@ import { dequal } from 'dequal';
 import type { TimeoutState } from './types';
 
 /**
- * Returns a deep-stable reference and a version counter that only changes when content changes.
- * Includes optimizations for primitive values and reference equality.
+ * Returns a referentially stable version of `value` that only updates when content changes.
+ * Uses reference equality as a fast path and deep comparison to prevent unnecessary updates.
  */
-export const useStableOptions = <T>(value: T) => {
+export const useStableValue = <T>(value: T): T => {
   const ref = useRef(value);
-  const revision = useRef(0);
 
-  // Fast-path for primitive values
-  if (typeof value !== 'object' || value === null) {
-    if (value !== ref.current) {
-      ref.current = value;
-      revision.current += 1;
-    }
-    return [value, revision.current] as const;
+  if (value !== ref.current && !dequal(value, ref.current)) {
+    ref.current = value;
   }
 
-  // Reference equality check before expensive deep comparison
-  if (value !== ref.current) {
-    if (!dequal(value, ref.current)) {
-      ref.current = value;
-      revision.current += 1;
-    }
-  }
-
-  return [ref.current, revision.current] as const;
+  return ref.current;
 };
 
 /**
