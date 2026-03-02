@@ -16,9 +16,12 @@ import type {
   Highlighter,
   HighlighterCore,
   Awaitable,
+  LanguageInput,
   RegexEngine,
   BundledTheme,
 } from 'shiki';
+
+import { guessEmbeddedLanguages } from 'shiki/core';
 
 import type {
   Language,
@@ -36,6 +39,21 @@ import { lineNumbersTransformer } from './transformers';
 const DEFAULT_THEMES: Themes = {
   light: 'github-light',
   dark: 'github-dark',
+};
+
+/**
+ * Returns detected embedded languages that are available in the current bundle.
+ */
+const getEmbeddedLanguages = (
+  code: string,
+  languageId: string,
+  highlighter: Highlighter | HighlighterCore
+): LanguageInput[] => {
+  const bundled: Record<string, LanguageInput> =
+    highlighter.getBundledLanguages();
+  return guessEmbeddedLanguages(code, languageId).flatMap(
+    (language) => bundled[language] ?? []
+  );
 };
 
 /**
@@ -133,6 +151,18 @@ export const useShikiHighlighter = (
             themesToLoad,
             stableOpts.engine
           );
+
+      // Load embedded language grammars (e.g. ```python inside markdown)
+      if (!stableOpts.highlighter) {
+        const embedded = getEmbeddedLanguages(
+          code,
+          languageId,
+          highlighter
+        );
+        if (embedded.length > 0) {
+          await highlighter.loadLanguage(...embedded);
+        }
+      }
 
       const langToUse = resolveLoadedLanguage(
         languageId,

@@ -5,8 +5,14 @@ import {
   createJavaScriptRegexEngine,
 } from '../src/index';
 import type { Language, Theme, Themes } from '../src/lib/types';
-import type { ShikiTransformer } from 'shiki';
+import type {
+  ShikiTransformer,
+  Highlighter,
+  LanguageInput,
+} from 'shiki';
 import { throttleHighlighting } from '../src/lib/utils';
+import { useShikiHighlighter as useBaseHook } from '../src/lib/hook';
+import * as shikiCore from 'shiki/core';
 
 interface TestComponentProps {
   code: string;
@@ -48,6 +54,50 @@ const TestComponent = ({
 };
 
 describe('useShikiHighlighter Hook', () => {
+  type HookFactory = Parameters<typeof useBaseHook>[4];
+
+  const createMockHighlighter = (
+    bundled: Record<string, LanguageInput> = {}
+  ) => {
+    const highlighter = {
+      getBundledLanguages: vi.fn(() => bundled),
+      loadLanguage: vi.fn(async () => {}),
+      getLoadedLanguages: vi.fn(() => ['markdown']),
+      codeToHtml: vi.fn(
+        () => '<pre class="shiki"><code>ok</code></pre>'
+      ),
+      codeToHast: vi.fn(() => ({ type: 'root', children: [] })),
+    } as unknown as Highlighter;
+
+    return highlighter;
+  };
+
+  interface EmbeddedHarnessProps {
+    code?: string;
+    highlighter?: Highlighter;
+    factory: HookFactory;
+  }
+
+  const EmbeddedHarness = ({
+    code = '```python\nprint("hi")\n```',
+    highlighter,
+    factory,
+  }: EmbeddedHarnessProps) => {
+    const highlighted = useBaseHook(
+      code,
+      'markdown',
+      'github-dark',
+      { outputFormat: 'html', highlighter },
+      factory
+    );
+
+    return (
+      <div data-testid="output">
+        {typeof highlighted === 'string' ? highlighted : ''}
+      </div>
+    );
+  };
+
   const renderComponent = (props?: Partial<TestComponentProps>) => {
     const defaultProps: TestComponentProps = {
       code: '<div>Hello World</div>',
@@ -657,6 +707,103 @@ describe('useShikiHighlighter Hook', () => {
 
       // Restore original Date.now
       Date.now = originalDateNow;
+    });
+  });
+
+  describe('Embedded Language Loading', () => {
+    afterEach(() => {
+      vi.restoreAllMocks();
+    });
+
+    test('loads only guessed embedded languages that exist in bundled languages', async () => {
+      const pythonGrammar: LanguageInput = {
+        name: 'python',
+        scopeName: 'source.python',
+        patterns: [],
+      };
+      const highlighter = createMockHighlighter({
+        python: pythonGrammar,
+      });
+      const factory: HookFactory = vi
+        .fn()
+        .mockResolvedValue(highlighter);
+
+      vi.spyOn(shikiCore, 'guessEmbeddedLanguages').mockReturnValue(
+        ['python', 'not-bundled']
+      );
+
+      render(<EmbeddedHarness factory={factory} />);
+
+      await waitFor(() => {
+        expect(highlighter.loadLanguage).toHaveBeenCalledTimes(1);
+        expect(highlighter.loadLanguage).toHaveBeenCalledWith(
+          pythonGrammar
+        );
+      });
+    });
+
+    test('detects embedded language from a real markdown document and loads only bundled matches', async () => {
+      const markdown = [
+        '# Example',
+        '',
+        'Intro text.',
+        '',
+        '```python',
+        'print("hi")',
+        '```',
+        '',
+        '```not-bundled',
+        'noop',
+        '```',
+      ].join('\n');
+      const pythonGrammar: LanguageInput = {
+        name: 'python',
+        scopeName: 'source.python',
+        patterns: [],
+      };
+      const highlighter = createMockHighlighter({
+        python: pythonGrammar,
+      });
+      const factory: HookFactory = vi
+        .fn()
+        .mockResolvedValue(highlighter);
+
+      render(<EmbeddedHarness code={markdown} factory={factory} />);
+
+      await waitFor(() => {
+        expect(highlighter.loadLanguage).toHaveBeenCalledWith(
+          pythonGrammar
+        );
+      });
+    });
+
+    test('does not auto-load embedded languages when a custom highlighter is provided', async () => {
+      const pythonGrammar: LanguageInput = {
+        name: 'python',
+        scopeName: 'source.python',
+        patterns: [],
+      };
+      const customHighlighter = createMockHighlighter({
+        python: pythonGrammar,
+      });
+      const factory: HookFactory = vi.fn();
+
+      vi.spyOn(shikiCore, 'guessEmbeddedLanguages').mockReturnValue([
+        'python',
+      ]);
+
+      render(
+        <EmbeddedHarness
+          highlighter={customHighlighter}
+          factory={factory}
+        />
+      );
+
+      await waitFor(() => {
+        expect(customHighlighter.codeToHtml).toHaveBeenCalled();
+        expect(customHighlighter.loadLanguage).not.toHaveBeenCalled();
+        expect(factory).not.toHaveBeenCalled();
+      });
     });
   });
 });
