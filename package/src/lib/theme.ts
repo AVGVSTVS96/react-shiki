@@ -43,11 +43,9 @@ export function resolveTheme(themeInput: Theme | Themes): ThemeResult {
     !inputIsTextmateTheme &&
     Object.entries(themeInput).some(
       ([key, value]) =>
-        key &&
-        value &&
         key.trim() !== '' &&
-        value !== '' &&
-        (typeof value === 'string' || isTextmateTheme(value))
+        ((typeof value === 'string' && value.trim() !== '') ||
+          isTextmateTheme(value))
     );
 
   if (isMultiThemeConfig) {
