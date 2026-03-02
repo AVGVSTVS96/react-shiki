@@ -70,8 +70,15 @@ interface ReactShikiOptions {
 
   /**
    * Custom textmate grammars to be preloaded for highlighting.
+   * @deprecated Use preloadLanguages instead.
    */
   customLanguages?: LanguageRegistration | LanguageRegistration[];
+
+  /**
+   * Textmate grammars or language ids to preload for highlighting.
+   * Use this to preload supported languages before runtime language selection.
+   */
+  preloadLanguages?: Language | Language[];
 
   /**
    * Output format for the highlighted code.

@@ -119,6 +119,7 @@ export const createShikiHighlighterComponent = (
         children: code,
         as: Element = 'pre',
         customLanguages,
+        preloadLanguages,
         ...shikiOptions
       },
       ref
@@ -128,6 +129,7 @@ export const createShikiHighlighterComponent = (
         delay,
         transformers,
         customLanguages,
+        preloadLanguages,
         showLineNumbers,
         defaultColor,
         cssVariablePrefix,

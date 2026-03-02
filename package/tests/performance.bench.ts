@@ -234,7 +234,7 @@ beforeAll(async () => {
 
     const languagesToLoad = new Set(
       allConfigs
-        .map((c) => resolveLanguage(c.lang).langsToLoad)
+        .flatMap((c) => resolveLanguage(c.lang).langsToLoad)
         .filter(Boolean)
     );
 

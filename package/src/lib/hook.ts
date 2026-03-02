@@ -72,7 +72,7 @@ export const useShikiHighlighter = (
   themeInput: Theme | Themes,
   options: HighlighterOptions = {},
   highlighterFactory: (
-    langsToLoad: Language,
+    langsToLoad: Language[],
     themesToLoad: Theme[],
     engine?: Awaitable<RegexEngine>
   ) => Promise<Highlighter | HighlighterCore>
@@ -92,9 +92,15 @@ export const useShikiHighlighter = (
       resolveLanguage(
         stableLang,
         stableOpts.customLanguages,
-        stableOpts.langAlias
+        stableOpts.langAlias,
+        stableOpts.preloadLanguages
       ),
-    [stableLang, stableOpts.customLanguages, stableOpts.langAlias]
+    [
+      stableLang,
+      stableOpts.customLanguages,
+      stableOpts.preloadLanguages,
+      stableOpts.langAlias,
+    ]
   );
 
   const { isMultiTheme, themeId, multiTheme, singleTheme, themesToLoad } =

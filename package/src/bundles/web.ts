@@ -15,13 +15,13 @@ import { isLoadableLanguage } from '../lib/language';
  * Includes: HTML, CSS, JS, TS, JSON, Markdown, Vue, JSX, Svelte, etc.
  */
 export async function createWebHighlighter(
-  langsToLoad: Language,
+  langsToLoad: Language[],
   themesToLoad: Theme[],
   engine?: Awaitable<RegexEngine>
 ): Promise<Highlighter> {
-  const langs = isLoadableLanguage(langsToLoad, bundledLanguages)
-    ? [langsToLoad]
-    : [];
+  const langs = langsToLoad.filter((lang) =>
+    isLoadableLanguage(lang, bundledLanguages)
+  );
 
   return await getSingletonHighlighter({
     langs,
