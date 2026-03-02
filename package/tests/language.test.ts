@@ -84,29 +84,29 @@ describe('resolveLanguage', () => {
   test('returns plaintext for nullish and empty languages', () => {
     expect(resolveLanguage(undefined)).toEqual({
       languageId: FALLBACK_LANGUAGE,
-      langsToLoad: undefined,
+      langsToLoad: [],
     });
     expect(resolveLanguage('')).toEqual({
       languageId: FALLBACK_LANGUAGE,
-      langsToLoad: undefined,
+      langsToLoad: [],
     });
     expect(resolveLanguage('   ')).toEqual({
       languageId: FALLBACK_LANGUAGE,
-      langsToLoad: undefined,
+      langsToLoad: [],
     });
   });
 
   test('uses custom language object directly', () => {
     expect(resolveLanguage(customLanguage)).toEqual({
       languageId: 'my-language',
-      langsToLoad: customLanguage,
+      langsToLoad: [customLanguage],
     });
   });
 
   test('resolves custom language by name', () => {
     expect(resolveLanguage('my-language', customLanguage)).toEqual({
       languageId: 'my-language',
-      langsToLoad: customLanguage,
+      langsToLoad: [customLanguage],
     });
   });
 
@@ -118,32 +118,21 @@ describe('resolveLanguage', () => {
 
     expect(resolveLanguage('my-language', [scopeNameLanguage])).toEqual({
       languageId: 'scope-based-language',
-      langsToLoad: scopeNameLanguage,
+      langsToLoad: [scopeNameLanguage],
     });
   });
 
   test('resolves custom language by alias and file type', () => {
-    expect(
-      resolveLanguage('my-lang', {
-        ...customLanguage,
-        aliases: ['My-Lang'],
-      })
-    ).toEqual({
+    const aliasedLang = { ...customLanguage, aliases: ['My-Lang'] };
+    expect(resolveLanguage('my-lang', aliasedLang)).toEqual({
       languageId: 'my-language',
-      langsToLoad: {
-        ...customLanguage,
-        aliases: ['My-Lang'],
-      },
+      langsToLoad: [aliasedLang],
     });
 
-    expect(
-      resolveLanguage('ml', { ...customLanguage, fileTypes: ['ML'] })
-    ).toEqual({
+    const fileTypeLang = { ...customLanguage, fileTypes: ['ML'] };
+    expect(resolveLanguage('ml', fileTypeLang)).toEqual({
       languageId: 'my-language',
-      langsToLoad: {
-        ...customLanguage,
-        fileTypes: ['ML'],
-      },
+      langsToLoad: [fileTypeLang],
     });
   });
 
@@ -154,14 +143,14 @@ describe('resolveLanguage', () => {
       })
     ).toEqual({
       languageId: 'javascript',
-      langsToLoad: 'javascript',
+      langsToLoad: ['javascript'],
     });
   });
 
   test('falls back to passthrough when no resolver match exists', () => {
     expect(resolveLanguage('plain-old-lang', customLanguage)).toEqual({
       languageId: 'plain-old-lang',
-      langsToLoad: 'plain-old-lang',
+      langsToLoad: ['plain-old-lang', customLanguage],
     });
   });
 
@@ -172,7 +161,41 @@ describe('resolveLanguage', () => {
       })
     ).toEqual({
       languageId: 'my-language',
-      langsToLoad: customLanguage,
+      langsToLoad: [customLanguage],
+    });
+  });
+
+  test('matches custom language from preloadLanguages', () => {
+    expect(
+      resolveLanguage('my-language', undefined, undefined, customLanguage)
+    ).toEqual({
+      languageId: 'my-language',
+      langsToLoad: [customLanguage],
+    });
+  });
+
+  test('merges preloadLanguages and customLanguages without duplicates', () => {
+    expect(
+      resolveLanguage('typescript', customLanguage, undefined, [
+        'javascript',
+        customLanguage,
+      ])
+    ).toEqual({
+      languageId: 'typescript',
+      langsToLoad: ['typescript', 'javascript', customLanguage],
+    });
+  });
+
+  test('dedupes repeated preload string ids while preserving order', () => {
+    expect(
+      resolveLanguage('typescript', undefined, undefined, [
+        'javascript',
+        'javascript',
+        'typescript',
+      ])
+    ).toEqual({
+      languageId: 'typescript',
+      langsToLoad: ['typescript', 'javascript'],
     });
   });
 });

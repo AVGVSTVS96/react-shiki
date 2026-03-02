@@ -14,13 +14,13 @@ import { isLoadableLanguage } from '../lib/language';
  * This is the largest bundle but provides maximum compatibility.
  */
 export async function createFullHighlighter(
-  langsToLoad: Language,
+  langsToLoad: Language[],
   themesToLoad: Theme[],
   engine?: Awaitable<RegexEngine>
 ): Promise<Highlighter> {
-  const langs = isLoadableLanguage(langsToLoad, bundledLanguages)
-    ? [langsToLoad]
-    : [];
+  const langs = langsToLoad.filter((lang) =>
+    isLoadableLanguage(lang, bundledLanguages)
+  );
 
   return await getSingletonHighlighter({
     langs,

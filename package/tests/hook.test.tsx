@@ -5,14 +5,9 @@ import {
   createJavaScriptRegexEngine,
 } from '../src/index';
 import type { Language, Theme, Themes } from '../src/lib/types';
-import type {
-  ShikiTransformer,
-  Highlighter,
-  LanguageInput,
-} from 'shiki';
+import type { ShikiTransformer, Highlighter, LanguageInput } from 'shiki';
 import { throttleHighlighting } from '../src/lib/utils';
 import { useShikiHighlighter as useBaseHook } from '../src/lib/hook';
-import * as shikiCore from 'shiki/core';
 
 interface TestComponentProps {
   code: string;
@@ -63,9 +58,7 @@ describe('useShikiHighlighter Hook', () => {
       getBundledLanguages: vi.fn(() => bundled),
       loadLanguage: vi.fn(async () => {}),
       getLoadedLanguages: vi.fn(() => ['markdown']),
-      codeToHtml: vi.fn(
-        () => '<pre class="shiki"><code>ok</code></pre>'
-      ),
+      codeToHtml: vi.fn(() => '<pre class="shiki"><code>ok</code></pre>'),
       codeToHast: vi.fn(() => ({ type: 'root', children: [] })),
     } as unknown as Highlighter;
 
@@ -716,6 +709,17 @@ describe('useShikiHighlighter Hook', () => {
     });
 
     test('loads only guessed embedded languages that exist in bundled languages', async () => {
+      const markdown = [
+        '# Example',
+        '',
+        '```python',
+        'print("hi")',
+        '```',
+        '',
+        '```not-bundled',
+        'noop',
+        '```',
+      ].join('\n');
       const pythonGrammar: LanguageInput = {
         name: 'python',
         scopeName: 'source.python',
@@ -724,15 +728,9 @@ describe('useShikiHighlighter Hook', () => {
       const highlighter = createMockHighlighter({
         python: pythonGrammar,
       });
-      const factory: HookFactory = vi
-        .fn()
-        .mockResolvedValue(highlighter);
+      const factory: HookFactory = vi.fn().mockResolvedValue(highlighter);
 
-      vi.spyOn(shikiCore, 'guessEmbeddedLanguages').mockReturnValue(
-        ['python', 'not-bundled']
-      );
-
-      render(<EmbeddedHarness factory={factory} />);
+      render(<EmbeddedHarness code={markdown} factory={factory} />);
 
       await waitFor(() => {
         expect(highlighter.loadLanguage).toHaveBeenCalledTimes(1);
@@ -764,9 +762,7 @@ describe('useShikiHighlighter Hook', () => {
       const highlighter = createMockHighlighter({
         python: pythonGrammar,
       });
-      const factory: HookFactory = vi
-        .fn()
-        .mockResolvedValue(highlighter);
+      const factory: HookFactory = vi.fn().mockResolvedValue(highlighter);
 
       render(<EmbeddedHarness code={markdown} factory={factory} />);
 
@@ -787,10 +783,6 @@ describe('useShikiHighlighter Hook', () => {
         python: pythonGrammar,
       });
       const factory: HookFactory = vi.fn();
-
-      vi.spyOn(shikiCore, 'guessEmbeddedLanguages').mockReturnValue([
-        'python',
-      ]);
 
       render(
         <EmbeddedHarness

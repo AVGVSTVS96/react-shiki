@@ -12,7 +12,30 @@ export const FALLBACK_LANGUAGE = 'plaintext';
  */
 type LanguageResult = {
   languageId: string;
-  langsToLoad: Language;
+  langsToLoad: Language[];
+};
+
+const toArray = <T>(value?: T | T[]): T[] =>
+  value == null ? [] : Array.isArray(value) ? value : [value];
+
+const languageKey = (lang: Language): string | null => {
+  if (lang == null) return null;
+  if (typeof lang === 'string') return `s:${lang}`;
+  return `o:${lang.name}::${lang.scopeName}`;
+};
+
+const dedupeLanguages = (langs: Language[]): Language[] => {
+  const seen = new Set<string>();
+  const deduped: Language[] = [];
+
+  for (const lang of langs) {
+    const key = languageKey(lang);
+    if (key == null || seen.has(key)) continue;
+    seen.add(key);
+    deduped.push(lang);
+  }
+
+  return deduped;
 };
 
 /**
@@ -48,68 +71,72 @@ export const resolveLoadedLanguage = (
  * @param customLanguages An array of custom textmate grammar objects or a single grammar object
  * @returns A LanguageResult object containing:
  *   - languageId: The resolved language ID
- *   - langsToLoad: The language object or string id to load
+ *   - langsToLoad: The language objects/string ids to load
  */
 export const resolveLanguage = (
   lang: Language,
   customLanguages?: LanguageRegistration | LanguageRegistration[],
-  langAliases?: Record<string, string>
+  langAliases?: Record<string, string>,
+  preloadLanguages?: Language | Language[]
 ): LanguageResult => {
-  const normalizedCustomLangs = customLanguages
-    ? Array.isArray(customLanguages)
-      ? customLanguages
-      : [customLanguages]
-    : [];
+  const customLangs = toArray(customLanguages);
+  const preloadLangs = toArray(preloadLanguages);
+  const customMatchPool = [...customLangs, ...preloadLangs];
+  let languageId = FALLBACK_LANGUAGE;
+  let primaryLang: Language;
 
   // Language is null or empty string
   if (lang == null || (typeof lang === 'string' && !lang.trim())) {
     return {
-      languageId: FALLBACK_LANGUAGE,
-      langsToLoad: undefined,
+      languageId,
+      langsToLoad: dedupeLanguages([...preloadLangs, ...customLangs]),
     };
   }
 
-  // Language is custom
+  // Language is custom object
   if (typeof lang === 'object') {
-    return {
-      languageId: lang.name,
-      langsToLoad: lang,
-    };
+    languageId = lang.name;
+    primaryLang = lang;
+  } else {
+    // Language is string
+    const lowerLang = lang.toLowerCase();
+    const matches = (str: string | undefined): boolean =>
+      str?.toLowerCase() === lowerLang;
+
+    // Check custom registrations (from both customLanguages and preloadLanguages)
+    const customMatch = customMatchPool.find(
+      (candidate): candidate is LanguageRegistration =>
+        typeof candidate === 'object' &&
+        candidate != null &&
+        !!(
+          matches(candidate.name) ||
+          matches(candidate.scopeName) ||
+          matches(candidate.scopeName?.split('.').pop()) ||
+          candidate.aliases?.some(matches) ||
+          candidate.fileTypes?.some(matches)
+        )
+    );
+
+    if (customMatch) {
+      languageId = customMatch.name || lang;
+      primaryLang = customMatch;
+    } else if (langAliases?.[lang]) {
+      // Language is aliased
+      languageId = langAliases[lang];
+      primaryLang = langAliases[lang];
+    } else {
+      // For any other string, pass it through to the factory
+      languageId = lang;
+      primaryLang = lang;
+    }
   }
 
-  // Language is string
-  const lowerLang = lang.toLowerCase();
-  const matches = (str: string | undefined): boolean =>
-    str?.toLowerCase() === lowerLang;
-
-  // Check if the string identifies a provided custom language
-  const customMatch = normalizedCustomLangs.find(
-    (cl) =>
-      matches(cl.name) ||
-      matches(cl.scopeName) ||
-      matches(cl.scopeName?.split('.').pop()) ||
-      cl.aliases?.some(matches) ||
-      cl.fileTypes?.some(matches)
-  );
-
-  if (customMatch) {
-    return {
-      languageId: customMatch.name || lang,
-      langsToLoad: customMatch,
-    };
-  }
-
-  // Check if language is aliased
-  if (langAliases?.[lang]) {
-    return {
-      languageId: langAliases[lang],
-      langsToLoad: langAliases[lang],
-    };
-  }
-
-  // For any other string, pass it through to the factory
   return {
-    languageId: lang,
-    langsToLoad: lang,
+    languageId,
+    langsToLoad: dedupeLanguages([
+      primaryLang,
+      ...preloadLangs,
+      ...customLangs,
+    ]),
   };
 };

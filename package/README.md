@@ -24,7 +24,7 @@ A performant client-side syntax highlighting component and hook for React, built
         - [Option 2: CSS Theme Switching](#option-2-css-theme-switching)
     - [Custom Themes](#custom-themes)
     - [Custom Languages](#custom-languages)
-      - [Preloading Custom Languages](#preloading-custom-languages)
+      - [Preloading Languages](#preloading-languages)
     - [Language Aliases](#language-aliases)
     - [Custom Transformers](#custom-transformers)
     - [Line Numbers](#line-numbers)
@@ -211,7 +211,8 @@ See [Shiki - RegExp Engines](https://shiki.style/guide/regex-engines) for more i
 | `language`          | `string \| object` | -               | Language to highlight, built-in or custom textmate grammer object             |
 | `theme`             | `string \| object` | `'github-dark'` | Single or multi-theme configuration, built-in or custom textmate theme object |
 | `delay`             | `number`           | `0`             | Delay between highlights (in milliseconds)                                    |
-| `customLanguages`   | `array`            | `[]`            | Array of custom languages to preload                                          |
+| `customLanguages`   | `array`            | `[]`            | **Deprecated**: use `preloadLanguages` instead. |
+| `preloadLanguages`  | `array`            | `[]`            | Preload bundled language IDs and custom language grammars |
 | `langAlias`         | `object`           | `{}`            | Map of language aliases                                                       |
 | `engine`            | `RegexEngine`      | Oniguruma       | RegExp engine for syntax highlighting (Oniguruma, JavaScript RegExp, or JavaScript Raw) |
 | `showLineNumbers`   | `boolean`          | `false`         | Display line numbers alongside code                                           |
@@ -358,9 +359,10 @@ import mcfunction from "../langs/mcfunction.tmLanguage.json";
 const highlightedCode = useShikiHighlighter(code, mcfunction, "github-dark");
 ```
 
-#### Preloading Custom Languages
+#### Preloading Languages
 
 For dynamic highlighting scenarios where language selection happens at runtime:
+`preloadLanguages` can also preload bundled language IDs, not just custom grammars.
 
 ```tsx
 import mcfunction from "../langs/mcfunction.tmLanguage.json";
@@ -370,14 +372,14 @@ import bosque from "../langs/bosque.tmLanguage.json";
 <ShikiHighlighter
   language="typescript"
   theme="github-dark"
-  customLanguages={[mcfunction, bosque]}
+  preloadLanguages={[mcfunction, bosque]}
 >
   {code.trim()}
 </ShikiHighlighter>
 
 // Hook
 const highlightedCode = useShikiHighlighter(code, "typescript", "github-dark", {
-  customLanguages: [mcfunction, bosque],
+  preloadLanguages: [mcfunction, bosque],
 });
 ```
 

@@ -30,7 +30,7 @@ beforeEach(() => {
 describe('full bundle factory', () => {
   test('passes bundled languages through as-is', async () => {
     await createFullHighlighter(
-      'javascript',
+      ['javascript'],
       ['github-dark'],
       'engine' as any
     );
@@ -44,7 +44,7 @@ describe('full bundle factory', () => {
 
   test('does not pass unsupported string languages to shiki', async () => {
     await createFullHighlighter(
-      'not-a-language',
+      ['not-a-language'],
       ['github-dark'],
       'engine' as any
     );
@@ -63,7 +63,7 @@ describe('full bundle factory', () => {
     };
 
     await createFullHighlighter(
-      customLanguage as any,
+      [customLanguage as any],
       ['github-dark'],
       'engine' as any
     );
@@ -81,7 +81,7 @@ describe('full bundle factory', () => {
     };
 
     await createFullHighlighter(
-      invalidCustomLanguage as any,
+      [invalidCustomLanguage as any],
       ['github-dark'],
       'engine' as any
     );
@@ -96,7 +96,11 @@ describe('full bundle factory', () => {
 
 describe('web bundle factory', () => {
   test('passes bundled languages through as-is', async () => {
-    await createWebHighlighter('html', ['github-dark'], 'engine' as any);
+    await createWebHighlighter(
+      ['html'],
+      ['github-dark'],
+      'engine' as any
+    );
 
     expect(getSingletonHighlighterMock).toHaveBeenCalledWith({
       langs: ['html'],
@@ -107,7 +111,7 @@ describe('web bundle factory', () => {
 
   test('does not pass unsupported string languages to shiki', async () => {
     await createWebHighlighter(
-      'not-a-language',
+      ['not-a-language'],
       ['github-dark'],
       'engine' as any
     );
