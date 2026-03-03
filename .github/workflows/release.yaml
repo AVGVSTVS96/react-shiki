@@ -24,11 +24,12 @@ jobs:
         uses: pnpm/action-setup@v4
 
       - name: Setup node.js
-        uses: actions/setup-node@v4
+        uses: actions/setup-node@v6
         with:
-          node-version: 22
+          # npm trusted publishing requires npm >= 11.5.1 and Node >= 22.14.0.
+          # Node 24 ships with npm 11+.
+          node-version: 24
           cache: "pnpm"
-          registry-url: "https://registry.npmjs.org"
 
       - name: Install dependencies
         run: pnpm install --frozen-lockfile
