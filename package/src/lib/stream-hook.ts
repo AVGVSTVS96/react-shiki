@@ -163,11 +163,196 @@ export const useShikiStreamHighlighter = (
   // Recall removes from the end (the previous unstable tokens),
   // then new stable + unstable are appended.
   const tokensRef = useRef<ThemedToken[]>([]);
-  const prevCodeRef = useRef<string>('');
   const schedulerRef = useRef<BatchScheduler | null>(null);
+  const tokenizerRef = useRef<ShikiStreamTokenizer | null>(null);
+
+  // Controlled code path state
+  const sessionIdRef = useRef(0);
+  const processingRef = useRef(false);
+  const requestedCodeRef = useRef('');
+  const requestedCompleteRef = useRef(false);
+  const appliedCodeRef = useRef('');
+  const completedRef = useRef(false);
+  const forceResyncRef = useRef(false);
+
+  // Tracks unstable tail currently displayed in tokensRef
+  const unstableCountRef = useRef(0);
+  const streamStartedRef = useRef(false);
 
   const batchStrategy: BatchStrategy = stableOpts.batch ?? 'raf';
   const allowRecalls = stableOpts.allowRecalls !== false;
+
+  const processResult = useCallback(
+    (
+      result: {
+        recall: number;
+        stable: ThemedToken[];
+        unstable: ThemedToken[];
+      },
+      sessionId: number,
+      canResync: boolean
+    ): boolean => {
+      if (sessionId !== sessionIdRef.current) return false;
+
+      if (allowRecalls) {
+        if (result.recall !== unstableCountRef.current) {
+          if (canResync) {
+            forceResyncRef.current = true;
+          }
+          return false;
+        }
+
+        if (result.recall > 0) {
+          tokensRef.current = tokensRef.current.slice(
+            0,
+            Math.max(0, tokensRef.current.length - result.recall)
+          );
+        }
+      }
+
+      tokensRef.current.push(...result.stable);
+
+      if (allowRecalls) {
+        tokensRef.current.push(...result.unstable);
+        unstableCountRef.current = result.unstable.length;
+      } else {
+        unstableCountRef.current = 0;
+      }
+
+      if (!streamStartedRef.current) {
+        streamStartedRef.current = true;
+        setStatus('streaming');
+        stableOpts.onStreamStart?.();
+      }
+
+      schedulerRef.current?.schedule();
+      return true;
+    },
+    [allowRecalls, stableOpts.onStreamStart]
+  );
+
+  const handleComplete = useCallback(
+    (sessionId: number, targetTokenizer: ShikiStreamTokenizer) => {
+      if (sessionId !== sessionIdRef.current || completedRef.current) return;
+
+      const closeResult = targetTokenizer.close();
+
+      // close() returns the final unstable tokens as stable.
+      // When allowRecalls is true, those tokens are already in our buffer
+      // (they were appended as unstable). Don't add them again.
+      // When allowRecalls is false, they weren't displayed yet — add them now.
+      if (!allowRecalls) {
+        tokensRef.current.push(...closeResult.stable);
+      }
+
+      unstableCountRef.current = 0;
+      completedRef.current = true;
+      setStatus('done');
+      stableOpts.onStreamEnd?.();
+      schedulerRef.current?.forceFlush();
+    },
+    [allowRecalls, stableOpts.onStreamEnd]
+  );
+
+  const handleError = useCallback((err: unknown, sessionId: number) => {
+    if (sessionId !== sessionIdRef.current) return;
+    setError(err instanceof Error ? err : new Error(String(err)));
+    setStatus('error');
+    schedulerRef.current?.forceFlush();
+  }, []);
+
+  const pumpCode = useCallback(
+    async (sessionId: number) => {
+      if (processingRef.current) return;
+      processingRef.current = true;
+
+      try {
+        while (sessionId === sessionIdRef.current) {
+          const activeTokenizer = tokenizerRef.current;
+          if (!activeTokenizer) break;
+
+          const targetCode = requestedCodeRef.current;
+          const targetComplete = requestedCompleteRef.current;
+          const appliedCode = appliedCodeRef.current;
+
+          const caughtUp =
+            targetCode === appliedCode &&
+            (!targetComplete || completedRef.current);
+
+          if (!forceResyncRef.current && caughtUp) {
+            break;
+          }
+
+          let result: {
+            recall: number;
+            stable: ThemedToken[];
+            unstable: ThemedToken[];
+          } | null = null;
+
+          if (
+            forceResyncRef.current ||
+            !(targetCode.startsWith(appliedCode) && appliedCode.length > 0)
+          ) {
+            forceResyncRef.current = false;
+            activeTokenizer.clear();
+            tokensRef.current = [];
+            unstableCountRef.current = 0;
+
+            if (targetCode) {
+              result = await activeTokenizer.enqueue(targetCode);
+            } else {
+              schedulerRef.current?.forceFlush();
+            }
+          } else {
+            const delta = targetCode.slice(appliedCode.length);
+            if (delta) {
+              result = await activeTokenizer.enqueue(delta);
+            }
+          }
+
+          if (sessionId !== sessionIdRef.current) break;
+
+          if (result) {
+            const ok = processResult(result, sessionId, true);
+            if (!ok) {
+              continue;
+            }
+          }
+
+          appliedCodeRef.current = targetCode;
+
+          if (targetComplete && !completedRef.current) {
+            handleComplete(sessionId, activeTokenizer);
+          }
+
+          if (
+            targetCode === requestedCodeRef.current &&
+            targetComplete === requestedCompleteRef.current &&
+            !forceResyncRef.current
+          ) {
+            break;
+          }
+        }
+      } catch (err) {
+        handleError(err, sessionId);
+      } finally {
+        if (sessionId === sessionIdRef.current) {
+          processingRef.current = false;
+
+          const needsMore =
+            tokenizerRef.current != null &&
+            (forceResyncRef.current ||
+              requestedCodeRef.current !== appliedCodeRef.current ||
+              (requestedCompleteRef.current && !completedRef.current));
+
+          if (needsMore) {
+            void pumpCode(sessionId);
+          }
+        }
+      }
+    },
+    [handleComplete, handleError, processResult]
+  );
 
   // ---- Effect 1: Batch scheduler ----
   useEffect(() => {
@@ -227,6 +412,9 @@ export const useShikiStreamHighlighter = (
   // Does NOT depend on input — so code deltas don't recreate the tokenizer.
   useEffect(() => {
     if (!resolvedHighlighter || !languageId) {
+      sessionIdRef.current += 1;
+      tokenizerRef.current = null;
+      processingRef.current = false;
       setTokenizer(null);
       return;
     }
@@ -252,9 +440,19 @@ export const useShikiStreamHighlighter = (
       ...themeOpts,
     });
 
+    sessionIdRef.current += 1;
+    tokenizerRef.current = tok;
+
     // Reset token state for the new session
     tokensRef.current = [];
-    prevCodeRef.current = '';
+    unstableCountRef.current = 0;
+    requestedCodeRef.current = '';
+    requestedCompleteRef.current = false;
+    appliedCodeRef.current = '';
+    completedRef.current = false;
+    processingRef.current = false;
+    forceResyncRef.current = false;
+    streamStartedRef.current = false;
     setTokens([]);
     setStatus('idle');
     setError(null);
@@ -263,125 +461,34 @@ export const useShikiStreamHighlighter = (
 
     return () => {
       tok.clear();
+      if (tokenizerRef.current === tok) {
+        tokenizerRef.current = null;
+      }
     };
   }, [resolvedHighlighter, languageId, resolvedTheme]);
 
-  // ---- Effect 4: Input consumption ----
-  // Depends on tokenizer (state) and stableInput.
-  // For code: detects append-only deltas via prevCodeRef.
-  // For stream/chunks: consumes the source.
+  // ---- Effect 4: Controlled code input ----
   useEffect(() => {
     if (!tokenizer) return;
+    if (!('code' in stableInput)) return;
+
+    requestedCodeRef.current = stableInput.code;
+    requestedCompleteRef.current = !!stableInput.isComplete;
+
+    void pumpCode(sessionIdRef.current);
+  }, [tokenizer, stableInput, pumpCode]);
+
+  // ---- Effect 5: Stream/chunks input consumption ----
+  useEffect(() => {
+    if (!tokenizer) return;
+    if ('code' in stableInput) return;
+
+    const sessionId = sessionIdRef.current;
+    const activeTokenizer = tokenizerRef.current;
+    if (!activeTokenizer) return;
 
     let cancelled = false;
-    let streamStarted = false;
 
-    const processResult = (result: {
-      recall: number;
-      stable: ThemedToken[];
-      unstable: ThemedToken[];
-    }) => {
-      if (cancelled) return;
-
-      // Recall removes previous unstable tokens from the end of the display buffer.
-      // This is safe because when allowRecalls is true, unstable tokens were appended
-      // to the buffer on the previous round. When allowRecalls is false, recall is
-      // effectively 0 (no unstable tokens were added).
-      if (allowRecalls && result.recall > 0) {
-        tokensRef.current = tokensRef.current.slice(
-          0,
-          Math.max(0, tokensRef.current.length - result.recall)
-        );
-      }
-
-      // Append new stable tokens (always)
-      tokensRef.current.push(...result.stable);
-
-      // Append new unstable tokens (only when allowRecalls is true,
-      // so they'll be recalled on the next enqueue)
-      if (allowRecalls) {
-        tokensRef.current.push(...result.unstable);
-      }
-
-      if (!streamStarted) {
-        streamStarted = true;
-        setStatus('streaming');
-        stableOpts.onStreamStart?.();
-      }
-
-      schedulerRef.current?.schedule();
-    };
-
-    const handleComplete = () => {
-      if (cancelled) return;
-
-      const closeResult = tokenizer.close();
-
-      // close() returns the final unstable tokens as stable.
-      // When allowRecalls is true, those tokens are already in our buffer
-      // (they were appended as unstable). Don't add them again.
-      // When allowRecalls is false, they weren't displayed yet — add them now.
-      if (!allowRecalls) {
-        tokensRef.current.push(...closeResult.stable);
-      }
-
-      setStatus('done');
-      stableOpts.onStreamEnd?.();
-      schedulerRef.current?.forceFlush();
-    };
-
-    const handleError = (err: unknown) => {
-      if (cancelled) return;
-      setError(err instanceof Error ? err : new Error(String(err)));
-      setStatus('error');
-      schedulerRef.current?.forceFlush();
-    };
-
-    // --- Code input path (controlled growing string) ---
-    if ('code' in stableInput) {
-      const prevCode = prevCodeRef.current;
-      const newCode = stableInput.code;
-
-      const enqueueCode = async () => {
-        try {
-          if (newCode.startsWith(prevCode) && prevCode.length > 0) {
-            // Append-only: enqueue only the delta
-            const delta = newCode.slice(prevCode.length);
-            if (delta) {
-              const result = await tokenizer.enqueue(delta);
-              processResult(result);
-            }
-          } else {
-            // Non-append (edit/reset/initial): clear and re-feed
-            tokenizer.clear();
-            tokensRef.current = [];
-
-            if (newCode) {
-              const result = await tokenizer.enqueue(newCode);
-              processResult(result);
-            } else {
-              schedulerRef.current?.forceFlush();
-            }
-          }
-
-          prevCodeRef.current = newCode;
-
-          if (stableInput.isComplete) {
-            handleComplete();
-          }
-        } catch (err) {
-          handleError(err);
-        }
-      };
-
-      enqueueCode();
-
-      return () => {
-        cancelled = true;
-      };
-    }
-
-    // --- ReadableStream input path ---
     if ('stream' in stableInput) {
       if (stableInput.stream.locked) {
         return () => {
@@ -395,21 +502,27 @@ export const useShikiStreamHighlighter = (
         try {
           while (true) {
             const { done, value } = await reader.read();
-            if (cancelled || done) break;
+            if (cancelled || sessionId !== sessionIdRef.current || done) break;
             if (value) {
-              const result = await tokenizer.enqueue(value);
-              processResult(result);
+              const result = await activeTokenizer.enqueue(value);
+              if (!processResult(result, sessionId, false)) {
+                handleError(
+                  new Error('Tokenizer recall desync detected while streaming'),
+                  sessionId
+                );
+                return;
+              }
             }
           }
           if (!cancelled) {
-            handleComplete();
+            handleComplete(sessionId, activeTokenizer);
           }
         } catch (err) {
-          handleError(err);
+          handleError(err, sessionId);
         }
       };
 
-      consume();
+      void consume();
 
       return () => {
         cancelled = true;
@@ -417,26 +530,31 @@ export const useShikiStreamHighlighter = (
       };
     }
 
-    // --- AsyncIterable input path ---
     if ('chunks' in stableInput) {
       const consume = async () => {
         try {
           for await (const chunk of stableInput.chunks) {
-            if (cancelled) break;
+            if (cancelled || sessionId !== sessionIdRef.current) break;
             if (chunk) {
-              const result = await tokenizer.enqueue(chunk);
-              processResult(result);
+              const result = await activeTokenizer.enqueue(chunk);
+              if (!processResult(result, sessionId, false)) {
+                handleError(
+                  new Error('Tokenizer recall desync detected while streaming'),
+                  sessionId
+                );
+                return;
+              }
             }
           }
           if (!cancelled) {
-            handleComplete();
+            handleComplete(sessionId, activeTokenizer);
           }
         } catch (err) {
-          handleError(err);
+          handleError(err, sessionId);
         }
       };
 
-      consume();
+      void consume();
 
       return () => {
         cancelled = true;
@@ -446,12 +564,20 @@ export const useShikiStreamHighlighter = (
     return () => {
       cancelled = true;
     };
-  }, [tokenizer, stableInput, stableOpts.onStreamStart, stableOpts.onStreamEnd]);
+  }, [tokenizer, stableInput, processResult, handleComplete, handleError]);
 
   // ---- Reset callback ----
   const reset = useCallback(() => {
+    tokenizerRef.current?.clear();
     tokensRef.current = [];
-    prevCodeRef.current = '';
+    unstableCountRef.current = 0;
+    requestedCodeRef.current = '';
+    requestedCompleteRef.current = false;
+    appliedCodeRef.current = '';
+    completedRef.current = false;
+    forceResyncRef.current = false;
+    processingRef.current = false;
+    streamStartedRef.current = false;
     setTokens([]);
     setStatus('idle');
     setError(null);
