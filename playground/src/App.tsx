@@ -33,7 +33,7 @@ function App() {
                 : 'border-slate-600/70 bg-slate-700/30 text-slate-200'
             }`}
           >
-            Streaming Benchmark
+            Streaming Chat Lab
           </button>
         </nav>
 

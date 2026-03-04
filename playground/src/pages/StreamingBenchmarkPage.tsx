@@ -1,32 +1,82 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import type { ShikiStreamInput } from 'react-shiki';
 import {
+  ShikiTokenRenderer,
   useShikiHighlighter,
   useShikiStreamHighlighter,
-  ShikiTokenRenderer,
 } from 'react-shiki';
-import type { ReactNode } from 'react';
 
 import {
-  STREAMING_TARGET_TOKENS,
-  buildProgressiveStates,
-  buildStreamingMetrics,
-  createEmptyMetrics,
-  createTokenChunks,
-  wait,
-} from '../lib/streamingBenchmark';
-import { STREAMING_BENCHMARK_SAMPLE } from '../lib/streamingSample';
+  STREAMING_CORPUS_LIST,
+  STREAMING_SCENARIO_PRESETS,
+  buildScenarioFrames,
+  buildSessionMetrics,
+  calculateTextDiffCounts,
+  createAsyncCodeIterableFromScenario,
+  createEmptySessionMetrics,
+  createReadableCodeStreamFromScenario,
+  createStreamingScenario,
+  extractFinalCode,
+  getStreamingCorpus,
+  getWorkAmplification,
+  isCodeMutationEvent,
+  playScenarioEvents,
+  type CorpusId,
+  type ScenarioPresetId,
+  type ScenarioPlaybackFrame,
+} from '@streaming-lab/index';
 
 type RunStatus = 'idle' | 'running' | 'stopped' | 'completed';
-type HighlightMode = 'static' | 'incremental';
+type LabMode = 'static' | 'incremental' | 'split';
+type SourceMode =
+  | 'controlled-code'
+  | 'readable-stream'
+  | 'async-iterable'
+  | 'markdown-chat';
+
+type TimelineItem = {
+  index: number;
+  elapsedMs: number;
+  type: string;
+  codeChars: number;
+  transcriptChars: number;
+};
+
+type SessionCounters = {
+  startedAtMs: number;
+  inputChunkCount: number;
+  processedChars: number;
+  highlightCalls: number;
+  tokenizerEnqueues: number;
+  recallEvents: number;
+  recalledTokens: number;
+  resyncCount: number;
+  renderCommits: number;
+  firstAnyOutputMs: number;
+  firstHighlightedCodeMs: number;
+  chunkLatenciesMs: number[];
+  lastCode: string;
+};
 
 const formatMs = (value: number) => `${value.toFixed(2)} ms`;
 const formatNumber = (value: number) =>
   new Intl.NumberFormat('en-US').format(Math.round(value));
-const formatCompact = (value: number) =>
-  new Intl.NumberFormat('en-US', {
-    notation: 'compact',
-    maximumFractionDigits: 1,
-  }).format(value);
+
+const createCounterState = (): SessionCounters => ({
+  startedAtMs: 0,
+  inputChunkCount: 0,
+  processedChars: 0,
+  highlightCalls: 0,
+  tokenizerEnqueues: 0,
+  recallEvents: 0,
+  recalledTokens: 0,
+  resyncCount: 0,
+  renderCommits: 0,
+  firstAnyOutputMs: 0,
+  firstHighlightedCodeMs: 0,
+  chunkLatenciesMs: [],
+  lastCode: '',
+});
 
 const statusDot: Record<RunStatus, string> = {
   idle: 'bg-white/25',
@@ -35,466 +85,777 @@ const statusDot: Record<RunStatus, string> = {
   completed: 'bg-blue-400',
 };
 
-const impactTone = (amplification: number) => {
-  if (amplification >= 200) return 'text-red-400';
-  if (amplification >= 80) return 'text-amber-400';
-  return 'text-emerald-400';
-};
-
 export default function StreamingBenchmarkPage() {
-  const progressiveStates = useMemo(
+  const [presetId, setPresetId] =
+    useState<ScenarioPresetId>('openai-steady');
+  const [corpusId, setCorpusId] = useState<CorpusId>('tsx-chat-ui');
+  const [mode, setMode] = useState<LabMode>('incremental');
+  const [source, setSource] = useState<SourceMode>('markdown-chat');
+  const [runStatus, setRunStatus] = useState<RunStatus>('idle');
+  const [tokenDelayMs, setTokenDelayMs] = useState(16);
+  const [allowRecalls, setAllowRecalls] = useState(true);
+  const [seed, setSeed] = useState(42);
+
+  const scenario = useMemo(
     () =>
-      buildProgressiveStates(
-        createTokenChunks(
-          STREAMING_BENCHMARK_SAMPLE,
-          STREAMING_TARGET_TOKENS
-        )
-      ),
-    []
+      createStreamingScenario({
+        presetId,
+        corpusId,
+        seed,
+      }),
+    [presetId, corpusId, seed]
   );
 
+  const frames = useMemo(
+    () => buildScenarioFrames(scenario.events),
+    [scenario.events]
+  );
+
+  const finalCode = useMemo(
+    () => extractFinalCode(scenario.events),
+    [scenario.events]
+  );
+  const language = getStreamingCorpus(corpusId).language;
+
+  const [cursor, setCursor] = useState(-1);
+  const [transcript, setTranscript] = useState('');
   const [code, setCode] = useState('');
-  const [status, setStatus] = useState<RunStatus>('idle');
-  const [tokenDelayMs, setTokenDelayMs] = useState(20);
-  const [mode, setMode] = useState<HighlightMode>('static');
-  const [metrics, setMetrics] = useState(
-    createEmptyMetrics(progressiveStates.length)
+  const [timeline, setTimeline] = useState<TimelineItem[]>([]);
+  const [metrics, setMetrics] = useState(createEmptySessionMetrics());
+  const [exportPayload, setExportPayload] = useState('');
+
+  const [streamInput, setStreamInput] = useState<ShikiStreamInput>({
+    code: '',
+  });
+
+  const abortRef = useRef<AbortController | null>(null);
+  const pendingChunkTimesRef = useRef<number[]>([]);
+  const countersRef = useRef<SessionCounters>(createCounterState());
+  const statusSequenceRef = useRef<string[]>([]);
+
+  const resetCounters = useCallback(() => {
+    countersRef.current = createCounterState();
+    pendingChunkTimesRef.current = [];
+    statusSequenceRef.current = [];
+    setMetrics(createEmptySessionMetrics());
+  }, []);
+
+  const incrementalInput = useMemo<ShikiStreamInput>(() => {
+    if (mode === 'static') {
+      return { code: '' };
+    }
+    return streamInput;
+  }, [mode, streamInput]);
+
+  const incrementalResult = useShikiStreamHighlighter(
+    incrementalInput,
+    language,
+    'github-dark',
+    { allowRecalls }
   );
 
-  const runIdRef = useRef(0);
-  const pendingResolveRef = useRef<((durationMs: number) => void) | null>(
-    null
-  );
-  const tokenStartRef = useRef<number>(0);
-  const isStreamingRef = useRef(false);
-  const prevCodeLenRef = useRef(0);
-
-  // ---- Both hooks are always called (Rules of Hooks). ----
-  // Only the active mode gets real code; the other gets empty string.
   const staticHighlighted = useShikiHighlighter(
-    mode === 'static' ? code : '',
-    'tsx',
+    code,
+    language,
     'github-dark'
   );
 
-  const streamResult = useShikiStreamHighlighter(
-    mode === 'incremental' ? { code } : { code: '' },
-    'tsx',
-    'github-dark',
-    { allowRecalls: true }
+  const incrementalCodeText = useMemo(
+    () => incrementalResult.tokens.map((token) => token.content).join(''),
+    [incrementalResult.tokens]
   );
 
-  // ---- Measurement: detect when the active output changes ----
-  const staticOutput = mode === 'static' ? staticHighlighted : null;
-  const streamTokens =
-    mode === 'incremental' ? streamResult.tokens : null;
+  const activeRenderedCode =
+    mode === 'static' ? code : incrementalCodeText;
 
-  // Static mode: measure when highlighted output changes
-  useEffect(() => {
-    if (mode !== 'static') return;
-    if (!isStreamingRef.current) return;
-    if (!pendingResolveRef.current) return;
+  const refreshMetrics = useCallback(
+    (endedCleanly: boolean) => {
+      const counters = countersRef.current;
+      const now = performance.now();
 
-    const elapsed = performance.now() - tokenStartRef.current;
-    const resolve = pendingResolveRef.current;
-    pendingResolveRef.current = null;
-    resolve(elapsed);
-  }, [staticOutput, mode]);
+      const statusSequence =
+        mode === 'static'
+          ? [
+              'idle',
+              runStatus === 'idle' ? 'idle' : 'streaming',
+              runStatus === 'completed' ? 'done' : 'streaming',
+            ]
+          : statusSequenceRef.current.length > 0
+            ? [...statusSequenceRef.current]
+            : [incrementalResult.status];
 
-  // Incremental mode: measure when tokens change
-  useEffect(() => {
-    if (mode !== 'incremental') return;
-    if (!isStreamingRef.current) return;
-    if (!pendingResolveRef.current) return;
+      const sessionTotalMs =
+        counters.startedAtMs > 0 ? now - counters.startedAtMs : 0;
 
-    const elapsed = performance.now() - tokenStartRef.current;
-    const resolve = pendingResolveRef.current;
-    pendingResolveRef.current = null;
-    resolve(elapsed);
-  }, [streamTokens, mode]);
+      const nextMetrics = buildSessionMetrics({
+        finalCode: activeRenderedCode,
+        baselineCode: finalCode,
+        inputChunkCount: counters.inputChunkCount,
+        processedChars: counters.processedChars,
+        highlightCalls: counters.highlightCalls,
+        tokenizerEnqueues:
+          source === 'readable-stream' || source === 'async-iterable'
+            ? counters.inputChunkCount
+            : counters.highlightCalls,
+        recallEvents: counters.recallEvents,
+        recalledTokens: counters.recalledTokens,
+        resyncCount: counters.resyncCount,
+        renderCommits: counters.renderCommits,
+        chunkLatenciesMs: counters.chunkLatenciesMs,
+        timeToFirstAnyOutputMs: counters.firstAnyOutputMs,
+        timeToFirstHighlightedCodeMs: counters.firstHighlightedCodeMs,
+        sessionTotalMs,
+        statusSequence,
+        endedCleanly,
+      });
 
-  const waitForHighlightCommit = useCallback(() => {
-    return new Promise<number>((resolve) => {
-      pendingResolveRef.current = resolve;
-    });
-  }, []);
+      setMetrics(nextMetrics);
+    },
+    [
+      activeRenderedCode,
+      finalCode,
+      incrementalResult.status,
+      mode,
+      runStatus,
+      source,
+    ]
+  );
 
-  const stopRun = useCallback((nextStatus: RunStatus = 'stopped') => {
-    runIdRef.current += 1;
-    isStreamingRef.current = false;
-    if (pendingResolveRef.current) {
-      const resolve = pendingResolveRef.current;
-      pendingResolveRef.current = null;
-      resolve(0);
-    }
-    setStatus(nextStatus);
-  }, []);
+  const appendTimeline = useCallback(
+    (playbackFrame: ScenarioPlaybackFrame) => {
+      const snapshot = playbackFrame.frame.snapshot;
+      const item: TimelineItem = {
+        index: playbackFrame.index,
+        elapsedMs: playbackFrame.elapsedMs,
+        type: playbackFrame.event.type,
+        codeChars: snapshot.codeBlocks[0]?.length ?? 0,
+        transcriptChars: snapshot.transcript.length,
+      };
 
-  const reset = useCallback(() => {
-    stopRun('idle');
+      setTimeline((prev) => {
+        const next = [...prev, item];
+        return next.slice(Math.max(0, next.length - 120));
+      });
+    },
+    []
+  );
+
+  const applyPlaybackFrame = useCallback(
+    (playbackFrame: ScenarioPlaybackFrame) => {
+      const nextSnapshot = playbackFrame.frame.snapshot;
+      const nextCode = nextSnapshot.codeBlocks[0] ?? '';
+      const event = playbackFrame.event;
+      const now = performance.now();
+      const counters = countersRef.current;
+
+      setCursor(playbackFrame.index);
+      setTranscript(nextSnapshot.transcript);
+      setCode(nextCode);
+
+      const ended = event.type === 'message-end' || nextSnapshot.ended;
+
+      if (source === 'controlled-code' || source === 'markdown-chat') {
+        setStreamInput({ code: nextCode, isComplete: ended });
+      }
+
+      appendTimeline(playbackFrame);
+
+      if (
+        counters.firstAnyOutputMs === 0 &&
+        nextSnapshot.transcript.length > 0 &&
+        counters.startedAtMs > 0
+      ) {
+        counters.firstAnyOutputMs = now - counters.startedAtMs;
+      }
+
+      if (isCodeMutationEvent(event)) {
+        counters.inputChunkCount += 1;
+        counters.highlightCalls += 1;
+
+        const appendDelta = nextCode.startsWith(counters.lastCode)
+          ? nextCode.length - counters.lastCode.length
+          : nextCode.length;
+
+        if (!nextCode.startsWith(counters.lastCode)) {
+          counters.resyncCount += 1;
+        }
+
+        counters.processedChars +=
+          mode === 'static' ? nextCode.length : appendDelta;
+        counters.lastCode = nextCode;
+
+        pendingChunkTimesRef.current.push(now);
+      }
+
+      if (ended) {
+        setRunStatus('completed');
+      }
+    },
+    [appendTimeline, mode, source]
+  );
+
+  const resetSession = useCallback(() => {
+    abortRef.current?.abort();
+    abortRef.current = null;
+
+    setRunStatus('idle');
+    setCursor(-1);
+    setTranscript('');
     setCode('');
-    prevCodeLenRef.current = 0;
-    setMetrics(createEmptyMetrics(progressiveStates.length));
-  }, [progressiveStates.length, stopRun]);
+    setTimeline([]);
+    setStreamInput({ code: '' });
+    resetCounters();
+  }, [resetCounters]);
+
+  const stopRun = useCallback(() => {
+    abortRef.current?.abort();
+    abortRef.current = null;
+    setRunStatus('stopped');
+    refreshMetrics(false);
+  }, [refreshMetrics]);
 
   const startRun = useCallback(async () => {
-    if (status === 'running') return;
+    abortRef.current?.abort();
+    const controller = new AbortController();
+    abortRef.current = controller;
 
-    const runId = runIdRef.current + 1;
-    runIdRef.current = runId;
-    isStreamingRef.current = true;
-    prevCodeLenRef.current = 0;
-    setStatus('running');
+    resetCounters();
+    countersRef.current.startedAtMs = performance.now();
+
+    setCursor(-1);
+    setTranscript('');
     setCode('');
-    setMetrics(createEmptyMetrics(progressiveStates.length));
+    setTimeline([]);
+    setRunStatus('running');
 
-    const tokenDurationsMs: number[] = [];
-    const codeLengths: number[] = [];
-
-    for (let i = 0; i < progressiveStates.length; i += 1) {
-      if (runId !== runIdRef.current) return;
-
-      const next = progressiveStates[i];
-      const waitForCommit = waitForHighlightCommit();
-      tokenStartRef.current = performance.now();
-      setCode(next);
-
-      const elapsed = await waitForCommit;
-      if (runId !== runIdRef.current) return;
-
-      tokenDurationsMs.push(elapsed);
-
-      // Static mode: full code re-highlighted each time → track full length
-      // Incremental mode: only delta processed → track delta length
-      if (mode === 'incremental') {
-        codeLengths.push(next.length - prevCodeLenRef.current);
-        prevCodeLenRef.current = next.length;
-      } else {
-        codeLengths.push(next.length);
-      }
-
-      setMetrics(
-        buildStreamingMetrics({
-          tokenDurationsMs,
-          codeLengths,
-          finalCodeLength:
-            progressiveStates[progressiveStates.length - 1].length,
-          tokenTarget: progressiveStates.length,
-        })
-      );
-
-      if (tokenDelayMs > 0) {
-        await wait(tokenDelayMs);
-      }
+    if (source === 'readable-stream') {
+      setStreamInput({
+        stream: createReadableCodeStreamFromScenario(scenario.events, {
+          chunkDelayMs: tokenDelayMs,
+        }),
+      });
+    } else if (source === 'async-iterable') {
+      setStreamInput({
+        chunks: createAsyncCodeIterableFromScenario(scenario.events, {
+          chunkDelayMs: tokenDelayMs,
+        }),
+      });
+    } else {
+      setStreamInput({ code: '', isComplete: false });
     }
 
-    isStreamingRef.current = false;
-    setStatus('completed');
+    const playback = await playScenarioEvents({
+      events: scenario.events,
+      stepDelayMs: tokenDelayMs,
+      signal: controller.signal,
+      onFrame: (frame) => {
+        applyPlaybackFrame(frame);
+      },
+    });
+
+    if (playback.cancelled) {
+      setRunStatus('stopped');
+      refreshMetrics(false);
+      return;
+    }
+
+    setRunStatus('completed');
+    refreshMetrics(true);
   }, [
-    progressiveStates,
-    status,
+    applyPlaybackFrame,
+    refreshMetrics,
+    resetCounters,
+    scenario.events,
+    source,
     tokenDelayMs,
-    mode,
-    waitForHighlightCommit,
+  ]);
+
+  const stepOnce = useCallback(() => {
+    if (runStatus === 'running') return;
+    const next = frames[cursor + 1];
+    if (!next) return;
+
+    if (countersRef.current.startedAtMs === 0) {
+      resetCounters();
+      countersRef.current.startedAtMs = performance.now();
+
+      if (source === 'readable-stream' || source === 'async-iterable') {
+        setSource('controlled-code');
+      }
+
+      setRunStatus('stopped');
+      setStreamInput({ code: '', isComplete: false });
+    }
+
+    applyPlaybackFrame({
+      index: next.index,
+      elapsedMs: performance.now() - countersRef.current.startedAtMs,
+      event: next.event,
+      frame: next,
+    });
+
+    refreshMetrics(next.event.type === 'message-end');
+  }, [
+    applyPlaybackFrame,
+    cursor,
+    frames,
+    refreshMetrics,
+    resetCounters,
+    runStatus,
+    source,
   ]);
 
   useEffect(() => {
-    return () => {
-      stopRun('stopped');
+    if (!scenario.appendOnly) {
+      setSource((current) =>
+        current === 'readable-stream' || current === 'async-iterable'
+          ? 'controlled-code'
+          : current
+      );
+    }
+  }, [scenario.appendOnly]);
+
+  useEffect(() => {
+    if (mode === 'static') return;
+
+    const sequence = statusSequenceRef.current;
+    if (sequence[sequence.length - 1] !== incrementalResult.status) {
+      sequence.push(incrementalResult.status);
+    }
+  }, [incrementalResult.status, mode]);
+
+  const staticCommitSignal = mode === 'static' ? staticHighlighted : null;
+
+  useEffect(() => {
+    if (runStatus !== 'running' && runStatus !== 'completed') return;
+
+    const counters = countersRef.current;
+    const now = performance.now();
+
+    if (
+      counters.firstHighlightedCodeMs === 0 &&
+      activeRenderedCode.length > 0 &&
+      counters.startedAtMs > 0
+    ) {
+      counters.firstHighlightedCodeMs = now - counters.startedAtMs;
+    }
+
+    const pending = pendingChunkTimesRef.current.shift();
+    if (pending != null) {
+      counters.chunkLatenciesMs.push(now - pending);
+    }
+
+    counters.renderCommits += 1;
+    refreshMetrics(runStatus === 'completed');
+  }, [activeRenderedCode, refreshMetrics, runStatus, staticCommitSignal]);
+
+  const divergence = mode === 'split' && code !== incrementalCodeText;
+  const diff = calculateTextDiffCounts(finalCode, activeRenderedCode);
+  const workAmplification = getWorkAmplification(metrics);
+
+  const exportSession = useCallback(() => {
+    const payload = {
+      corpusId,
+      presetId,
+      seed,
+      mode,
+      source,
+      tokenDelayMs,
+      allowRecalls,
+      events: scenario.events,
     };
-  }, [stopRun]);
 
-  // ---- Render the active output ----
-  const renderOutput =
-    mode === 'static' ? (
-      (staticHighlighted as ReactNode)
-    ) : (
-      <ShikiTokenRenderer tokens={streamResult.tokens} />
-    );
-
-  const extraWork =
-    metrics.workAmplification > 1 ? metrics.workAmplification - 1 : 0;
-  const finalCodeLength =
-    progressiveStates[progressiveStates.length - 1]?.length ?? 0;
-  const avgCharsPerToken =
-    metrics.tokensProcessed > 0
-      ? metrics.totalCharsProcessed / metrics.tokensProcessed
-      : 0;
-
-  const metricRows = [
-    {
-      label: 'Progress',
-      value: `${metrics.tokensProcessed} / ${metrics.tokenTarget}`,
-    },
-    {
-      label: 'Highlight calls',
-      value: formatNumber(metrics.highlightCalls),
-    },
-    { label: 'Avg chars / pass', value: formatNumber(avgCharsPerToken) },
-    {
-      label: 'Extra work',
-      value: `${formatNumber(extraWork * finalCodeLength)} chars`,
-    },
-    {
-      label: 'Total processed',
-      value: `${formatNumber(metrics.totalCharsProcessed)} chars`,
-    },
-    {
-      label: 'Cost multiplier',
-      value: `${metrics.workAmplification.toFixed(2)}\u00d7`,
-    },
-    { label: 'Highlight cost', value: formatMs(metrics.totalTimeMs) },
-    { label: 'Avg latency', value: formatMs(metrics.avgPerTokenMs) },
-    { label: 'P95 latency', value: formatMs(metrics.p95PerTokenMs) },
-  ];
+    setExportPayload(JSON.stringify(payload, null, 2));
+  }, [
+    allowRecalls,
+    corpusId,
+    mode,
+    presetId,
+    scenario.events,
+    seed,
+    source,
+    tokenDelayMs,
+  ]);
 
   return (
-    <section className="streaming-page relative mx-auto w-full max-w-5xl px-4 pb-12 pt-4">
-      {/* Ambient background glow */}
-      <div className="pointer-events-none absolute -top-32 left-1/2 h-[600px] w-[900px] -translate-x-1/2 rounded-full bg-blue-500/[0.04] blur-[120px]" />
-
-      {/* Header */}
-      <header className="relative mb-10">
-        <h1 className="text-[2.5rem] font-semibold leading-[1.1] tracking-tight text-white">
-          Streaming Performance
+    <section className="streaming-page mx-auto w-full max-w-[1400px] px-4 pb-10 pt-6 text-slate-100">
+      <header className="mb-6">
+        <h1 className="text-3xl font-semibold tracking-tight">
+          Streaming Chat Lab
         </h1>
-        <p className="mt-3 max-w-2xl text-[0.95rem] leading-relaxed text-white/45">
-          Measures the cost of re-highlighting on every token during a
-          simulated streaming response. Toggle between the static hook and
-          the incremental shiki-stream hook to compare.
+        <p className="mt-2 max-w-3xl text-sm leading-relaxed text-slate-300">
+          Deterministic scenario playback for validating streaming
+          correctness, work amplification, and user-perceived latency. Use
+          the same scenarios in tests, benches, and this playground view.
         </p>
       </header>
 
-      {/* Controls */}
-      <div className="relative mb-8 flex flex-wrap items-center gap-3">
-        {/* Mode toggle */}
-        <div className="flex overflow-hidden rounded-xl border border-white/[0.08] bg-white/[0.03]">
-          <button
-            type="button"
-            onClick={() => {
-              if (status !== 'running') {
-                setMode('static');
-                reset();
-              }
-            }}
-            disabled={status === 'running'}
-            className={`px-4 py-2 text-[0.8125rem] font-medium transition-all ${
-              mode === 'static'
-                ? 'bg-white/[0.12] text-white'
-                : 'text-white/40 hover:text-white/60'
-            } disabled:cursor-not-allowed`}
-          >
-            Static{' '}
-            <span className="text-[0.6875rem] opacity-50">O(n²)</span>
-          </button>
-          <button
-            type="button"
-            onClick={() => {
-              if (status !== 'running') {
-                setMode('incremental');
-                reset();
-              }
-            }}
-            disabled={status === 'running'}
-            className={`px-4 py-2 text-[0.8125rem] font-medium transition-all ${
-              mode === 'incremental'
-                ? 'bg-emerald-500/20 text-emerald-300'
-                : 'text-white/40 hover:text-white/60'
-            } disabled:cursor-not-allowed`}
-          >
-            Incremental{' '}
-            <span className="text-[0.6875rem] opacity-50">
-              shiki-stream
-            </span>
-          </button>
-        </div>
-
-        <div className="w-px self-stretch bg-white/[0.06]" />
-
-        <button
-          type="button"
-          onClick={() => void startRun()}
-          disabled={status === 'running'}
-          className="rounded-xl bg-white px-5 py-2 text-[0.8125rem] font-semibold text-black/90 shadow-sm transition-all hover:bg-white/90 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white/25 active:scale-[0.97] disabled:cursor-not-allowed disabled:opacity-40"
-        >
-          Start
-        </button>
-        <button
-          type="button"
-          onClick={() => stopRun()}
-          disabled={status !== 'running'}
-          className="rounded-xl border border-white/[0.08] bg-white/[0.05] px-4 py-2 text-[0.8125rem] font-medium text-white/60 transition-all hover:bg-white/[0.1] hover:text-white/80 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white/15 active:scale-[0.97] disabled:cursor-not-allowed disabled:opacity-30"
-        >
-          Stop
-        </button>
-        <button
-          type="button"
-          onClick={reset}
-          className="rounded-xl border border-white/[0.08] bg-white/[0.05] px-4 py-2 text-[0.8125rem] font-medium text-white/60 transition-all hover:bg-white/[0.1] hover:text-white/80 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white/15 active:scale-[0.97]"
-        >
-          Reset
-        </button>
-
-        <div className="flex-1" />
-
-        <label className="flex items-center gap-2.5 text-[0.8125rem] text-white/35">
-          Speed
-          <input
-            type="range"
-            min={0}
-            max={80}
-            step={1}
-            value={tokenDelayMs}
-            onChange={(event) => {
-              setTokenDelayMs(Number(event.target.value));
-            }}
-            className="w-24"
-          />
-          <span className="w-10 text-right font-mono text-[0.75rem] tabular-nums text-white/45">
-            {tokenDelayMs}ms
-          </span>
-        </label>
-
-        <div className="flex items-center gap-2 pl-2">
-          <div
-            className={`h-2 w-2 rounded-full transition-colors ${statusDot[status]} ${
-              status === 'running' ? 'animate-pulse' : ''
-            }`}
-          />
-          <span className="text-[0.75rem] font-medium capitalize text-white/35">
-            {status}
-          </span>
-        </div>
-      </div>
-
-      {/* Metric cards */}
-      <div className="relative mb-6 grid gap-4 sm:grid-cols-3">
-        <div className="rounded-2xl border border-white/[0.06] bg-white/[0.03] p-5">
-          <p className="text-[0.6875rem] font-medium uppercase tracking-[0.1em] text-white/30">
-            Work amplification
-          </p>
-          <p
-            className={`mt-3 text-3xl font-semibold tabular-nums ${impactTone(
-              metrics.workAmplification
-            )}`}
-          >
-            {metrics.workAmplification.toFixed(1)}&times;
-          </p>
-          <p className="mt-1.5 text-[0.75rem] text-white/20">
-            Ideal is 1.0&times;
-          </p>
-        </div>
-
-        <div className="rounded-2xl border border-white/[0.06] bg-white/[0.03] p-5">
-          <p className="text-[0.6875rem] font-medium uppercase tracking-[0.1em] text-white/30">
-            Total highlight time
-          </p>
-          <p className="mt-3 text-3xl font-semibold tabular-nums text-white">
-            {formatMs(metrics.totalTimeMs)}
-          </p>
-          <p className="mt-1.5 text-[0.75rem] text-white/20">
-            Cumulative across all tokens
-          </p>
-        </div>
-
-        <div className="rounded-2xl border border-white/[0.06] bg-white/[0.03] p-5">
-          <p className="text-[0.6875rem] font-medium uppercase tracking-[0.1em] text-white/30">
-            Characters processed
-          </p>
-          <p className="mt-3 text-3xl font-semibold tabular-nums text-white">
-            {formatCompact(metrics.totalCharsProcessed)}
-          </p>
-          <p className="mt-1.5 text-[0.75rem] text-white/20">
-            Final output is {formatCompact(finalCodeLength)} chars
-          </p>
-        </div>
-      </div>
-
-      {/* Progress bar */}
-      <div className="relative mb-8">
-        <div className="h-1 overflow-hidden rounded-full bg-white/[0.06]">
-          <div
-            className={`h-full rounded-full transition-all duration-300 ${
-              mode === 'incremental' ? 'bg-emerald-500' : 'bg-blue-500'
-            }`}
-            style={{
-              width: `${Math.min(
-                100,
-                (metrics.tokensProcessed /
-                  Math.max(1, metrics.tokenTarget)) *
-                  100
-              )}%`,
-              boxShadow:
-                metrics.tokensProcessed > 0
-                  ? mode === 'incremental'
-                    ? '0 0 12px rgba(16,185,129,0.4)'
-                    : '0 0 12px rgba(59,130,246,0.4)'
-                  : 'none',
-            }}
-          />
-        </div>
-      </div>
-
-      {/* Two-column content */}
-      <div className="relative grid gap-6 lg:grid-cols-[1.6fr_1fr]">
-        {/* Code preview */}
-        <div className="rounded-2xl border border-white/[0.06] bg-white/[0.02] p-5">
-          <p className="mb-3 text-[0.6875rem] font-medium uppercase tracking-[0.12em] text-white/20">
-            Live output
-            <span className="ml-2 text-white/10">
-              {mode === 'incremental'
-                ? '(shiki-stream)'
-                : '(static rehighlight)'}
-            </span>
-          </p>
-          <div className="code-scroll max-h-[640px] overflow-auto rounded-xl bg-black/30 p-4">
-            <pre>{renderOutput}</pre>
-          </div>
-        </div>
-
-        {/* Sidebar */}
-        <aside className="space-y-5">
-          <div className="rounded-2xl border border-white/[0.06] bg-white/[0.03] p-5">
-            <p className="mb-4 text-[0.6875rem] font-medium uppercase tracking-[0.12em] text-white/25">
-              Metrics
-            </p>
-            <div className="divide-y divide-white/[0.05]">
-              {metricRows.map(({ label, value }) => (
-                <div
-                  key={label}
-                  className="flex items-center justify-between py-2.5"
-                >
-                  <span className="text-[0.8125rem] text-white/35">
-                    {label}
-                  </span>
-                  <span className="font-mono text-[0.8125rem] tabular-nums text-white/75">
-                    {value}
-                  </span>
-                </div>
+      <div className="grid gap-5 lg:grid-cols-[280px_1fr_340px]">
+        <aside className="space-y-4 rounded-2xl border border-slate-700/70 bg-slate-900/70 p-4">
+          <div>
+            <label className="mb-1 block text-xs uppercase tracking-wide text-slate-400">
+              Scenario
+            </label>
+            <select
+              value={presetId}
+              onChange={(event) => {
+                setPresetId(event.target.value as ScenarioPresetId);
+                resetSession();
+              }}
+              className="w-full rounded-md border border-slate-700 bg-slate-950 px-2 py-1.5 text-sm"
+            >
+              {STREAMING_SCENARIO_PRESETS.map((preset) => (
+                <option key={preset.id} value={preset.id}>
+                  {preset.label}
+                </option>
               ))}
+            </select>
+          </div>
+
+          <div>
+            <label className="mb-1 block text-xs uppercase tracking-wide text-slate-400">
+              Corpus
+            </label>
+            <select
+              value={corpusId}
+              onChange={(event) => {
+                setCorpusId(event.target.value as CorpusId);
+                resetSession();
+              }}
+              className="w-full rounded-md border border-slate-700 bg-slate-950 px-2 py-1.5 text-sm"
+            >
+              {STREAMING_CORPUS_LIST.map((corpus) => (
+                <option key={corpus.id} value={corpus.id}>
+                  {corpus.label}
+                </option>
+              ))}
+            </select>
+          </div>
+
+          <div>
+            <label className="mb-1 block text-xs uppercase tracking-wide text-slate-400">
+              Mode
+            </label>
+            <select
+              value={mode}
+              onChange={(event) => {
+                setMode(event.target.value as LabMode);
+                resetSession();
+              }}
+              className="w-full rounded-md border border-slate-700 bg-slate-950 px-2 py-1.5 text-sm"
+            >
+              <option value="static">Static</option>
+              <option value="incremental">Incremental</option>
+              <option value="split">Split</option>
+            </select>
+          </div>
+
+          <div>
+            <label className="mb-1 block text-xs uppercase tracking-wide text-slate-400">
+              Source
+            </label>
+            <select
+              value={source}
+              onChange={(event) => {
+                setSource(event.target.value as SourceMode);
+                resetSession();
+              }}
+              className="w-full rounded-md border border-slate-700 bg-slate-950 px-2 py-1.5 text-sm"
+            >
+              <option value="controlled-code">Controlled code</option>
+              <option value="markdown-chat">Markdown chat</option>
+              <option
+                value="readable-stream"
+                disabled={!scenario.appendOnly}
+              >
+                ReadableStream
+              </option>
+              <option
+                value="async-iterable"
+                disabled={!scenario.appendOnly}
+              >
+                AsyncIterable
+              </option>
+            </select>
+          </div>
+
+          <div>
+            <label className="mb-1 block text-xs uppercase tracking-wide text-slate-400">
+              Step delay ({tokenDelayMs} ms)
+            </label>
+            <input
+              type="range"
+              min={0}
+              max={80}
+              step={1}
+              value={tokenDelayMs}
+              onChange={(event) => {
+                setTokenDelayMs(Number(event.target.value));
+              }}
+              className="w-full"
+            />
+          </div>
+
+          <div>
+            <label className="mb-1 block text-xs uppercase tracking-wide text-slate-400">
+              Seed ({seed})
+            </label>
+            <input
+              type="range"
+              min={1}
+              max={999}
+              step={1}
+              value={seed}
+              onChange={(event) => {
+                setSeed(Number(event.target.value));
+                resetSession();
+              }}
+              className="w-full"
+            />
+          </div>
+
+          <label className="flex items-center gap-2 text-sm text-slate-300">
+            <input
+              type="checkbox"
+              checked={allowRecalls}
+              onChange={(event) => {
+                setAllowRecalls(event.target.checked);
+                resetSession();
+              }}
+            />
+            allowRecalls
+          </label>
+
+          <div className="flex flex-wrap gap-2">
+            <button
+              type="button"
+              onClick={() => {
+                void startRun();
+              }}
+              className="rounded-md bg-emerald-500/80 px-3 py-1.5 text-sm font-medium text-emerald-50 hover:bg-emerald-500"
+              disabled={runStatus === 'running'}
+            >
+              Replay
+            </button>
+            <button
+              type="button"
+              onClick={stopRun}
+              className="rounded-md border border-slate-600 bg-slate-800 px-3 py-1.5 text-sm hover:bg-slate-700"
+              disabled={runStatus !== 'running'}
+            >
+              Stop
+            </button>
+            <button
+              type="button"
+              onClick={stepOnce}
+              className="rounded-md border border-slate-600 bg-slate-800 px-3 py-1.5 text-sm hover:bg-slate-700"
+            >
+              Step
+            </button>
+            <button
+              type="button"
+              onClick={resetSession}
+              className="rounded-md border border-slate-600 bg-slate-800 px-3 py-1.5 text-sm hover:bg-slate-700"
+            >
+              Reset
+            </button>
+          </div>
+
+          <button
+            type="button"
+            onClick={exportSession}
+            className="w-full rounded-md border border-slate-600 bg-slate-800 px-3 py-1.5 text-sm hover:bg-slate-700"
+          >
+            Export JSON session
+          </button>
+
+          <div className="flex items-center gap-2 pt-2 text-xs text-slate-300">
+            <span
+              className={`h-2 w-2 rounded-full ${statusDot[runStatus]} ${runStatus === 'running' ? 'animate-pulse' : ''}`}
+            />
+            <span className="capitalize">{runStatus}</span>
+            <span className="text-slate-500">
+              event #{Math.max(0, cursor)}
+            </span>
+          </div>
+        </aside>
+
+        <main className="space-y-4 rounded-2xl border border-slate-700/70 bg-slate-950/50 p-4">
+          <div className="rounded-xl border border-slate-700/60 bg-slate-900/80 p-3">
+            <p className="mb-2 text-xs uppercase tracking-wide text-slate-400">
+              Transcript
+            </p>
+            <pre className="max-h-60 overflow-auto whitespace-pre-wrap text-sm leading-relaxed text-slate-200">
+              {transcript ||
+                'No transcript yet. Start or step the scenario.'}
+            </pre>
+          </div>
+
+          {divergence ? (
+            <div className="rounded-lg border border-amber-500/40 bg-amber-500/10 px-3 py-2 text-sm text-amber-200">
+              Output divergence detected between static and incremental
+              rendering.
+            </div>
+          ) : null}
+
+          <div className="rounded-xl border border-slate-700/60 bg-slate-900/80 p-3">
+            <p className="mb-2 text-xs uppercase tracking-wide text-slate-400">
+              Highlighted output ({language})
+            </p>
+
+            {mode === 'static' ? (
+              <div className="max-h-[520px] overflow-auto rounded-lg bg-black/40 p-3 text-sm">
+                {staticHighlighted}
+              </div>
+            ) : null}
+
+            {mode === 'incremental' ? (
+              <pre className="max-h-[520px] overflow-auto rounded-lg bg-black/40 p-3 text-sm">
+                <ShikiTokenRenderer tokens={incrementalResult.tokens} />
+              </pre>
+            ) : null}
+
+            {mode === 'split' ? (
+              <div className="grid gap-3 md:grid-cols-2">
+                <div>
+                  <p className="mb-1 text-xs text-slate-400">Static</p>
+                  <div className="max-h-[520px] overflow-auto rounded-lg bg-black/40 p-3 text-sm">
+                    {staticHighlighted}
+                  </div>
+                </div>
+                <div>
+                  <p className="mb-1 text-xs text-slate-400">
+                    Incremental
+                  </p>
+                  <pre className="max-h-[520px] overflow-auto rounded-lg bg-black/40 p-3 text-sm">
+                    <ShikiTokenRenderer
+                      tokens={incrementalResult.tokens}
+                    />
+                  </pre>
+                </div>
+              </div>
+            ) : null}
+          </div>
+
+          {exportPayload ? (
+            <div className="rounded-xl border border-slate-700/60 bg-slate-900/80 p-3">
+              <p className="mb-2 text-xs uppercase tracking-wide text-slate-400">
+                Session JSON
+              </p>
+              <pre className="max-h-48 overflow-auto whitespace-pre-wrap text-xs text-slate-200">
+                {exportPayload}
+              </pre>
+            </div>
+          ) : null}
+        </main>
+
+        <aside className="space-y-4 rounded-2xl border border-slate-700/70 bg-slate-900/70 p-4">
+          <div>
+            <p className="mb-2 text-xs uppercase tracking-wide text-slate-400">
+              Integrity
+            </p>
+            <div className="space-y-1 text-sm text-slate-200">
+              <p>
+                parity:{' '}
+                {metrics.integrity.finalPlainTextMatchesBaseline
+                  ? 'pass'
+                  : 'fail'}
+              </p>
+              <p>
+                duplicate chars: {formatNumber(diff.duplicateCharCount)}
+              </p>
+              <p>missing chars: {formatNumber(diff.missingCharCount)}</p>
+              <p>
+                ended cleanly:{' '}
+                {metrics.integrity.endedCleanly ? 'yes' : 'no'}
+              </p>
             </div>
           </div>
 
-          <p className="px-1 text-[0.8rem] leading-relaxed text-white/20">
-            {mode === 'static' ? (
-              <>
-                <strong className="text-white/30">Static mode</strong>{' '}
-                re-highlights the full code on each token&mdash;
-                <code className="text-white/30">O(n&sup2;)</code> total
-                work. Switch to <em>Incremental</em> to see the
-                difference.
-              </>
-            ) : (
-              <>
-                <strong className="text-emerald-400/60">
-                  Incremental mode
-                </strong>{' '}
-                uses <code className="text-white/30">shiki-stream</code>{' '}
-                to tokenize only the delta&mdash;near-linear total work.
-                Compare with <em>Static</em> to see the improvement.
-              </>
-            )}
-          </p>
+          <div>
+            <p className="mb-2 text-xs uppercase tracking-wide text-slate-400">
+              Compute
+            </p>
+            <div className="space-y-1 text-sm text-slate-200">
+              <p>
+                final chars:{' '}
+                {formatNumber(metrics.compute.finalCodeChars)}
+              </p>
+              <p>
+                input chunks:{' '}
+                {formatNumber(metrics.compute.inputChunkCount)}
+              </p>
+              <p>
+                processed chars:{' '}
+                {formatNumber(metrics.compute.processedChars)}
+              </p>
+              <p>
+                highlight calls:{' '}
+                {formatNumber(metrics.compute.highlightCalls)}
+              </p>
+              <p>
+                render commits:{' '}
+                {formatNumber(metrics.compute.renderCommits)}
+              </p>
+              <p>work amp: {workAmplification.toFixed(2)}x</p>
+              <p>
+                resync count: {formatNumber(metrics.compute.resyncCount)}
+              </p>
+            </div>
+          </div>
+
+          <div>
+            <p className="mb-2 text-xs uppercase tracking-wide text-slate-400">
+              UX
+            </p>
+            <div className="space-y-1 text-sm text-slate-200">
+              <p>
+                first any output:{' '}
+                {formatMs(metrics.ux.timeToFirstAnyOutputMs)}
+              </p>
+              <p>
+                first highlighted:{' '}
+                {formatMs(metrics.ux.timeToFirstHighlightedCodeMs)}
+              </p>
+              <p>
+                p50 chunk latency:{' '}
+                {formatMs(metrics.ux.p50ChunkLatencyMs)}
+              </p>
+              <p>
+                p95 chunk latency:{' '}
+                {formatMs(metrics.ux.p95ChunkLatencyMs)}
+              </p>
+              <p>
+                max chunk latency:{' '}
+                {formatMs(metrics.ux.maxChunkLatencyMs)}
+              </p>
+              <p>session total: {formatMs(metrics.ux.sessionTotalMs)}</p>
+            </div>
+          </div>
+
+          <div>
+            <p className="mb-2 text-xs uppercase tracking-wide text-slate-400">
+              Event timeline
+            </p>
+            <div className="max-h-72 space-y-1 overflow-auto rounded-lg border border-slate-700/60 bg-slate-950/70 p-2">
+              {timeline.length === 0 ? (
+                <p className="text-xs text-slate-500">No events yet.</p>
+              ) : (
+                timeline.map((item) => (
+                  <div
+                    key={`${item.index}:${item.type}:${item.elapsedMs}`}
+                    className="rounded bg-slate-900/80 px-2 py-1 text-xs text-slate-300"
+                  >
+                    <span className="font-mono text-slate-400">
+                      #{item.index}
+                    </span>{' '}
+                    {item.type} - {item.elapsedMs.toFixed(1)} ms - code{' '}
+                    {item.codeChars} - text {item.transcriptChars}
+                  </div>
+                ))
+              )}
+            </div>
+          </div>
         </aside>
       </div>
     </section>

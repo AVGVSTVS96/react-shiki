@@ -1,0 +1,133 @@
+import { describe, expect, test } from 'vitest';
+
+import {
+  buildCodeChunks,
+  buildScenarioFrames,
+  buildControlledCodeStates,
+  createAsyncCodeIterableFromScenario,
+  createReadableCodeStreamFromScenario,
+  createStreamingScenario,
+  extractFinalCode,
+} from '../src/dev/streaming-lab';
+
+const readStreamText = async (stream: ReadableStream<string>) => {
+  const reader = stream.getReader();
+  let output = '';
+  while (true) {
+    const { done, value } = await reader.read();
+    if (done) break;
+    output += value;
+  }
+  return output;
+};
+
+const readAsyncIterableText = async (iterable: AsyncIterable<string>) => {
+  let output = '';
+  for await (const chunk of iterable) {
+    output += chunk;
+  }
+  return output;
+};
+
+describe('streaming lab scenarios', () => {
+  test('same seed yields deterministic event sequence', () => {
+    const a = createStreamingScenario({
+      presetId: 'openai-steady',
+      corpusId: 'tsx-chat-ui',
+      seed: 42,
+    });
+
+    const b = createStreamingScenario({
+      presetId: 'openai-steady',
+      corpusId: 'tsx-chat-ui',
+      seed: 42,
+    });
+
+    expect(a.events).toEqual(b.events);
+  });
+
+  test('replace-tail keeps prefix and converges to expected final code', () => {
+    const scenario = createStreamingScenario({
+      presetId: 'replace-tail',
+      corpusId: 'python-snippet',
+      seed: 77,
+    });
+
+    const frames = buildScenarioFrames(scenario.events);
+    const replaceIndex = frames.findIndex(
+      (frame) =>
+        frame.event.type === 'replace-tail' &&
+        frame.event.target === 'code'
+    );
+
+    expect(replaceIndex).toBeGreaterThan(0);
+
+    const before = frames[replaceIndex - 1]?.snapshot.codeBlocks[0] ?? '';
+    const after = frames[replaceIndex]?.snapshot.codeBlocks[0] ?? '';
+    const finalCode = extractFinalCode(scenario.events);
+
+    expect(after).not.toBe(before);
+    expect(finalCode).toBe(
+      frames[frames.length - 1]?.snapshot.codeBlocks[0] ?? ''
+    );
+
+    const prefixLength = (() => {
+      const max = Math.min(before.length, after.length);
+      let cursor = 0;
+      while (cursor < max && before[cursor] === after[cursor]) {
+        cursor += 1;
+      }
+      return cursor;
+    })();
+
+    expect(prefixLength).toBeGreaterThan(0);
+  });
+
+  test('pause and ping events do not mutate transcript content', () => {
+    const scenario = createStreamingScenario({
+      presetId: 'cancel-resume',
+      corpusId: 'json-tool-payload',
+      seed: 12,
+    });
+
+    const frames = buildScenarioFrames(scenario.events);
+
+    for (let index = 1; index < frames.length; index += 1) {
+      const current = frames[index]!;
+      const previous = frames[index - 1]!;
+      if (
+        current.event.type === 'pause' ||
+        current.event.type === 'ping'
+      ) {
+        expect(current.snapshot.transcript).toBe(
+          previous.snapshot.transcript
+        );
+      }
+    }
+  });
+
+  test('code, stream, and chunks adapters converge on append-only scenarios', async () => {
+    const scenario = createStreamingScenario({
+      presetId: 'anthropic-bursty',
+      corpusId: 'tsx-chat-ui',
+      seed: 9,
+    });
+
+    const codeStates = buildControlledCodeStates(scenario.events);
+    const expectedCode = codeStates[codeStates.length - 1]?.code ?? '';
+
+    const chunkData = buildCodeChunks(scenario.events);
+    const chunkText = chunkData.chunks.join('');
+    const streamText = await readStreamText(
+      createReadableCodeStreamFromScenario(scenario.events)
+    );
+    const iterableText = await readAsyncIterableText(
+      createAsyncCodeIterableFromScenario(scenario.events)
+    );
+
+    expect(chunkData.appendOnly).toBe(true);
+    expect(chunkText).toBe(expectedCode);
+    expect(streamText).toBe(expectedCode);
+    expect(iterableText).toBe(expectedCode);
+  });
+});
