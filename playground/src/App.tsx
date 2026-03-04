@@ -1,14 +1,59 @@
 import Demo from './Demo.mdx';
+import { useState } from 'react';
+import StreamingBenchmarkPage from './pages/StreamingBenchmarkPage';
 
 function App() {
+  const [view, setView] = useState<'demo' | 'streaming'>('demo');
+
   return (
-    <main className="flex flex-col min-w-screen dark">
-      <div className="flex flex-col prose dark:prose-invert self-center mt-10 md:max-w-3xl">
-        <Demo />
-        <footer className="text-sm dark:text-slate-300 mt-10 mb-8 self-end">
-          Made with ❤ by Bassim -{' '}
-          <a href="https://github.com/avgvstvs96">@avgvstvs96</a>
-        </footer>
+    <main className="dark min-h-screen w-full text-slate-100">
+      <div className="mx-auto w-full max-w-6xl px-4 pt-8">
+        <nav className="mb-6 flex flex-wrap items-center gap-2">
+          <button
+            type="button"
+            onClick={() => {
+              setView('demo');
+            }}
+            className={`rounded-md border px-3 py-1.5 text-sm font-medium transition ${
+              view === 'demo'
+                ? 'border-sky-400/50 bg-sky-500/20 text-sky-100'
+                : 'border-slate-600/70 bg-slate-700/30 text-slate-200'
+            }`}
+          >
+            Demo
+          </button>
+          <button
+            type="button"
+            onClick={() => {
+              setView('streaming');
+            }}
+            className={`rounded-md border px-3 py-1.5 text-sm font-medium transition ${
+              view === 'streaming'
+                ? 'border-sky-400/50 bg-sky-500/20 text-sky-100'
+                : 'border-slate-600/70 bg-slate-700/30 text-slate-200'
+            }`}
+          >
+            Streaming Benchmark
+          </button>
+        </nav>
+
+        {view === 'demo' ? (
+          <div className="prose mt-4 self-center dark:prose-invert md:max-w-3xl">
+            <Demo />
+            <footer className="mb-8 mt-10 self-end text-sm dark:text-slate-300">
+              Made with ❤ by Bassim -{' '}
+              <a href="https://github.com/avgvstvs96">@avgvstvs96</a>
+            </footer>
+          </div>
+        ) : (
+          <>
+            <StreamingBenchmarkPage />
+            <footer className="mb-8 mt-6 text-right text-sm text-slate-300">
+              Made with ❤ by Bassim -{' '}
+              <a href="https://github.com/avgvstvs96">@avgvstvs96</a>
+            </footer>
+          </>
+        )}
       </div>
     </main>
   );
