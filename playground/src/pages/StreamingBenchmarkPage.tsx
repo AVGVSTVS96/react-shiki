@@ -1,5 +1,9 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
-import { useShikiHighlighter } from 'react-shiki';
+import {
+  useShikiHighlighter,
+  useShikiStreamHighlighter,
+  ShikiTokenRenderer,
+} from 'react-shiki';
 import type { ReactNode } from 'react';
 
 import {
@@ -13,6 +17,7 @@ import {
 import { STREAMING_BENCHMARK_SAMPLE } from '../lib/streamingSample';
 
 type RunStatus = 'idle' | 'running' | 'stopped' | 'completed';
+type HighlightMode = 'static' | 'incremental';
 
 const formatMs = (value: number) => `${value.toFixed(2)} ms`;
 const formatNumber = (value: number) =>
@@ -48,6 +53,7 @@ export default function StreamingBenchmarkPage() {
   const [code, setCode] = useState('');
   const [status, setStatus] = useState<RunStatus>('idle');
   const [tokenDelayMs, setTokenDelayMs] = useState(20);
+  const [mode, setMode] = useState<HighlightMode>('static');
   const [metrics, setMetrics] = useState(
     createEmptyMetrics(progressiveStates.length)
   );
@@ -58,16 +64,30 @@ export default function StreamingBenchmarkPage() {
   );
   const tokenStartRef = useRef<number>(0);
   const isStreamingRef = useRef(false);
+  const prevCodeLenRef = useRef(0);
 
-  const highlighted = useShikiHighlighter(code, 'tsx', 'github-dark');
+  // ---- Both hooks are always called (Rules of Hooks). ----
+  // Only the active mode gets real code; the other gets empty string.
+  const staticHighlighted = useShikiHighlighter(
+    mode === 'static' ? code : '',
+    'tsx',
+    'github-dark'
+  );
 
-  const waitForHighlightCommit = useCallback(() => {
-    return new Promise<number>((resolve) => {
-      pendingResolveRef.current = resolve;
-    });
-  }, []);
+  const streamResult = useShikiStreamHighlighter(
+    mode === 'incremental' ? { code } : { code: '' },
+    'tsx',
+    'github-dark',
+    { batch: 'sync', allowRecalls: true }
+  );
 
+  // ---- Measurement: detect when the active output changes ----
+  const staticOutput = mode === 'static' ? staticHighlighted : null;
+  const streamTokens = mode === 'incremental' ? streamResult.tokens : null;
+
+  // Static mode: measure when highlighted output changes
   useEffect(() => {
+    if (mode !== 'static') return;
     if (!isStreamingRef.current) return;
     if (!pendingResolveRef.current) return;
 
@@ -75,7 +95,25 @@ export default function StreamingBenchmarkPage() {
     const resolve = pendingResolveRef.current;
     pendingResolveRef.current = null;
     resolve(elapsed);
-  }, [highlighted]);
+  }, [staticOutput, mode]);
+
+  // Incremental mode: measure when tokens change
+  useEffect(() => {
+    if (mode !== 'incremental') return;
+    if (!isStreamingRef.current) return;
+    if (!pendingResolveRef.current) return;
+
+    const elapsed = performance.now() - tokenStartRef.current;
+    const resolve = pendingResolveRef.current;
+    pendingResolveRef.current = null;
+    resolve(elapsed);
+  }, [streamTokens, mode]);
+
+  const waitForHighlightCommit = useCallback(() => {
+    return new Promise<number>((resolve) => {
+      pendingResolveRef.current = resolve;
+    });
+  }, []);
 
   const stopRun = useCallback((nextStatus: RunStatus = 'stopped') => {
     runIdRef.current += 1;
@@ -91,6 +129,7 @@ export default function StreamingBenchmarkPage() {
   const reset = useCallback(() => {
     stopRun('idle');
     setCode('');
+    prevCodeLenRef.current = 0;
     setMetrics(createEmptyMetrics(progressiveStates.length));
   }, [progressiveStates.length, stopRun]);
 
@@ -100,6 +139,7 @@ export default function StreamingBenchmarkPage() {
     const runId = runIdRef.current + 1;
     runIdRef.current = runId;
     isStreamingRef.current = true;
+    prevCodeLenRef.current = 0;
     setStatus('running');
     setCode('');
     setMetrics(createEmptyMetrics(progressiveStates.length));
@@ -119,7 +159,15 @@ export default function StreamingBenchmarkPage() {
       if (runId !== runIdRef.current) return;
 
       tokenDurationsMs.push(elapsed);
-      codeLengths.push(next.length);
+
+      // Static mode: full code re-highlighted each time → track full length
+      // Incremental mode: only delta processed → track delta length
+      if (mode === 'incremental') {
+        codeLengths.push(next.length - prevCodeLenRef.current);
+        prevCodeLenRef.current = next.length;
+      } else {
+        codeLengths.push(next.length);
+      }
 
       setMetrics(
         buildStreamingMetrics({
@@ -137,7 +185,7 @@ export default function StreamingBenchmarkPage() {
 
     isStreamingRef.current = false;
     setStatus('completed');
-  }, [progressiveStates, status, tokenDelayMs, waitForHighlightCommit]);
+  }, [progressiveStates, status, tokenDelayMs, mode, waitForHighlightCommit]);
 
   useEffect(() => {
     return () => {
@@ -145,7 +193,14 @@ export default function StreamingBenchmarkPage() {
     };
   }, [stopRun]);
 
-  const renderNode = highlighted as ReactNode;
+  // ---- Render the active output ----
+  const renderOutput =
+    mode === 'static' ? (
+      (staticHighlighted as ReactNode)
+    ) : (
+      <ShikiTokenRenderer tokens={streamResult.tokens} />
+    );
+
   const extraWork =
     metrics.workAmplification > 1 ? metrics.workAmplification - 1 : 0;
   const finalCodeLength =
@@ -179,12 +234,53 @@ export default function StreamingBenchmarkPage() {
         </h1>
         <p className="mt-3 max-w-2xl text-[0.95rem] leading-relaxed text-white/45">
           Measures the cost of re-highlighting on every token during a simulated
-          streaming response. Watch total work grow in real time.
+          streaming response. Toggle between the static hook and the incremental
+          shiki-stream hook to compare.
         </p>
       </header>
 
       {/* Controls */}
       <div className="relative mb-8 flex flex-wrap items-center gap-3">
+        {/* Mode toggle */}
+        <div className="flex overflow-hidden rounded-xl border border-white/[0.08] bg-white/[0.03]">
+          <button
+            type="button"
+            onClick={() => {
+              if (status !== 'running') {
+                setMode('static');
+                reset();
+              }
+            }}
+            disabled={status === 'running'}
+            className={`px-4 py-2 text-[0.8125rem] font-medium transition-all ${
+              mode === 'static'
+                ? 'bg-white/[0.12] text-white'
+                : 'text-white/40 hover:text-white/60'
+            } disabled:cursor-not-allowed`}
+          >
+            Static <span className="text-[0.6875rem] opacity-50">O(n²)</span>
+          </button>
+          <button
+            type="button"
+            onClick={() => {
+              if (status !== 'running') {
+                setMode('incremental');
+                reset();
+              }
+            }}
+            disabled={status === 'running'}
+            className={`px-4 py-2 text-[0.8125rem] font-medium transition-all ${
+              mode === 'incremental'
+                ? 'bg-emerald-500/20 text-emerald-300'
+                : 'text-white/40 hover:text-white/60'
+            } disabled:cursor-not-allowed`}
+          >
+            Incremental <span className="text-[0.6875rem] opacity-50">shiki-stream</span>
+          </button>
+        </div>
+
+        <div className="w-px self-stretch bg-white/[0.06]" />
+
         <button
           type="button"
           onClick={() => void startRun()}
@@ -286,7 +382,9 @@ export default function StreamingBenchmarkPage() {
       <div className="relative mb-8">
         <div className="h-1 overflow-hidden rounded-full bg-white/[0.06]">
           <div
-            className="h-full rounded-full bg-blue-500 transition-all duration-300"
+            className={`h-full rounded-full transition-all duration-300 ${
+              mode === 'incremental' ? 'bg-emerald-500' : 'bg-blue-500'
+            }`}
             style={{
               width: `${Math.min(
                 100,
@@ -295,7 +393,9 @@ export default function StreamingBenchmarkPage() {
               )}%`,
               boxShadow:
                 metrics.tokensProcessed > 0
-                  ? '0 0 12px rgba(59,130,246,0.4)'
+                  ? mode === 'incremental'
+                    ? '0 0 12px rgba(16,185,129,0.4)'
+                    : '0 0 12px rgba(59,130,246,0.4)'
                   : 'none',
             }}
           />
@@ -308,9 +408,12 @@ export default function StreamingBenchmarkPage() {
         <div className="rounded-2xl border border-white/[0.06] bg-white/[0.02] p-5">
           <p className="mb-3 text-[0.6875rem] font-medium uppercase tracking-[0.12em] text-white/20">
             Live output
+            <span className="ml-2 text-white/10">
+              {mode === 'incremental' ? '(shiki-stream)' : '(static rehighlight)'}
+            </span>
           </p>
           <div className="code-scroll max-h-[640px] overflow-auto rounded-xl bg-black/30 p-4">
-            {renderNode}
+            <pre>{renderOutput}</pre>
           </div>
         </div>
 
@@ -338,11 +441,21 @@ export default function StreamingBenchmarkPage() {
           </div>
 
           <p className="px-1 text-[0.8rem] leading-relaxed text-white/20">
-            Current mode re-highlights the full code on each
-            token&mdash;
-            <code className="text-white/30">O(n&sup2;)</code> total work. With{' '}
-            <code className="text-white/30">shiki-stream</code>, growth becomes
-            near-linear.
+            {mode === 'static' ? (
+              <>
+                <strong className="text-white/30">Static mode</strong> re-highlights
+                the full code on each token&mdash;
+                <code className="text-white/30">O(n&sup2;)</code> total work. Switch
+                to <em>Incremental</em> to see the difference.
+              </>
+            ) : (
+              <>
+                <strong className="text-emerald-400/60">Incremental mode</strong> uses{' '}
+                <code className="text-white/30">shiki-stream</code> to tokenize only
+                the delta&mdash;near-linear total work. Compare with <em>Static</em> to
+                see the improvement.
+              </>
+            )}
           </p>
         </aside>
       </div>
