@@ -6,7 +6,7 @@ function App() {
   const [view, setView] = useState<'demo' | 'streaming'>('demo');
 
   return (
-    <main className="dark min-h-screen w-full text-slate-100">
+    <main className="dark flex min-h-screen w-full flex-col items-center text-slate-100">
       <div className="mx-auto w-full max-w-6xl px-4 pt-8">
         <nav className="mb-6 flex flex-wrap items-center gap-2">
           <button
@@ -38,9 +38,9 @@ function App() {
         </nav>
 
         {view === 'demo' ? (
-          <div className="prose mt-4 self-center dark:prose-invert md:max-w-3xl">
+          <div className="prose mx-auto mt-4 dark:prose-invert md:max-w-3xl">
             <Demo />
-            <footer className="mb-8 mt-10 self-end text-sm dark:text-slate-300">
+            <footer className="mb-8 mt-10 text-right text-sm dark:text-slate-300">
               Made with ❤ by Bassim -{' '}
               <a href="https://github.com/avgvstvs96">@avgvstvs96</a>
             </footer>

@@ -37,6 +37,10 @@ body {
   min-height: 100vh;
 }
 
+#root {
+  width: 100%;
+}
+
 h1 {
   font-size: 3.2em;
   line-height: 1.1;
@@ -61,15 +65,70 @@ button:focus-visible {
   outline: 4px auto -webkit-focus-ring-color;
 }
 
-/* @media (prefers-color-scheme: light) { */
-/*   :root { */
-/*     color: #213547; */
-/*     background-color: #ffffff; */
-/*   } */
-/*   a:hover { */
-/*     color: #747bff; */
-/*   } */
-/*   button { */
-/*     background-color: #f9f9f9; */
-/*   } */
-/* } */
+/* ── Streaming benchmark page ── */
+
+.streaming-page input[type='range'] {
+  -webkit-appearance: none;
+  appearance: none;
+  height: 4px;
+  background: rgba(255, 255, 255, 0.08);
+  border-radius: 9999px;
+  outline: none;
+  cursor: pointer;
+}
+
+.streaming-page input[type='range']::-webkit-slider-thumb {
+  -webkit-appearance: none;
+  appearance: none;
+  width: 14px;
+  height: 14px;
+  border-radius: 50%;
+  background: white;
+  cursor: pointer;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.4);
+  transition: transform 0.15s ease;
+}
+
+.streaming-page input[type='range']::-webkit-slider-thumb:hover {
+  transform: scale(1.15);
+}
+
+.streaming-page input[type='range']::-moz-range-track {
+  height: 4px;
+  background: rgba(255, 255, 255, 0.08);
+  border-radius: 9999px;
+  border: none;
+}
+
+.streaming-page input[type='range']::-moz-range-thumb {
+  width: 14px;
+  height: 14px;
+  border-radius: 50%;
+  background: white;
+  cursor: pointer;
+  border: none;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.4);
+}
+
+.streaming-page .code-scroll {
+  scrollbar-width: thin;
+  scrollbar-color: rgba(255, 255, 255, 0.08) transparent;
+}
+
+.streaming-page .code-scroll::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+
+.streaming-page .code-scroll::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+.streaming-page .code-scroll::-webkit-scrollbar-thumb {
+  background: rgba(255, 255, 255, 0.08);
+  border-radius: 3px;
+}
+
+.streaming-page .code-scroll::-webkit-scrollbar-thumb:hover {
+  background: rgba(255, 255, 255, 0.15);
+}
