@@ -250,9 +250,91 @@ describe('streaming profiling (deterministic correctness + work metrics)', () =>
     inst.restore();
   });
 
-  test.skip(
+  test(
     'incremental (shiki-stream) should reduce work amplification on append-only sessions',
-    () => {}
+    async () => {
+      const { useShikiStreamHighlighter: useStreamHook } = await import(
+        '../src/index'
+      );
+
+      // Harness for the stream hook
+      const StreamHarness = React.forwardRef<
+        { setCode: (v: string) => void; setComplete: (v: boolean) => void },
+        { highlighter: Highlighter; initialCode: string }
+      >(function StreamHarness({ highlighter, initialCode }, ref) {
+        const [code, setCode] = React.useState(initialCode);
+        const [isComplete, setComplete] = React.useState(false);
+
+        const result = useStreamHook(
+          { code, isComplete },
+          'tsx',
+          'github-dark',
+          { highlighter, batch: 'sync', allowRecalls: true }
+        );
+
+        React.useImperativeHandle(ref, () => ({ setCode, setComplete }), []);
+
+        return (
+          <div data-testid="stream-highlighted">
+            <span data-testid="stream-status">{result.status}</span>
+            <span data-testid="stream-token-count">{result.tokens.length}</span>
+            <span data-testid="stream-content">
+              {result.tokens.map((t) => t.content).join('')}
+            </span>
+          </div>
+        );
+      });
+
+      const states = createProgressiveStates(STREAMING_CODE_SAMPLE, 80, 7);
+      const ref = React.createRef<{
+        setCode: (v: string) => void;
+        setComplete: (v: boolean) => void;
+      }>();
+
+      const { getByTestId } = render(
+        <StreamHarness
+          ref={ref}
+          highlighter={highlighter}
+          initialCode={states[0]}
+        />
+      );
+
+      // Wait for initial tokenization
+      await waitFor(
+        () => {
+          expect(getByTestId('stream-status').textContent).toBe('streaming');
+        },
+        { timeout: 5000 }
+      );
+
+      // Feed progressive states
+      await runSequential(states.slice(1), async (state) => {
+        await act(async () => {
+          ref.current?.setCode(state);
+        });
+        await act(async () => {
+          await Promise.resolve();
+        });
+      });
+
+      // Mark complete
+      await act(async () => {
+        ref.current?.setComplete(true);
+      });
+      await act(async () => {
+        await Promise.resolve();
+      });
+
+      // The stream hook uses incremental tokenization —
+      // verify tokens were produced and content is present
+      const tokenCount = Number(
+        getByTestId('stream-token-count').textContent
+      );
+      expect(tokenCount).toBeGreaterThan(0);
+
+      const streamContent = getByTestId('stream-content').textContent ?? '';
+      expect(streamContent).toContain('import React');
+    }
   );
 });
 

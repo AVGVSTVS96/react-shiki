@@ -1,6 +1,8 @@
 import { useShikiHighlighter as useBaseHook } from './lib/hook';
+import { useShikiStreamHighlighter as useBaseStreamHook } from './lib/stream-hook';
 import { validateCoreHighlighter } from './bundles/core';
 import type { UseShikiHighlighter } from './lib/types';
+import type { UseShikiStreamHighlighter } from './lib/stream-types';
 
 export { isInlineCode, rehypeInlineCodeProperty } from './lib/plugins';
 
@@ -9,7 +11,13 @@ import {
   type ShikiHighlighterProps,
 } from './lib/component';
 
+import {
+  createShikiStreamComponent,
+  type ShikiStreamHighlighterProps,
+} from './lib/stream-component';
+
 export type { ShikiHighlighterProps };
+export type { ShikiStreamHighlighterProps };
 
 export type {
   UseShikiHighlighter,
@@ -19,6 +27,17 @@ export type {
   Element,
   HighlighterOptions,
 } from './lib/types';
+
+export type {
+  UseShikiStreamHighlighter,
+  ShikiStreamInput,
+  StreamHighlighterOptions,
+  StreamHighlighterResult,
+  StreamStatus,
+  BatchStrategy,
+} from './lib/stream-types';
+
+export { ShikiTokenRenderer, type ShikiTokenRendererProps } from './lib/stream-renderer';
 
 export { createHighlighterCore } from 'shiki/core';
 export { createOnigurumaEngine } from 'shiki/engine/oniguruma';
@@ -91,3 +110,35 @@ export const ShikiHighlighter = createShikiHighlighterComponent(
   useShikiHighlighter
 );
 export default ShikiHighlighter;
+
+/**
+ * Streaming syntax highlighter hook (core bundle)
+ * Requires a custom highlighter to be provided via options.highlighter.
+ */
+export const useShikiStreamHighlighter: UseShikiStreamHighlighter = (
+  input,
+  lang,
+  themeInput,
+  options = {}
+) => {
+  const highlighter = validateCoreHighlighter(options.highlighter);
+
+  return useBaseStreamHook(
+    input,
+    lang,
+    themeInput,
+    {
+      ...options,
+      highlighter,
+    },
+    async () => highlighter
+  );
+};
+
+/**
+ * ShikiStreamHighlighter component using a custom highlighter.
+ * Requires a highlighter to be provided.
+ */
+export const ShikiStreamHighlighter = createShikiStreamComponent(
+  useShikiStreamHighlighter
+);
