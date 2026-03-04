@@ -34,10 +34,12 @@ export type {
   StreamHighlighterOptions,
   StreamHighlighterResult,
   StreamStatus,
-  BatchStrategy,
 } from './lib/stream-types';
 
-export { ShikiTokenRenderer, type ShikiTokenRendererProps } from './lib/stream-renderer';
+export {
+  ShikiTokenRenderer,
+  type ShikiTokenRendererProps,
+} from './lib/stream-renderer';
 
 export {
   createJavaScriptRegexEngine,
@@ -100,7 +102,7 @@ export default ShikiHighlighter;
  * @param lang - Language (bundled or custom)
  * @param theme - Theme (bundled, multi-theme, or custom)
  * @param options - Streaming options
- * @returns Token state, status, error, and reset function
+ * @returns Token state, status, and error
  *
  * Full bundle (~6.4MB minified, 1.2MB gzipped). For smaller bundles: `react-shiki/web` or `react-shiki/core`
  */

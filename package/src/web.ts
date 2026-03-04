@@ -34,10 +34,12 @@ export type {
   StreamHighlighterOptions,
   StreamHighlighterResult,
   StreamStatus,
-  BatchStrategy,
 } from './lib/stream-types';
 
-export { ShikiTokenRenderer, type ShikiTokenRendererProps } from './lib/stream-renderer';
+export {
+  ShikiTokenRenderer,
+  type ShikiTokenRendererProps,
+} from './lib/stream-renderer';
 
 export {
   createJavaScriptRegexEngine,

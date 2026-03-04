@@ -12,8 +12,9 @@ import type { Language, Theme, Themes } from './types';
 /**
  * Input source for streaming syntax highlighting.
  *
- * - `code`: A controlled growing string, the primary path for chat apps.
+ * - `code`: A controlled growing string, optimized for append-only updates.
  *   Set `isComplete` when the stream is finished.
+ *   Non-append replacements restart the stream session.
  * - `stream`: A browser `ReadableStream<string>`.
  * - `chunks`: An async iterable source.
  */
@@ -33,15 +34,6 @@ export type ShikiStreamInput =
  * Streaming lifecycle status.
  */
 export type StreamStatus = 'idle' | 'streaming' | 'done' | 'error';
-
-/**
- * Batching strategy for state commits.
- *
- * - `'sync'`: commit immediately after each token update
- * - `'raf'`: commit once per animation frame (default)
- * - `number`: commit at most once per N milliseconds
- */
-export type BatchStrategy = 'sync' | 'raf' | number;
 
 /**
  * Options for the streaming syntax highlighter hook.
@@ -75,29 +67,11 @@ export interface StreamHighlighterOptions {
   engine?: Awaitable<RegexEngine>;
 
   /**
-   * Batching strategy for React state commits.
-   * @default 'raf'
-   */
-  batch?: BatchStrategy;
-
-  /**
    * Include unstable "preview" tokens for smoother streaming.
    * When true, tokens may shift as later context changes tokenization.
    * @default true
    */
   allowRecalls?: boolean;
-
-  /**
-   * Whether to show line numbers in the renderer.
-   * @default false
-   */
-  showLineNumbers?: boolean;
-
-  /**
-   * Starting line number when showLineNumbers is true.
-   * @default 1
-   */
-  startingLineNumber?: number;
 
   /**
    * Callback fired when the stream starts producing tokens.
@@ -128,11 +102,6 @@ export interface StreamHighlighterResult {
    * Error if status is 'error', null otherwise.
    */
   error: Error | null;
-
-  /**
-   * Reset the stream session, clearing all tokens and status.
-   */
-  reset: () => void;
 }
 
 /**

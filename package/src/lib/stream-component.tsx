@@ -13,7 +13,8 @@ import { ShikiTokenRenderer } from './stream-renderer';
 /**
  * Props for the ShikiStreamHighlighter component.
  */
-export interface ShikiStreamHighlighterProps extends StreamHighlighterOptions {
+export interface ShikiStreamHighlighterProps
+  extends StreamHighlighterOptions {
   /**
    * Input source for streaming.
    */
@@ -90,15 +91,12 @@ export const createShikiStreamComponent = (
         langStyle,
         langClassName,
         as: Element = 'pre',
-        showLineNumbers = false,
-        startingLineNumber = 1,
         // Stream options
         highlighter,
         customLanguages,
         preloadLanguages,
         langAlias,
         engine,
-        batch,
         allowRecalls,
         onStreamStart,
         onStreamEnd,
@@ -111,10 +109,7 @@ export const createShikiStreamComponent = (
         preloadLanguages,
         langAlias,
         engine,
-        batch,
         allowRecalls,
-        showLineNumbers,
-        startingLineNumber,
         onStreamStart,
         onStreamEnd,
       };
@@ -151,11 +146,7 @@ export const createShikiStreamComponent = (
               {displayLanguageId}
             </span>
           ) : null}
-          <ShikiTokenRenderer
-            tokens={tokens}
-            showLineNumbers={showLineNumbers}
-            startingLineNumber={startingLineNumber}
-          />
+          <ShikiTokenRenderer tokens={tokens} />
         </Element>
       );
     }
