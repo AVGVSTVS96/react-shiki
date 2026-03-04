@@ -159,8 +159,10 @@ export const useShikiStreamHighlighter = (
   const { themesToLoad } = resolvedTheme;
 
   // ---- Mutable refs (never in deps arrays) ----
+  // Single display buffer: contains both stable + unstable tokens.
+  // Recall removes from the end (the previous unstable tokens),
+  // then new stable + unstable are appended.
   const tokensRef = useRef<ThemedToken[]>([]);
-  const unstableRef = useRef<ThemedToken[]>([]);
   const prevCodeRef = useRef<string>('');
   const schedulerRef = useRef<BatchScheduler | null>(null);
 
@@ -170,13 +172,7 @@ export const useShikiStreamHighlighter = (
   // ---- Effect 1: Batch scheduler ----
   useEffect(() => {
     const flush = () => {
-      const buf = tokensRef.current;
-      const unstable = unstableRef.current;
-      if (allowRecalls && unstable.length > 0) {
-        setTokens([...buf, ...unstable]);
-      } else {
-        setTokens([...buf]);
-      }
+      setTokens([...tokensRef.current]);
     };
 
     schedulerRef.current?.cancel();
@@ -258,7 +254,6 @@ export const useShikiStreamHighlighter = (
 
     // Reset token state for the new session
     tokensRef.current = [];
-    unstableRef.current = [];
     prevCodeRef.current = '';
     setTokens([]);
     setStatus('idle');
@@ -288,17 +283,25 @@ export const useShikiStreamHighlighter = (
     }) => {
       if (cancelled) return;
 
-      const buf = tokensRef.current;
-
-      if (result.recall > 0) {
-        tokensRef.current = buf.slice(
+      // Recall removes previous unstable tokens from the end of the display buffer.
+      // This is safe because when allowRecalls is true, unstable tokens were appended
+      // to the buffer on the previous round. When allowRecalls is false, recall is
+      // effectively 0 (no unstable tokens were added).
+      if (allowRecalls && result.recall > 0) {
+        tokensRef.current = tokensRef.current.slice(
           0,
-          Math.max(0, buf.length - result.recall)
+          Math.max(0, tokensRef.current.length - result.recall)
         );
       }
 
+      // Append new stable tokens (always)
       tokensRef.current.push(...result.stable);
-      unstableRef.current = result.unstable;
+
+      // Append new unstable tokens (only when allowRecalls is true,
+      // so they'll be recalled on the next enqueue)
+      if (allowRecalls) {
+        tokensRef.current.push(...result.unstable);
+      }
 
       if (!streamStarted) {
         streamStarted = true;
@@ -313,8 +316,14 @@ export const useShikiStreamHighlighter = (
       if (cancelled) return;
 
       const closeResult = tokenizer.close();
-      tokensRef.current.push(...closeResult.stable);
-      unstableRef.current = [];
+
+      // close() returns the final unstable tokens as stable.
+      // When allowRecalls is true, those tokens are already in our buffer
+      // (they were appended as unstable). Don't add them again.
+      // When allowRecalls is false, they weren't displayed yet — add them now.
+      if (!allowRecalls) {
+        tokensRef.current.push(...closeResult.stable);
+      }
 
       setStatus('done');
       stableOpts.onStreamEnd?.();
@@ -346,7 +355,6 @@ export const useShikiStreamHighlighter = (
             // Non-append (edit/reset/initial): clear and re-feed
             tokenizer.clear();
             tokensRef.current = [];
-            unstableRef.current = [];
 
             if (newCode) {
               const result = await tokenizer.enqueue(newCode);
@@ -443,7 +451,6 @@ export const useShikiStreamHighlighter = (
   // ---- Reset callback ----
   const reset = useCallback(() => {
     tokensRef.current = [];
-    unstableRef.current = [];
     prevCodeRef.current = '';
     setTokens([]);
     setStatus('idle');

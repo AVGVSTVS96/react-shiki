@@ -1,5 +1,6 @@
 import { afterAll, beforeAll, bench, describe } from 'vitest';
 import { getSingletonHighlighter, type CodeToHastOptions, type Highlighter } from 'shiki';
+import { ShikiStreamTokenizer } from 'shiki-stream';
 import { jsx, jsxs, Fragment } from 'react/jsx-runtime';
 import { toJsxRuntime } from 'hast-util-to-jsx-runtime';
 
@@ -8,6 +9,7 @@ import {
   type SessionSummary,
   type StreamMode,
   createInstrumentedHighlighter,
+  createTokenChunks,
   createProgressiveStates,
   runFirehose,
   runSequential,
@@ -72,6 +74,32 @@ beforeAll(async () => {
 
 afterAll(() => {
   reportOnce.clear();
+});
+
+describe('streaming incremental (shiki-stream)', () => {
+  for (const scenario of scenarios) {
+    bench(`${scenario.name} :: shiki-stream incremental`, async () => {
+      const tokenizer = new ShikiStreamTokenizer({
+        highlighter,
+        lang: LANGUAGE,
+        theme: THEME,
+      });
+
+      const chunks = createTokenChunks(
+        scenario.states[scenario.states.length - 1] ?? '',
+        scenario.states.length,
+        42
+      );
+
+      let totalTokens = 0;
+      for (const chunk of chunks) {
+        const result = await tokenizer.enqueue(chunk);
+        totalTokens += result.stable.length + result.unstable.length;
+      }
+      const closeResult = tokenizer.close();
+      totalTokens += closeResult.stable.length;
+    });
+  }
 });
 
 describe('streaming full rehighlight complexity', () => {
