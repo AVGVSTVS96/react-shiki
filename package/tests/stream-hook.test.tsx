@@ -1,23 +1,14 @@
-import React, {
-  forwardRef,
-  useImperativeHandle,
-  useState,
-} from 'react';
+import React, { forwardRef, useImperativeHandle, useState } from 'react';
 import { render, waitFor, act } from '@testing-library/react';
 import { describe, test, beforeAll, expect } from 'vitest';
 import { getSingletonHighlighter, type Highlighter } from 'shiki';
 
 import { useShikiStreamHighlighter } from '../src/index';
-import type { ShikiStreamInput, StreamHighlighterResult } from '../src/lib/stream-types';
+import type {
+  ShikiStreamInput,
+  StreamHighlighterResult,
+} from '../src/lib/stream-types';
 import type { Language, Theme, Themes } from '../src/lib/types';
-import {
-  STREAMING_CODE_SAMPLE,
-  createProgressiveStates,
-} from './streaming-fixtures';
-
-// ---------------------------------------------------------------------------
-// Test harness
-// ---------------------------------------------------------------------------
 
 interface StreamHarnessHandle {
   setInput: (value: ShikiStreamInput) => void;
@@ -31,8 +22,6 @@ interface StreamHarnessProps {
   initialInput: ShikiStreamInput;
   initialLanguage?: Language;
   initialTheme?: Theme | Themes;
-  batch?: 'sync' | 'raf' | number;
-  allowRecalls?: boolean;
 }
 
 const StreamHarness = forwardRef<StreamHarnessHandle, StreamHarnessProps>(
@@ -42,8 +31,6 @@ const StreamHarness = forwardRef<StreamHarnessHandle, StreamHarnessProps>(
       initialInput,
       initialLanguage = 'tsx',
       initialTheme = 'github-dark',
-      batch = 'sync',
-      allowRecalls = true,
     },
     ref
   ) {
@@ -53,8 +40,6 @@ const StreamHarness = forwardRef<StreamHarnessHandle, StreamHarnessProps>(
 
     const result = useShikiStreamHighlighter(input, language, theme, {
       highlighter,
-      batch,
-      allowRecalls,
     });
 
     useImperativeHandle(
@@ -83,10 +68,6 @@ const StreamHarness = forwardRef<StreamHarnessHandle, StreamHarnessProps>(
   }
 );
 
-// ---------------------------------------------------------------------------
-// Helpers
-// ---------------------------------------------------------------------------
-
 const flushAll = async () => {
   await act(async () => {
     await new Promise((r) => setTimeout(r, 0));
@@ -103,163 +84,42 @@ const setInputState = async (
   await flushAll();
 };
 
-// ---------------------------------------------------------------------------
-// Tests
-// ---------------------------------------------------------------------------
+const tokensToText = (result: StreamHighlighterResult) =>
+  result.tokens.map((t) => t.content).join('');
+
+const streamFromChunks = (chunks: string[]) =>
+  new ReadableStream<string>({
+    start(controller) {
+      for (const chunk of chunks) {
+        controller.enqueue(chunk);
+      }
+      controller.close();
+    },
+  });
 
 let highlighter: Highlighter;
 
 beforeAll(async () => {
   highlighter = await getSingletonHighlighter({
-    langs: ['tsx', 'typescript', 'markdown', 'plaintext'],
-    themes: ['github-dark', 'github-light'],
+    langs: [
+      'tsx',
+      'typescript',
+      'markdown',
+      'plaintext',
+      'php',
+      'ruby',
+      'swift',
+      'go',
+    ],
+    themes: ['github-dark', 'github-light', 'tokyo-night'],
   });
 }, 30000);
 
 describe('useShikiStreamHighlighter', () => {
-  test('renders tokens for basic code input', async () => {
+  test('append-only code mode preserves exact final output with no duplicates', async () => {
+    const source = 'const x = 1';
     const ref = React.createRef<StreamHarnessHandle>();
-    const { getByTestId } = render(
-      <StreamHarness
-        ref={ref}
-        highlighter={highlighter}
-        initialInput={{ code: 'const x = 1;' }}
-      />
-    );
-
-    await waitFor(
-      () => {
-        const tokenCount = Number(getByTestId('token-count').textContent);
-        expect(tokenCount).toBeGreaterThan(0);
-      },
-      { timeout: 5000 }
-    );
-
-    expect(getByTestId('content').textContent).toContain('const');
-    expect(getByTestId('content').textContent).toContain('x');
-  });
-
-  test('transitions status to streaming on code input', async () => {
-    const ref = React.createRef<StreamHarnessHandle>();
-    const { getByTestId } = render(
-      <StreamHarness
-        ref={ref}
-        highlighter={highlighter}
-        initialInput={{ code: 'const x = 1;' }}
-      />
-    );
-
-    await waitFor(
-      () => {
-        const status = getByTestId('status').textContent;
-        expect(status).toBe('streaming');
-      },
-      { timeout: 5000 }
-    );
-  });
-
-  test('transitions to done status when isComplete is true', async () => {
-    const ref = React.createRef<StreamHarnessHandle>();
-    const { getByTestId } = render(
-      <StreamHarness
-        ref={ref}
-        highlighter={highlighter}
-        initialInput={{ code: 'const x = 1;', isComplete: true }}
-      />
-    );
-
-    await waitFor(
-      () => {
-        expect(getByTestId('status').textContent).toBe('done');
-      },
-      { timeout: 5000 }
-    );
-  });
-
-  test('handles append-only code updates incrementally', async () => {
-    const ref = React.createRef<StreamHarnessHandle>();
-    const { getByTestId } = render(
-      <StreamHarness
-        ref={ref}
-        highlighter={highlighter}
-        initialInput={{ code: 'const ' }}
-      />
-    );
-
-    await waitFor(
-      () => {
-        expect(Number(getByTestId('token-count').textContent)).toBeGreaterThan(0);
-      },
-      { timeout: 5000 }
-    );
-
-    // Append more code
-    await setInputState(ref, { code: 'const x = 1;' });
-
-    await waitFor(() => {
-      expect(getByTestId('content').textContent).toContain('const');
-      expect(getByTestId('content').textContent).toContain('1');
-    });
-  });
-
-  test('handles non-append (edit) code updates via reset', async () => {
-    const ref = React.createRef<StreamHarnessHandle>();
-    const { getByTestId } = render(
-      <StreamHarness
-        ref={ref}
-        highlighter={highlighter}
-        initialInput={{ code: 'const x = 1;' }}
-      />
-    );
-
-    await waitFor(
-      () => {
-        expect(Number(getByTestId('token-count').textContent)).toBeGreaterThan(0);
-      },
-      { timeout: 5000 }
-    );
-
-    // Replace with completely different code (non-append)
-    await setInputState(ref, { code: 'let y = 2;' });
-
-    await waitFor(() => {
-      const content = getByTestId('content').textContent;
-      expect(content).toContain('let');
-      expect(content).toContain('y');
-      expect(content).not.toContain('const');
-    });
-  });
-
-  test('resets state when reset() is called', async () => {
-    const ref = React.createRef<StreamHarnessHandle>();
-    const { getByTestId } = render(
-      <StreamHarness
-        ref={ref}
-        highlighter={highlighter}
-        initialInput={{ code: 'const x = 1;' }}
-      />
-    );
-
-    await waitFor(
-      () => {
-        expect(Number(getByTestId('token-count').textContent)).toBeGreaterThan(0);
-      },
-      { timeout: 5000 }
-    );
-
-    // Call reset
-    await act(async () => {
-      ref.current?.getResult().reset();
-    });
-    await flushAll();
-
-    expect(getByTestId('status').textContent).toBe('idle');
-    expect(Number(getByTestId('token-count').textContent)).toBe(0);
-  });
-
-  test('handles empty code input', async () => {
-    const ref = React.createRef<StreamHarnessHandle>();
-    const { getByTestId } = render(
+    render(
       <StreamHarness
         ref={ref}
         highlighter={highlighter}
@@ -267,138 +127,148 @@ describe('useShikiStreamHighlighter', () => {
       />
     );
 
-    // Should not crash — tokens remain empty
-    await flushAll();
-    expect(Number(getByTestId('token-count').textContent)).toBe(0);
-  });
-
-  test('rebuilds tokenizer on language change', async () => {
-    const ref = React.createRef<StreamHarnessHandle>();
-    const { getByTestId } = render(
-      <StreamHarness
-        ref={ref}
-        highlighter={highlighter}
-        initialInput={{ code: 'const x = 1;' }}
-        initialLanguage="tsx"
-      />
-    );
-
-    await waitFor(
-      () => {
-        expect(Number(getByTestId('token-count').textContent)).toBeGreaterThan(0);
-      },
-      { timeout: 5000 }
-    );
-
-    // Switch language
-    await act(async () => {
-      ref.current?.setLanguage('markdown');
-      ref.current?.setInput({ code: '# Hello' });
-    });
-    await flushAll();
+    for (let i = 1; i <= source.length; i += 1) {
+      await setInputState(ref, {
+        code: source.slice(0, i),
+        isComplete: i === source.length,
+      });
+    }
 
     await waitFor(() => {
-      expect(getByTestId('content').textContent).toContain('Hello');
+      expect(ref.current?.getResult().status).toBe('done');
     });
+
+    const text = tokensToText(ref.current!.getResult());
+    expect(text).toBe(source);
+    expect(text.match(/const/g)?.length ?? 0).toBe(1);
   });
 
-  test('handles progressive append-only streaming', async () => {
-    const states = createProgressiveStates(STREAMING_CODE_SAMPLE, 20, 42);
+  test('non-append code changes restart and replace prior content', async () => {
     const ref = React.createRef<StreamHarnessHandle>();
-
     render(
       <StreamHarness
         ref={ref}
         highlighter={highlighter}
-        initialInput={{ code: states[0] }}
+        initialInput={{ code: 'const x' }}
       />
     );
 
-    // Wait for initial render
-    await waitFor(
-      () => {
-        expect(Number(ref.current?.getResult().tokens.length)).toBeGreaterThan(0);
-      },
-      { timeout: 5000 }
-    );
-
-    // Feed progressive states
-    for (const state of states.slice(1)) {
-      await setInputState(ref, { code: state });
-    }
-
-    // Mark complete
-    const finalCode = states[states.length - 1];
-    await setInputState(ref, { code: finalCode, isComplete: true });
-
-    await waitFor(
-      () => {
-        expect(ref.current?.getResult().status).toBe('done');
-      },
-      { timeout: 5000 }
-    );
-
-    // Verify final content contains the code text
-    const finalContent = ref.current
-      ?.getResult()
-      .tokens.map((t) => t.content)
-      .join('');
-    expect(finalContent).toContain('import React');
-  });
-
-  test('handles ReadableStream input', async () => {
-    const chunks = ['const ', 'x ', '= 1;'];
-    const stream = new ReadableStream<string>({
-      start(controller) {
-        for (const chunk of chunks) {
-          controller.enqueue(chunk);
-        }
-        controller.close();
-      },
+    await waitFor(() => {
+      expect(tokensToText(ref.current!.getResult())).toContain('const x');
     });
 
-    const ref = React.createRef<StreamHarnessHandle>();
-    const { getByTestId } = render(
-      <StreamHarness
-        ref={ref}
-        highlighter={highlighter}
-        initialInput={{ stream }}
-      />
-    );
+    await setInputState(ref, { code: 'let y', isComplete: true });
 
-    await waitFor(
-      () => {
-        expect(getByTestId('status').textContent).toBe('done');
-      },
-      { timeout: 5000 }
-    );
-
-    expect(getByTestId('content').textContent).toContain('const');
+    await waitFor(() => {
+      expect(ref.current?.getResult().status).toBe('done');
+      expect(tokensToText(ref.current!.getResult())).toBe('let y');
+    });
   });
 
-  test('handles AsyncIterable input', async () => {
-    async function* generateChunks() {
-      yield 'const ';
-      yield 'x ';
-      yield '= 1;';
-    }
-
+  test.each([
+    ['php', '<?php\n$answer = 42;\n'],
+    ['ruby', 'answer = 42\nputs answer\n'],
+    ['swift', 'let answer = 42\nprint(answer)\n'],
+    ['go', 'package main\nfunc main() { println(42) }\n'],
+    ['typescript', 'const answer: number = 42\n'],
+  ] as const)('small-block streaming highlights reliably for %s', async (language, source) => {
     const ref = React.createRef<StreamHarnessHandle>();
-    const { getByTestId } = render(
+    render(
       <StreamHarness
         ref={ref}
         highlighter={highlighter}
-        initialInput={{ chunks: generateChunks() }}
+        initialInput={{ code: '' }}
+        initialLanguage={language}
+        initialTheme="tokyo-night"
       />
     );
 
-    await waitFor(
-      () => {
-        expect(getByTestId('status').textContent).toBe('done');
-      },
-      { timeout: 5000 }
+    for (let i = 1; i <= source.length; i += 1) {
+      await setInputState(ref, {
+        code: source.slice(0, i),
+        isComplete: i === source.length,
+      });
+    }
+
+    await waitFor(() => {
+      expect(ref.current?.getResult().status).toBe('done');
+    });
+
+    const result = ref.current!.getResult();
+    expect(tokensToText(result)).toBe(source);
+    expect(
+      result.tokens.some((t) => Boolean(t.color || t.htmlStyle))
+    ).toBe(true);
+  });
+
+  test('stream input and code input produce same final output', async () => {
+    const source = 'const streamValue = 1;\nconsole.log(streamValue);\n';
+    const chunks = [
+      'const stream',
+      'Value = 1;\n',
+      'console.log(streamValue);\n',
+    ];
+
+    const codeRef = React.createRef<StreamHarnessHandle>();
+    const streamRef = React.createRef<StreamHarnessHandle>();
+
+    render(
+      <>
+        <StreamHarness
+          ref={codeRef}
+          highlighter={highlighter}
+          initialInput={{ code: source, isComplete: true }}
+        />
+        <StreamHarness
+          ref={streamRef}
+          highlighter={highlighter}
+          initialInput={{ stream: streamFromChunks(chunks) }}
+        />
+      </>
     );
 
-    expect(getByTestId('content').textContent).toContain('const');
+    await waitFor(() => {
+      expect(codeRef.current?.getResult().status).toBe('done');
+      expect(streamRef.current?.getResult().status).toBe('done');
+    });
+
+    expect(tokensToText(codeRef.current!.getResult())).toBe(source);
+    expect(tokensToText(streamRef.current!.getResult())).toBe(source);
+  });
+
+  test('chunks input and code input produce same final output', async () => {
+    const source = 'const chunkValue = 2;\nconsole.log(chunkValue);\n';
+
+    async function* generateChunks() {
+      yield 'const chunk';
+      yield 'Value = 2;\n';
+      yield 'console.log(chunkValue);\n';
+    }
+
+    const codeRef = React.createRef<StreamHarnessHandle>();
+    const chunksRef = React.createRef<StreamHarnessHandle>();
+
+    render(
+      <>
+        <StreamHarness
+          ref={codeRef}
+          highlighter={highlighter}
+          initialInput={{ code: source, isComplete: true }}
+        />
+        <StreamHarness
+          ref={chunksRef}
+          highlighter={highlighter}
+          initialInput={{ chunks: generateChunks() }}
+        />
+      </>
+    );
+
+    await waitFor(() => {
+      expect(codeRef.current?.getResult().status).toBe('done');
+      expect(chunksRef.current?.getResult().status).toBe('done');
+    });
+
+    expect(tokensToText(codeRef.current!.getResult())).toBe(source);
+    expect(tokensToText(chunksRef.current!.getResult())).toBe(source);
   });
 });

@@ -45,7 +45,10 @@ export default function StreamingBenchmarkPage() {
   const progressiveStates = useMemo(
     () =>
       buildProgressiveStates(
-        createTokenChunks(STREAMING_BENCHMARK_SAMPLE, STREAMING_TARGET_TOKENS)
+        createTokenChunks(
+          STREAMING_BENCHMARK_SAMPLE,
+          STREAMING_TARGET_TOKENS
+        )
       ),
     []
   );
@@ -78,12 +81,13 @@ export default function StreamingBenchmarkPage() {
     mode === 'incremental' ? { code } : { code: '' },
     'tsx',
     'github-dark',
-    { batch: 'sync', allowRecalls: true }
+    { allowRecalls: true }
   );
 
   // ---- Measurement: detect when the active output changes ----
   const staticOutput = mode === 'static' ? staticHighlighted : null;
-  const streamTokens = mode === 'incremental' ? streamResult.tokens : null;
+  const streamTokens =
+    mode === 'incremental' ? streamResult.tokens : null;
 
   // Static mode: measure when highlighted output changes
   useEffect(() => {
@@ -173,7 +177,8 @@ export default function StreamingBenchmarkPage() {
         buildStreamingMetrics({
           tokenDurationsMs,
           codeLengths,
-          finalCodeLength: progressiveStates[progressiveStates.length - 1].length,
+          finalCodeLength:
+            progressiveStates[progressiveStates.length - 1].length,
           tokenTarget: progressiveStates.length,
         })
       );
@@ -185,7 +190,13 @@ export default function StreamingBenchmarkPage() {
 
     isStreamingRef.current = false;
     setStatus('completed');
-  }, [progressiveStates, status, tokenDelayMs, mode, waitForHighlightCommit]);
+  }, [
+    progressiveStates,
+    status,
+    tokenDelayMs,
+    mode,
+    waitForHighlightCommit,
+  ]);
 
   useEffect(() => {
     return () => {
@@ -211,12 +222,27 @@ export default function StreamingBenchmarkPage() {
       : 0;
 
   const metricRows = [
-    { label: 'Progress', value: `${metrics.tokensProcessed} / ${metrics.tokenTarget}` },
-    { label: 'Highlight calls', value: formatNumber(metrics.highlightCalls) },
+    {
+      label: 'Progress',
+      value: `${metrics.tokensProcessed} / ${metrics.tokenTarget}`,
+    },
+    {
+      label: 'Highlight calls',
+      value: formatNumber(metrics.highlightCalls),
+    },
     { label: 'Avg chars / pass', value: formatNumber(avgCharsPerToken) },
-    { label: 'Extra work', value: `${formatNumber(extraWork * finalCodeLength)} chars` },
-    { label: 'Total processed', value: `${formatNumber(metrics.totalCharsProcessed)} chars` },
-    { label: 'Cost multiplier', value: `${metrics.workAmplification.toFixed(2)}\u00d7` },
+    {
+      label: 'Extra work',
+      value: `${formatNumber(extraWork * finalCodeLength)} chars`,
+    },
+    {
+      label: 'Total processed',
+      value: `${formatNumber(metrics.totalCharsProcessed)} chars`,
+    },
+    {
+      label: 'Cost multiplier',
+      value: `${metrics.workAmplification.toFixed(2)}\u00d7`,
+    },
     { label: 'Highlight cost', value: formatMs(metrics.totalTimeMs) },
     { label: 'Avg latency', value: formatMs(metrics.avgPerTokenMs) },
     { label: 'P95 latency', value: formatMs(metrics.p95PerTokenMs) },
@@ -233,9 +259,9 @@ export default function StreamingBenchmarkPage() {
           Streaming Performance
         </h1>
         <p className="mt-3 max-w-2xl text-[0.95rem] leading-relaxed text-white/45">
-          Measures the cost of re-highlighting on every token during a simulated
-          streaming response. Toggle between the static hook and the incremental
-          shiki-stream hook to compare.
+          Measures the cost of re-highlighting on every token during a
+          simulated streaming response. Toggle between the static hook and
+          the incremental shiki-stream hook to compare.
         </p>
       </header>
 
@@ -258,7 +284,8 @@ export default function StreamingBenchmarkPage() {
                 : 'text-white/40 hover:text-white/60'
             } disabled:cursor-not-allowed`}
           >
-            Static <span className="text-[0.6875rem] opacity-50">O(n²)</span>
+            Static{' '}
+            <span className="text-[0.6875rem] opacity-50">O(n²)</span>
           </button>
           <button
             type="button"
@@ -275,7 +302,10 @@ export default function StreamingBenchmarkPage() {
                 : 'text-white/40 hover:text-white/60'
             } disabled:cursor-not-allowed`}
           >
-            Incremental <span className="text-[0.6875rem] opacity-50">shiki-stream</span>
+            Incremental{' '}
+            <span className="text-[0.6875rem] opacity-50">
+              shiki-stream
+            </span>
           </button>
         </div>
 
@@ -350,7 +380,9 @@ export default function StreamingBenchmarkPage() {
           >
             {metrics.workAmplification.toFixed(1)}&times;
           </p>
-          <p className="mt-1.5 text-[0.75rem] text-white/20">Ideal is 1.0&times;</p>
+          <p className="mt-1.5 text-[0.75rem] text-white/20">
+            Ideal is 1.0&times;
+          </p>
         </div>
 
         <div className="rounded-2xl border border-white/[0.06] bg-white/[0.03] p-5">
@@ -388,7 +420,8 @@ export default function StreamingBenchmarkPage() {
             style={{
               width: `${Math.min(
                 100,
-                (metrics.tokensProcessed / Math.max(1, metrics.tokenTarget)) *
+                (metrics.tokensProcessed /
+                  Math.max(1, metrics.tokenTarget)) *
                   100
               )}%`,
               boxShadow:
@@ -409,7 +442,9 @@ export default function StreamingBenchmarkPage() {
           <p className="mb-3 text-[0.6875rem] font-medium uppercase tracking-[0.12em] text-white/20">
             Live output
             <span className="ml-2 text-white/10">
-              {mode === 'incremental' ? '(shiki-stream)' : '(static rehighlight)'}
+              {mode === 'incremental'
+                ? '(shiki-stream)'
+                : '(static rehighlight)'}
             </span>
           </p>
           <div className="code-scroll max-h-[640px] overflow-auto rounded-xl bg-black/30 p-4">
@@ -443,17 +478,20 @@ export default function StreamingBenchmarkPage() {
           <p className="px-1 text-[0.8rem] leading-relaxed text-white/20">
             {mode === 'static' ? (
               <>
-                <strong className="text-white/30">Static mode</strong> re-highlights
-                the full code on each token&mdash;
-                <code className="text-white/30">O(n&sup2;)</code> total work. Switch
-                to <em>Incremental</em> to see the difference.
+                <strong className="text-white/30">Static mode</strong>{' '}
+                re-highlights the full code on each token&mdash;
+                <code className="text-white/30">O(n&sup2;)</code> total
+                work. Switch to <em>Incremental</em> to see the
+                difference.
               </>
             ) : (
               <>
-                <strong className="text-emerald-400/60">Incremental mode</strong> uses{' '}
-                <code className="text-white/30">shiki-stream</code> to tokenize only
-                the delta&mdash;near-linear total work. Compare with <em>Static</em> to
-                see the improvement.
+                <strong className="text-emerald-400/60">
+                  Incremental mode
+                </strong>{' '}
+                uses <code className="text-white/30">shiki-stream</code>{' '}
+                to tokenize only the delta&mdash;near-linear total work.
+                Compare with <em>Static</em> to see the improvement.
               </>
             )}
           </p>
