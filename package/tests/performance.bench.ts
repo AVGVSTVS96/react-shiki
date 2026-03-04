@@ -22,7 +22,8 @@ import htmlReactParser from 'html-react-parser';
 
 import type { Language, Theme, Themes } from '../src/lib/types';
 
-import { resolveLanguage, resolveTheme } from '../src/lib/resolvers';
+import { resolveLanguage } from '../src/lib/language';
+import { resolveTheme } from '../src/lib/theme';
 // --- Test Data ---
 
 // Small code sample (few lines)

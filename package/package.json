@@ -57,6 +57,7 @@
     "build": "tsup",
     "test": "vitest",
     "bench": "vitest bench",
+    "bench:streaming": "vitest bench tests/streaming.bench.ts",
     "lint": "biome lint .",
     "lint:fix": "biome lint --write .",
     "format": "biome format --write .",
