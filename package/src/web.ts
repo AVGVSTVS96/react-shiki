@@ -120,8 +120,8 @@ export const useShikiStreamHighlighter: UseShikiStreamHighlighter = (
 
 /**
  * ShikiStreamHighlighter component using the web bundle.
- * Composes the streaming hook with a default token renderer.
+ * Uses the DOM-streaming fast path for chat-style code blocks.
  */
 export const ShikiStreamHighlighter = createShikiStreamComponent(
-  useShikiStreamHighlighter
+  createWebHighlighter
 );

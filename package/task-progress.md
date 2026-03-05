@@ -155,6 +155,43 @@
 1. package findings for expert agent (restart-storm root cause vs one-shot harness behavior).
 2. continue debugging in react-shiki stream-lab with deterministic scenarios + parity/integrity metrics.
 
+## stop-11.completed (2026-03-05 benchmark rerun + analysis capture)
+- reran benchmark suites from `package/`:
+  - `pnpm bench:streaming:compare:quick`
+  - `pnpm bench:streaming:assistant-message`
+- archived prior session benchmark snapshot before rerun:
+  - `.bench/archive/streaming-session.20260305-014454.prev.json`
+  - `.bench/archive/streaming-session.20260305-014454.prev.md`
+- recorded new raw benchmark logs and synthesized reports:
+  - `.bench/archive/streaming-session.20260305-014454.run.log`
+  - `.bench/archive/assistant-message.20260305-014454.run.log`
+  - `.bench/archive/streaming-session.20260305-014454.summary.md`
+  - `.bench/archive/benchmark-report.20260305-014454.md`
+  - `.bench/archive/benchmark-report.20260305-014454.json`
+
+## stop-11.observed (session benchmark deltas vs previous snapshot)
+- incremental path remains faster than full rehighlight in all quick scenarios (current speedups):
+  - `append-steady-short`: `2.15x`
+  - `append-bursty-long`: `6.71x`
+  - `firehose`: `6.88x`
+  - `replace-tail-intentional`: `2.63x`
+- positive deltas (incremental):
+  - `append-bursty-long`: `229.95ms -> 104.91ms` (`-54.38%`)
+  - `firehose`: `226.00ms -> 116.33ms` (`-48.53%`)
+- negative deltas (incremental):
+  - `append-steady-short`: `51.34ms -> 58.85ms` (`+14.62%`)
+  - `replace-tail-intentional`: `14.82ms -> 28.25ms` (`+90.62%`)
+- assistant benchmark (current run):
+  - `assistant-bursty`: incremental beats static (`516.88ms` vs `854.94ms`)
+  - `assistant-firehose`: incremental beats static (`2222.04ms` vs `3686.64ms`)
+  - `assistant-steady`: incremental slightly slower than static (`1384.14ms` vs `1329.40ms`)
+
+## inference.current (post stop-11)
+- architecture-level progress is real for bursty/firehose chat workloads, which are the main target cases.
+- regressions in steady + replace-tail indicate remaining sensitivity in low-churn/tail-rewrite patterns.
+- current Vitest bench config is single-sample; directional signal is valid but variance risk remains high.
+- next measurement step should be repeated-sample quick/full runs before locking perf claims.
+
 ## instrumentation.snapshot (current stream-hook implementation)
 - active logs in `package/src/lib/stream-hook.ts`:
   - `[react-shiki] slow options stabilize`

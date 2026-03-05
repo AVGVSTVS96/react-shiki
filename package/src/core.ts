@@ -145,5 +145,5 @@ export const useShikiStreamHighlighter: UseShikiStreamHighlighter = (
  * Requires a highlighter to be provided.
  */
 export const ShikiStreamHighlighter = createShikiStreamComponent(
-  useShikiStreamHighlighter
+  async () => validateCoreHighlighter(undefined)
 );
