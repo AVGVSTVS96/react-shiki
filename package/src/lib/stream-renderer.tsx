@@ -83,16 +83,24 @@ export function ShikiTokenRenderer({
   className,
   style,
 }: ShikiTokenRendererProps) {
+  const seenKeys = new Map<string, number>();
+
   return (
     <code className={className} style={style}>
-      {tokens.map((token) => (
-        <span
-          key={`${token.offset}:${token.content}:${token.color ?? ''}`}
-          style={getTokenStyleObject(token)}
-        >
-          {token.content}
-        </span>
-      ))}
+      {tokens.map((token) => {
+        const baseKey = `${token.offset}:${token.content}:${token.color ?? ''}:${token.fontStyle ?? ''}`;
+        const seenCount = seenKeys.get(baseKey) ?? 0;
+        seenKeys.set(baseKey, seenCount + 1);
+
+        return (
+          <span
+            key={`${baseKey}:${seenCount}`}
+            style={getTokenStyleObject(token)}
+          >
+            {token.content}
+          </span>
+        );
+      })}
     </code>
   );
 }
