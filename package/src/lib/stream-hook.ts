@@ -457,11 +457,13 @@ export const useShikiStreamHighlighter = (
               },
             });
 
+    const recallsEnabled = stableOpts.allowRecalls === true;
+
     const tokenStream = textStream.pipeThrough(
       new CodeToTokenTransformStream({
         highlighter: resolvedHighlighter,
         lang: langToUse,
-        allowRecalls: stableOpts.allowRecalls !== false,
+        allowRecalls: recallsEnabled,
         ...themeOpts,
       })
     );
@@ -470,18 +472,30 @@ export const useShikiStreamHighlighter = (
     let started = false;
     const bufferedTokens: ThemedToken[] = [];
     let flushScheduled = false;
-    let flushFrameId: number | null = null;
 
     const commitBufferedTokens = () => {
       flushScheduled = false;
-      flushFrameId = null;
 
       if (cancelled) return;
 
       metricsRef.current.scheduledCommits += 1;
       const snapshot = bufferedTokens.slice();
-      startTransition(() => {
-        setTokens(snapshot);
+      if (recallsEnabled) {
+        startTransition(() => {
+          setTokens(snapshot);
+        });
+        return;
+      }
+
+      setTokens(snapshot);
+    };
+
+    const scheduleMicrotaskFlush = () => {
+      Promise.resolve().then(() => {
+        if (!flushScheduled) {
+          return;
+        }
+        commitBufferedTokens();
       });
     };
 
@@ -489,28 +503,11 @@ export const useShikiStreamHighlighter = (
       if (flushScheduled) return;
       flushScheduled = true;
 
-      if (typeof requestAnimationFrame === 'function') {
-        flushFrameId = requestAnimationFrame(() => {
-          commitBufferedTokens();
-        });
-        return;
-      }
-
-      Promise.resolve().then(() => {
-        commitBufferedTokens();
-      });
+      scheduleMicrotaskFlush();
     };
 
     const flushTokenCommitNow = () => {
       if (!flushScheduled) return;
-
-      if (
-        flushFrameId != null &&
-        typeof cancelAnimationFrame === 'function'
-      ) {
-        cancelAnimationFrame(flushFrameId);
-      }
-
       commitBufferedTokens();
     };
 
@@ -563,13 +560,6 @@ export const useShikiStreamHighlighter = (
 
     const cancelSession = () => {
       cancelled = true;
-
-      if (
-        flushFrameId != null &&
-        typeof cancelAnimationFrame === 'function'
-      ) {
-        cancelAnimationFrame(flushFrameId);
-      }
 
       logSessionSummary('cleanup');
       void reader.cancel().catch(() => {});

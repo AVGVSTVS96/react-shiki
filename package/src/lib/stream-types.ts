@@ -90,7 +90,7 @@ export interface StreamHighlighterOptions {
   /**
    * Include unstable "preview" tokens for smoother streaming.
    * When true, tokens may shift as later context changes tokenization.
-   * @default true
+   * @default false
    */
   allowRecalls?: boolean;
 

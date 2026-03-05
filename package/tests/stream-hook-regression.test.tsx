@@ -92,7 +92,7 @@ describe('useShikiStreamHighlighter regressions', () => {
       <StreamHarness
         ref={ref}
         highlighter={highlighter}
-        initialInput={{ code: 'const a = 1;' }}
+        initialInput={{ code: 'const a = 1;', isComplete: true }}
         initialLanguage="typescript"
       />
     );

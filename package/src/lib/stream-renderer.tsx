@@ -1,4 +1,4 @@
-import type { CSSProperties } from 'react';
+import { memo, useRef, type CSSProperties, type ReactNode } from 'react';
 import type { ThemedToken } from 'shiki';
 
 /**
@@ -78,29 +78,73 @@ function getTokenStyleObject(
   return hasStyle ? (style as CSSProperties) : undefined;
 }
 
-export function ShikiTokenRenderer({
+const getTokenKey = (token: ThemedToken, index: number): string =>
+  `${token.offset}:${index}`;
+
+const buildTokenNode = (token: ThemedToken, index: number): ReactNode => (
+  <span
+    key={getTokenKey(token, index)}
+    style={getTokenStyleObject(token)}
+  >
+    {token.content}
+  </span>
+);
+
+const ShikiTokenRendererImpl = ({
   tokens,
   className,
   style,
-}: ShikiTokenRendererProps) {
-  const seenKeys = new Map<string, number>();
+}: ShikiTokenRendererProps) => {
+  const previousTokensRef = useRef<ThemedToken[] | null>(null);
+  const previousNodesRef = useRef<ReactNode[]>([]);
+
+  const previousTokens = previousTokensRef.current;
+  let renderedNodes = previousNodesRef.current;
+
+  if (tokens !== previousTokens) {
+    let stablePrefixLength = 0;
+    if (previousTokens) {
+      const max = Math.min(previousTokens.length, tokens.length);
+      while (
+        stablePrefixLength < max &&
+        previousTokens[stablePrefixLength] === tokens[stablePrefixLength]
+      ) {
+        stablePrefixLength += 1;
+      }
+    }
+
+    renderedNodes = renderedNodes.slice(0, stablePrefixLength);
+    for (
+      let index = stablePrefixLength;
+      index < tokens.length;
+      index += 1
+    ) {
+      const token = tokens[index];
+      if (token) {
+        renderedNodes.push(buildTokenNode(token, index));
+      }
+    }
+
+    previousTokensRef.current = tokens;
+    previousNodesRef.current = renderedNodes;
+  }
 
   return (
     <code className={className} style={style}>
-      {tokens.map((token) => {
-        const baseKey = `${token.offset}:${token.content}:${token.color ?? ''}:${token.fontStyle ?? ''}`;
-        const seenCount = seenKeys.get(baseKey) ?? 0;
-        seenKeys.set(baseKey, seenCount + 1);
-
-        return (
-          <span
-            key={`${baseKey}:${seenCount}`}
-            style={getTokenStyleObject(token)}
-          >
-            {token.content}
-          </span>
-        );
-      })}
+      {renderedNodes}
     </code>
   );
-}
+};
+
+const areTokenRendererPropsEqual = (
+  prev: ShikiTokenRendererProps,
+  next: ShikiTokenRendererProps
+): boolean =>
+  prev.tokens === next.tokens &&
+  prev.className === next.className &&
+  prev.style === next.style;
+
+export const ShikiTokenRenderer = memo(
+  ShikiTokenRendererImpl,
+  areTokenRendererPropsEqual
+);

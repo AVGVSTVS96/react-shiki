@@ -1,6 +1,6 @@
 import './styles.css';
 import { clsx } from 'clsx';
-import { forwardRef } from 'react';
+import { forwardRef, memo } from 'react';
 
 import type {
   UseShikiStreamHighlighter,
@@ -78,7 +78,10 @@ export interface ShikiStreamHighlighterProps
 export const createShikiStreamComponent = (
   useShikiStreamHighlighterImpl: UseShikiStreamHighlighter
 ) => {
-  return forwardRef<HTMLElement, ShikiStreamHighlighterProps>(
+  const StreamComponent = forwardRef<
+    HTMLElement,
+    ShikiStreamHighlighterProps
+  >(
     (
       {
         input,
@@ -100,6 +103,7 @@ export const createShikiStreamComponent = (
         allowRecalls,
         onStreamStart,
         onStreamEnd,
+        onSessionSummary,
       },
       ref
     ) => {
@@ -112,6 +116,7 @@ export const createShikiStreamComponent = (
         allowRecalls,
         onStreamStart,
         onStreamEnd,
+        onSessionSummary,
       };
 
       const { tokens } = useShikiStreamHighlighterImpl(
@@ -151,4 +156,52 @@ export const createShikiStreamComponent = (
       );
     }
   );
+
+  const areInputsEqual = (
+    prevInput: ShikiStreamInput,
+    nextInput: ShikiStreamInput
+  ): boolean => {
+    if ('code' in prevInput && 'code' in nextInput) {
+      return (
+        prevInput.code === nextInput.code &&
+        !!prevInput.isComplete === !!nextInput.isComplete
+      );
+    }
+
+    if ('stream' in prevInput && 'stream' in nextInput) {
+      return prevInput.stream === nextInput.stream;
+    }
+
+    if ('chunks' in prevInput && 'chunks' in nextInput) {
+      return prevInput.chunks === nextInput.chunks;
+    }
+
+    return false;
+  };
+
+  const areStreamHighlighterPropsEqual = (
+    prev: Readonly<ShikiStreamHighlighterProps>,
+    next: Readonly<ShikiStreamHighlighterProps>
+  ): boolean =>
+    areInputsEqual(prev.input, next.input) &&
+    prev.language === next.language &&
+    prev.theme === next.theme &&
+    prev.showLanguage === next.showLanguage &&
+    prev.addDefaultStyles === next.addDefaultStyles &&
+    prev.style === next.style &&
+    prev.className === next.className &&
+    prev.langStyle === next.langStyle &&
+    prev.langClassName === next.langClassName &&
+    prev.as === next.as &&
+    prev.highlighter === next.highlighter &&
+    prev.customLanguages === next.customLanguages &&
+    prev.preloadLanguages === next.preloadLanguages &&
+    prev.langAlias === next.langAlias &&
+    prev.engine === next.engine &&
+    prev.allowRecalls === next.allowRecalls &&
+    prev.onStreamStart === next.onStreamStart &&
+    prev.onStreamEnd === next.onStreamEnd &&
+    prev.onSessionSummary === next.onSessionSummary;
+
+  return memo(StreamComponent, areStreamHighlighterPropsEqual);
 };
