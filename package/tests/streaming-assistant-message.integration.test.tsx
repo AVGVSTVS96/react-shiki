@@ -6,7 +6,7 @@ import {
   createStreamingScenario,
   isSuspiciousAssistantBlock,
   parseTranscriptNodes,
-} from '../src/dev/streaming-lab';
+} from 'streaming-lab';
 import { runAssistantMessageScenario } from './assistant-message-harness';
 
 let highlighter: Highlighter;

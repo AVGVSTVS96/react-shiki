@@ -16,7 +16,7 @@ import {
   extractFencedCodeBlocks,
   normalizePlainText,
   parseTranscriptNodes,
-} from '../src/dev/streaming-lab';
+} from 'streaming-lab';
 
 type ChatTreeProps = {
   transcript: string;

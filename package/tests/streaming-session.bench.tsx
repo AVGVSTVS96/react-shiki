@@ -30,7 +30,7 @@ import {
   type ScenarioVariantReport,
   type ScenarioPresetId,
   type StreamingSessionMetrics,
-} from '../src/dev/streaming-lab';
+} from 'streaming-lab';
 
 // NOTE: This benchmark is intentionally built on real rendered React paths
 // (Profiler + hook/component rendering) because streaming-lab diagnostics rely

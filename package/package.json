@@ -55,6 +55,7 @@
   "scripts": {
     "dev": "tsup --watch",
     "build": "tsup",
+    "pretest": "pnpm --filter streaming-lab run build",
     "test": "vitest",
     "bench": "vitest bench",
     "bench:streaming": "pnpm bench:streaming:session",
@@ -95,6 +96,7 @@
     "unist-util-visit": "^5.1.0"
   },
   "devDependencies": {
+    "streaming-lab": "workspace:*",
     "@testing-library/jest-dom": "^6.9.1",
     "@testing-library/react": "^16.3.2",
     "@types/hast": "^3.0.4",

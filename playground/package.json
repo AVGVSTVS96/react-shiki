@@ -6,13 +6,14 @@
   "scripts": {
     "dev": "vite",
     "build": "tsc -b && vite build",
-    "prebuild": "pnpm --filter react-shiki run build",
+    "prebuild": "pnpm --filter streaming-lab run build && pnpm --filter react-shiki run build",
     "preview": "vite preview"
   },
   "dependencies": {
     "react": "catalog:",
     "react-dom": "catalog:",
-    "react-shiki": "workspace:*"
+    "react-shiki": "workspace:*",
+    "streaming-lab": "workspace:*"
   },
   "devDependencies": {
     "@mdx-js/react": "^3.1.1",

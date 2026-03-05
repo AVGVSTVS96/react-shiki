@@ -1,5 +1,6 @@
 packages:
   - package
+  - streaming-lab
   - playground
 
 catalog:

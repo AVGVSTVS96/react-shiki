@@ -7,7 +7,7 @@ import {
   buildControlledCodeStates,
   createStreamingScenario,
   normalizePlainText,
-} from '../src/dev/streaming-lab';
+} from 'streaming-lab';
 import {
   StreamHarness,
   type StreamHarnessHandle,

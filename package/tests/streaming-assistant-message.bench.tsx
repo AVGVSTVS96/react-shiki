@@ -1,7 +1,7 @@
 import { beforeAll, bench, describe } from 'vitest';
 import { getSingletonHighlighter, type Highlighter } from 'shiki';
 
-import { createStreamingScenario } from '../src/dev/streaming-lab';
+import { createStreamingScenario } from 'streaming-lab';
 import { runAssistantMessageScenario } from './assistant-message-harness';
 
 const BENCH_OPTIONS = {

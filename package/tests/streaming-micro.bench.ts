@@ -7,7 +7,7 @@ import { toJsxRuntime } from 'hast-util-to-jsx-runtime';
 import {
   chunkTextWithSeed,
   getStreamingCorpus,
-} from '../src/dev/streaming-lab';
+} from 'streaming-lab';
 
 let highlighter: Highlighter;
 const corpus = getStreamingCorpus('tsx-chat-ui');

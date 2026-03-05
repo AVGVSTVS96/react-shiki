@@ -9,7 +9,7 @@ import {
   createStreamingScenario,
   extractFinalCode,
   getStreamingCorpus,
-} from '../src/dev/streaming-lab';
+} from 'streaming-lab';
 import {
   StreamHarness,
   type StreamHarnessHandle,

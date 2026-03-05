@@ -39,7 +39,7 @@ import {
   type ScenarioPlaybackFrame,
   type ScenarioPreset,
   type ScenarioPresetId,
-} from '@streaming-lab/index';
+} from 'streaming-lab';
 
 type SingleLane = 'isolated' | 'chat';
 type AssistantLane =

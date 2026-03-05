@@ -27,7 +27,7 @@ import {
   type AssistantMessageMetrics,
   type AssistantMessageRunSummary,
   type StreamingScenario,
-} from '../src/dev/streaming-lab';
+} from 'streaming-lab';
 
 type LaneVariant =
   | 'incremental-chat-tree'

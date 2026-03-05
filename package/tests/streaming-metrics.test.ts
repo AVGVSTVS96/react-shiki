@@ -7,7 +7,7 @@ import {
   getCommitAmplification,
   getWorkAmplification,
   percentile,
-} from '../src/dev/streaming-lab';
+} from 'streaming-lab';
 
 describe('streaming metrics math', () => {
   test('percentile calculations are stable', () => {

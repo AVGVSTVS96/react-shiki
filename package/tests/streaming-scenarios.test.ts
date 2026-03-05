@@ -13,7 +13,7 @@ import {
   extractFinalCode,
   extractFinalTranscript,
   getAssistantMessageCorpus,
-} from '../src/dev/streaming-lab';
+} from 'streaming-lab';
 
 const readStreamText = async (stream: ReadableStream<string>) => {
   const reader = stream.getReader();
