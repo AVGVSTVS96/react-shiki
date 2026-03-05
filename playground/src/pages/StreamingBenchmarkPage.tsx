@@ -1,100 +1,182 @@
-import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
-import type { ShikiStreamInput } from 'react-shiki';
+import {
+  StrictMode,
+  useCallback,
+  useEffect,
+  useMemo,
+  useRef,
+  useState,
+} from 'react';
 import {
   ShikiTokenRenderer,
   useShikiHighlighter,
   useShikiStreamHighlighter,
+  type StreamSessionSummary,
 } from 'react-shiki';
 
 import {
   STREAMING_CORPUS_LIST,
   STREAMING_SCENARIO_PRESETS,
-  buildScenarioFrames,
+  buildMarkdownStates,
   buildSessionMetrics,
-  calculateTextDiffCounts,
-  createAsyncCodeIterableFromScenario,
+  compareStructuralHighlight,
   createEmptySessionMetrics,
-  createReadableCodeStreamFromScenario,
   createStreamingScenario,
-  extractFinalCode,
+  extractFencedCodeBlocks,
   getStreamingCorpus,
   getWorkAmplification,
   isCodeMutationEvent,
+  parseTranscriptNodes,
   playScenarioEvents,
   type CorpusId,
-  type ScenarioPresetId,
   type ScenarioPlaybackFrame,
+  type ScenarioPresetId,
 } from '@streaming-lab/index';
 
+type LabMode = 'isolated' | 'chat';
 type RunStatus = 'idle' | 'running' | 'stopped' | 'completed';
-type LabMode = 'static' | 'incremental' | 'split';
-type SourceMode =
-  | 'controlled-code'
-  | 'readable-stream'
-  | 'async-iterable'
-  | 'markdown-chat';
 
-type TimelineItem = {
-  index: number;
-  elapsedMs: number;
-  type: string;
-  codeChars: number;
-  transcriptChars: number;
-};
-
-type SessionCounters = {
+type CounterState = {
   startedAtMs: number;
   inputChunkCount: number;
   processedChars: number;
-  highlightCalls: number;
-  tokenizerEnqueues: number;
-  recallEvents: number;
-  recalledTokens: number;
-  resyncCount: number;
-  renderCommits: number;
-  firstAnyOutputMs: number;
-  firstHighlightedCodeMs: number;
   chunkLatenciesMs: number[];
+  pendingChunkStartedAt: number[];
+  firstAnyOutputMs: number;
+  firstHighlightedOutputMs: number;
   lastCode: string;
 };
 
-const formatMs = (value: number) => `${value.toFixed(2)} ms`;
-const formatNumber = (value: number) =>
-  new Intl.NumberFormat('en-US').format(Math.round(value));
-
-const createCounterState = (): SessionCounters => ({
+const createCounterState = (): CounterState => ({
   startedAtMs: 0,
   inputChunkCount: 0,
   processedChars: 0,
-  highlightCalls: 0,
-  tokenizerEnqueues: 0,
-  recallEvents: 0,
-  recalledTokens: 0,
-  resyncCount: 0,
-  renderCommits: 0,
-  firstAnyOutputMs: 0,
-  firstHighlightedCodeMs: 0,
   chunkLatenciesMs: [],
+  pendingChunkStartedAt: [],
+  firstAnyOutputMs: 0,
+  firstHighlightedOutputMs: 0,
   lastCode: '',
 });
 
-const statusDot: Record<RunStatus, string> = {
-  idle: 'bg-white/25',
-  running: 'bg-emerald-400',
-  stopped: 'bg-amber-400',
-  completed: 'bg-blue-400',
+const formatMs = (value: number) => `${value.toFixed(2)} ms`;
+
+const ChatCodeBlock = ({
+  blockIndex,
+  code,
+  language,
+  isComplete,
+  freshOptionsNonce,
+  onSummary,
+  onRenderCommit,
+}: {
+  blockIndex: number;
+  code: string;
+  language: string;
+  isComplete: boolean;
+  freshOptionsNonce: number;
+  onSummary: (summary: StreamSessionSummary) => void;
+  onRenderCommit: () => void;
+}) => {
+  const result = useShikiStreamHighlighter(
+    { code, isComplete },
+    language || 'plaintext',
+    'github-dark',
+    {
+      allowRecalls: true,
+      onSessionSummary: (summary) => {
+        if (freshOptionsNonce >= 0) {
+          onSummary(summary);
+        }
+      },
+    }
+  );
+
+  useEffect(() => {
+    onRenderCommit();
+  }, [onRenderCommit, result.tokens]);
+
+  return (
+    <div
+      className="whitespace-pre rounded border border-slate-700/70 bg-black/50 p-2"
+      data-chat-block
+      data-block-index={blockIndex}
+      data-language={language || 'plaintext'}
+      data-status={result.status}
+    >
+      <ShikiTokenRenderer tokens={result.tokens} />
+    </div>
+  );
+};
+
+const ChatTreeView = ({
+  transcript,
+  freshOptionsNonce,
+  remountSalt,
+  onSummary,
+  onRenderCommit,
+}: {
+  transcript: string;
+  freshOptionsNonce: number;
+  remountSalt: string;
+  onSummary: (blockIndex: number, summary: StreamSessionSummary) => void;
+  onRenderCommit: () => void;
+}) => {
+  const nodes = parseTranscriptNodes(transcript);
+
+  return (
+    <div className="space-y-2" data-chat-tree>
+      {nodes.map((node) => {
+        if (node.type === 'text') {
+          return (
+            <span
+              key={`text:${node.value}`}
+              className="whitespace-pre-wrap"
+            >
+              {node.value}
+            </span>
+          );
+        }
+
+        if (node.type === 'inline-code') {
+          return (
+            <code
+              key={`inline:${node.value}`}
+              className="rounded bg-slate-800/80 px-1 py-0.5"
+            >
+              {node.value}
+            </code>
+          );
+        }
+
+        return (
+          <ChatCodeBlock
+            key={`${remountSalt}:block:${node.block.index}`}
+            blockIndex={node.block.index}
+            code={node.block.code}
+            language={node.block.language || 'plaintext'}
+            isComplete={node.block.closed}
+            freshOptionsNonce={freshOptionsNonce}
+            onSummary={(summary) => {
+              onSummary(node.block.index, summary);
+            }}
+            onRenderCommit={onRenderCommit}
+          />
+        );
+      })}
+    </div>
+  );
 };
 
 export default function StreamingBenchmarkPage() {
   const [presetId, setPresetId] =
     useState<ScenarioPresetId>('openai-steady');
   const [corpusId, setCorpusId] = useState<CorpusId>('tsx-chat-ui');
-  const [mode, setMode] = useState<LabMode>('incremental');
-  const [source, setSource] = useState<SourceMode>('markdown-chat');
-  const [runStatus, setRunStatus] = useState<RunStatus>('idle');
-  const [tokenDelayMs, setTokenDelayMs] = useState(16);
-  const [allowRecalls, setAllowRecalls] = useState(true);
+  const [mode, setMode] = useState<LabMode>('isolated');
   const [seed, setSeed] = useState(42);
+  const [stepDelayMs, setStepDelayMs] = useState(12);
+  const [strictMode, setStrictMode] = useState(false);
+  const [remountChurn, setRemountChurn] = useState(false);
+  const [freshOptions, setFreshOptions] = useState(false);
+  const [runStatus, setRunStatus] = useState<RunStatus>('idle');
 
   const scenario = useMemo(
     () =>
@@ -103,406 +185,376 @@ export default function StreamingBenchmarkPage() {
         corpusId,
         seed,
       }),
-    [presetId, corpusId, seed]
+    [corpusId, presetId, seed]
   );
 
-  const frames = useMemo(
-    () => buildScenarioFrames(scenario.events),
-    [scenario.events]
-  );
-
-  const finalCode = useMemo(
-    () => extractFinalCode(scenario.events),
-    [scenario.events]
-  );
   const language = getStreamingCorpus(corpusId).language;
+  const markdownStates = useMemo(
+    () => buildMarkdownStates(scenario.events),
+    [scenario.events]
+  );
+  const expectedBlocks = useMemo(
+    () =>
+      extractFencedCodeBlocks(
+        markdownStates[markdownStates.length - 1] ?? ''
+      ),
+    [markdownStates]
+  );
 
   const [cursor, setCursor] = useState(-1);
   const [transcript, setTranscript] = useState('');
   const [code, setCode] = useState('');
-  const [timeline, setTimeline] = useState<TimelineItem[]>([]);
+  const [isComplete, setIsComplete] = useState(false);
   const [metrics, setMetrics] = useState(createEmptySessionMetrics());
-  const [exportPayload, setExportPayload] = useState('');
-
-  const [streamInput, setStreamInput] = useState<ShikiStreamInput>({
-    code: '',
-  });
-
-  const abortRef = useRef<AbortController | null>(null);
-  const pendingChunkTimesRef = useRef<number[]>([]);
-  const countersRef = useRef<SessionCounters>(createCounterState());
-  const statusSequenceRef = useRef<string[]>([]);
-
-  const resetCounters = useCallback(() => {
-    countersRef.current = createCounterState();
-    pendingChunkTimesRef.current = [];
-    statusSequenceRef.current = [];
-    setMetrics(createEmptySessionMetrics());
-  }, []);
-
-  const incrementalInput = useMemo<ShikiStreamInput>(() => {
-    if (mode === 'static') {
-      return { code: '' };
-    }
-    return streamInput;
-  }, [mode, streamInput]);
-
-  const incrementalResult = useShikiStreamHighlighter(
-    incrementalInput,
-    language,
-    'github-dark',
-    { allowRecalls }
+  const [integrityError, setIntegrityError] = useState<string | null>(
+    null
   );
 
-  const staticHighlighted = useShikiHighlighter(
+  const abortRef = useRef<AbortController | null>(null);
+  const countersRef = useRef<CounterState>(createCounterState());
+  const renderCommitCountRef = useRef(0);
+  const latestTranscriptRef = useRef('');
+  const isolatedSummariesRef = useRef<StreamSessionSummary[]>([]);
+  const chatSummariesRef = useRef<Map<number, StreamSessionSummary[]>>(
+    new Map()
+  );
+  const isolatedOutputRef = useRef<HTMLDivElement | null>(null);
+  const chatContainerRef = useRef<HTMLDivElement | null>(null);
+  const baselineContainerRef = useRef<HTMLDivElement | null>(null);
+
+  const baselineStatic = useShikiHighlighter(
     code,
     language,
     'github-dark'
   );
-
-  const incrementalCodeText = useMemo(
-    () => incrementalResult.tokens.map((token) => token.content).join(''),
-    [incrementalResult.tokens]
-  );
-
-  const activeRenderedCode =
-    mode === 'static' ? code : incrementalCodeText;
-
-  const refreshMetrics = useCallback(
-    (endedCleanly: boolean) => {
-      const counters = countersRef.current;
-      const now = performance.now();
-
-      const statusSequence =
-        mode === 'static'
-          ? [
-              'idle',
-              runStatus === 'idle' ? 'idle' : 'streaming',
-              runStatus === 'completed' ? 'done' : 'streaming',
-            ]
-          : statusSequenceRef.current.length > 0
-            ? [...statusSequenceRef.current]
-            : [incrementalResult.status];
-
-      const sessionTotalMs =
-        counters.startedAtMs > 0 ? now - counters.startedAtMs : 0;
-
-      const nextMetrics = buildSessionMetrics({
-        finalCode: activeRenderedCode,
-        baselineCode: finalCode,
-        inputChunkCount: counters.inputChunkCount,
-        processedChars: counters.processedChars,
-        highlightCalls: counters.highlightCalls,
-        tokenizerEnqueues:
-          source === 'readable-stream' || source === 'async-iterable'
-            ? counters.inputChunkCount
-            : counters.highlightCalls,
-        recallEvents: counters.recallEvents,
-        recalledTokens: counters.recalledTokens,
-        resyncCount: counters.resyncCount,
-        renderCommits: counters.renderCommits,
-        chunkLatenciesMs: counters.chunkLatenciesMs,
-        timeToFirstAnyOutputMs: counters.firstAnyOutputMs,
-        timeToFirstHighlightedCodeMs: counters.firstHighlightedCodeMs,
-        sessionTotalMs,
-        statusSequence,
-        endedCleanly,
-      });
-
-      setMetrics(nextMetrics);
-    },
-    [
-      activeRenderedCode,
-      finalCode,
-      incrementalResult.status,
-      mode,
-      runStatus,
-      source,
-    ]
-  );
-
-  const appendTimeline = useCallback(
-    (playbackFrame: ScenarioPlaybackFrame) => {
-      const snapshot = playbackFrame.frame.snapshot;
-      const item: TimelineItem = {
-        index: playbackFrame.index,
-        elapsedMs: playbackFrame.elapsedMs,
-        type: playbackFrame.event.type,
-        codeChars: snapshot.codeBlocks[0]?.length ?? 0,
-        transcriptChars: snapshot.transcript.length,
-      };
-
-      setTimeline((prev) => {
-        const next = [...prev, item];
-        return next.slice(Math.max(0, next.length - 120));
-      });
-    },
-    []
-  );
-
-  const applyPlaybackFrame = useCallback(
-    (playbackFrame: ScenarioPlaybackFrame) => {
-      const nextSnapshot = playbackFrame.frame.snapshot;
-      const nextCode = nextSnapshot.codeBlocks[0] ?? '';
-      const event = playbackFrame.event;
-      const now = performance.now();
-      const counters = countersRef.current;
-
-      setCursor(playbackFrame.index);
-      setTranscript(nextSnapshot.transcript);
-      setCode(nextCode);
-
-      const ended = event.type === 'message-end' || nextSnapshot.ended;
-
-      if (source === 'controlled-code' || source === 'markdown-chat') {
-        setStreamInput({ code: nextCode, isComplete: ended });
-      }
-
-      appendTimeline(playbackFrame);
-
-      if (
-        counters.firstAnyOutputMs === 0 &&
-        nextSnapshot.transcript.length > 0 &&
-        counters.startedAtMs > 0
-      ) {
-        counters.firstAnyOutputMs = now - counters.startedAtMs;
-      }
-
-      if (isCodeMutationEvent(event)) {
-        counters.inputChunkCount += 1;
-        counters.highlightCalls += 1;
-
-        const appendDelta = nextCode.startsWith(counters.lastCode)
-          ? nextCode.length - counters.lastCode.length
-          : nextCode.length;
-
-        if (!nextCode.startsWith(counters.lastCode)) {
-          counters.resyncCount += 1;
-        }
-
-        counters.processedChars +=
-          mode === 'static' ? nextCode.length : appendDelta;
-        counters.lastCode = nextCode;
-
-        pendingChunkTimesRef.current.push(now);
-      }
-
-      if (ended) {
-        setRunStatus('completed');
-      }
-    },
-    [appendTimeline, mode, source]
-  );
-
-  const resetSession = useCallback(() => {
-    abortRef.current?.abort();
-    abortRef.current = null;
-
-    setRunStatus('idle');
-    setCursor(-1);
-    setTranscript('');
-    setCode('');
-    setTimeline([]);
-    setStreamInput({ code: '' });
-    resetCounters();
-  }, [resetCounters]);
-
-  const stopRun = useCallback(() => {
-    abortRef.current?.abort();
-    abortRef.current = null;
-    setRunStatus('stopped');
-    refreshMetrics(false);
-  }, [refreshMetrics]);
-
-  const startRun = useCallback(async () => {
-    abortRef.current?.abort();
-    const controller = new AbortController();
-    abortRef.current = controller;
-
-    resetCounters();
-    countersRef.current.startedAtMs = performance.now();
-
-    setCursor(-1);
-    setTranscript('');
-    setCode('');
-    setTimeline([]);
-    setRunStatus('running');
-
-    if (source === 'readable-stream') {
-      setStreamInput({
-        stream: createReadableCodeStreamFromScenario(scenario.events, {
-          chunkDelayMs: tokenDelayMs,
-        }),
-      });
-    } else if (source === 'async-iterable') {
-      setStreamInput({
-        chunks: createAsyncCodeIterableFromScenario(scenario.events, {
-          chunkDelayMs: tokenDelayMs,
-        }),
-      });
-    } else {
-      setStreamInput({ code: '', isComplete: false });
-    }
-
-    const playback = await playScenarioEvents({
-      events: scenario.events,
-      stepDelayMs: tokenDelayMs,
-      signal: controller.signal,
-      onFrame: (frame) => {
-        applyPlaybackFrame(frame);
+  const isolatedResult = useShikiStreamHighlighter(
+    { code, isComplete },
+    language,
+    'github-dark',
+    {
+      allowRecalls: true,
+      onSessionSummary: (summary) => {
+        isolatedSummariesRef.current.push(summary);
       },
-    });
-
-    if (playback.cancelled) {
-      setRunStatus('stopped');
-      refreshMetrics(false);
-      return;
     }
+  );
 
-    setRunStatus('completed');
-    refreshMetrics(true);
-  }, [
-    applyPlaybackFrame,
-    refreshMetrics,
-    resetCounters,
-    scenario.events,
-    source,
-    tokenDelayMs,
-  ]);
+  const activeSummaries =
+    mode === 'isolated'
+      ? isolatedSummariesRef.current
+      : [...chatSummariesRef.current.values()].flat();
 
-  const stepOnce = useCallback(() => {
-    if (runStatus === 'running') return;
-    const next = frames[cursor + 1];
-    if (!next) return;
-
-    if (countersRef.current.startedAtMs === 0) {
-      resetCounters();
-      countersRef.current.startedAtMs = performance.now();
-
-      if (source === 'readable-stream' || source === 'async-iterable') {
-        setSource('controlled-code');
-      }
-
-      setRunStatus('stopped');
-      setStreamInput({ code: '', isComplete: false });
-    }
-
-    applyPlaybackFrame({
-      index: next.index,
-      elapsedMs: performance.now() - countersRef.current.startedAtMs,
-      event: next.event,
-      frame: next,
-    });
-
-    refreshMetrics(next.event.type === 'message-end');
-  }, [
-    applyPlaybackFrame,
-    cursor,
-    frames,
-    refreshMetrics,
-    resetCounters,
-    runStatus,
-    source,
-  ]);
-
-  useEffect(() => {
-    if (!scenario.appendOnly) {
-      setSource((current) =>
-        current === 'readable-stream' || current === 'async-iterable'
-          ? 'controlled-code'
-          : current
-      );
-    }
-  }, [scenario.appendOnly]);
-
-  useEffect(() => {
-    if (mode === 'static') return;
-
-    const sequence = statusSequenceRef.current;
-    if (sequence[sequence.length - 1] !== incrementalResult.status) {
-      sequence.push(incrementalResult.status);
-    }
-  }, [incrementalResult.status, mode]);
-
-  const staticCommitSignal = mode === 'static' ? staticHighlighted : null;
-
-  useEffect(() => {
-    if (runStatus !== 'running' && runStatus !== 'completed') return;
-
+  const recordRenderCommit = useCallback(() => {
+    renderCommitCountRef.current += 1;
     const counters = countersRef.current;
     const now = performance.now();
 
     if (
-      counters.firstHighlightedCodeMs === 0 &&
-      activeRenderedCode.length > 0 &&
-      counters.startedAtMs > 0
+      counters.firstHighlightedOutputMs === 0 &&
+      counters.startedAtMs > 0 &&
+      (mode === 'isolated'
+        ? (isolatedOutputRef.current?.textContent ?? '').length > 0
+        : (chatContainerRef.current?.textContent ?? '').length > 0)
     ) {
-      counters.firstHighlightedCodeMs = now - counters.startedAtMs;
+      counters.firstHighlightedOutputMs = now - counters.startedAtMs;
     }
 
-    const pending = pendingChunkTimesRef.current.shift();
+    const pending = counters.pendingChunkStartedAt.shift();
     if (pending != null) {
       counters.chunkLatenciesMs.push(now - pending);
     }
+  }, [mode]);
 
-    counters.renderCommits += 1;
-    refreshMetrics(runStatus === 'completed');
-  }, [activeRenderedCode, refreshMetrics, runStatus, staticCommitSignal]);
+  useEffect(() => {
+    if (mode !== 'isolated') return;
+    recordRenderCommit();
+  }, [mode, recordRenderCommit, isolatedResult.tokens]);
 
-  const divergence = mode === 'split' && code !== incrementalCodeText;
-  const diff = calculateTextDiffCounts(finalCode, activeRenderedCode);
-  const workAmplification = getWorkAmplification(metrics);
+  const resetPlaybackState = useCallback(() => {
+    abortRef.current?.abort();
+    abortRef.current = null;
+    countersRef.current = createCounterState();
+    renderCommitCountRef.current = 0;
+    latestTranscriptRef.current = '';
+    isolatedSummariesRef.current = [];
+    chatSummariesRef.current = new Map();
+    setRunStatus('idle');
+    setCursor(-1);
+    setTranscript('');
+    setCode('');
+    setIsComplete(false);
+    setMetrics(createEmptySessionMetrics());
+    setIntegrityError(null);
+  }, []);
 
-  const exportSession = useCallback(() => {
-    const payload = {
-      corpusId,
-      presetId,
-      seed,
+  const flushUiCommits = useCallback(async () => {
+    await new Promise<void>((resolve) => {
+      if (typeof requestAnimationFrame === 'function') {
+        requestAnimationFrame(() => {
+          resolve();
+        });
+        return;
+      }
+
+      setTimeout(resolve, 0);
+    });
+
+    await new Promise<void>((resolve) => {
+      setTimeout(resolve, 0);
+    });
+  }, []);
+
+  const finalizeMetrics = useCallback(
+    (endedCleanly: boolean) => {
+      const counters = countersRef.current;
+      const now = performance.now();
+      const sessionTotalMs =
+        counters.startedAtMs > 0 ? now - counters.startedAtMs : 0;
+
+      const finalTranscript = latestTranscriptRef.current;
+      const finalBlocks = extractFencedCodeBlocks(finalTranscript);
+      const expectedCode = expectedBlocks
+        .map((block) => block.code)
+        .join('\n');
+
+      const finalCode =
+        mode === 'isolated'
+          ? isolatedResult.tokens.map((token) => token.content).join('')
+          : finalBlocks.map((block) => block.code).join('\n');
+
+      const finalRenderedHtml =
+        mode === 'isolated'
+          ? (isolatedOutputRef.current?.innerHTML ?? '')
+          : Array.from(
+              chatContainerRef.current?.querySelectorAll(
+                '[data-chat-block]'
+              ) ?? []
+            )
+              .map((node) => node.innerHTML)
+              .join('');
+
+      const baselineHtml =
+        mode === 'isolated'
+          ? baselineContainerRef.current?.innerHTML
+          : expectedBlocks
+              .map((block) => {
+                const codeNode = document.createElement('code');
+                codeNode.textContent = block.code;
+                return codeNode.outerHTML;
+              })
+              .join('');
+
+      const nextMetrics = buildSessionMetrics({
+        finalCode,
+        baselineCode: expectedCode,
+        inputChunkCount: counters.inputChunkCount,
+        processedChars: counters.processedChars,
+        tokenEvents: activeSummaries.reduce(
+          (count, summary) => count + summary.tokenEvents,
+          0
+        ),
+        recallEvents: activeSummaries.reduce(
+          (count, summary) => count + summary.recallEvents,
+          0
+        ),
+        scheduledCommits: activeSummaries.reduce(
+          (count, summary) => count + summary.scheduledCommits,
+          0
+        ),
+        actualRenderCommits: renderCommitCountRef.current,
+        restartCount: activeSummaries.filter(
+          (summary) => summary.reason === 'restart'
+        ).length,
+        chunkLatenciesMs: counters.chunkLatenciesMs,
+        timeToFirstAnyOutputMs: counters.firstAnyOutputMs,
+        timeToFirstHighlightedOutputMs:
+          counters.firstHighlightedOutputMs || counters.firstAnyOutputMs,
+        sessionTotalMs,
+        statusSequence: activeSummaries.map((summary) => summary.reason),
+        endedCleanly,
+        finalRenderedHtml,
+        baselineHtml,
+      });
+
+      setMetrics(nextMetrics);
+
+      if (!nextMetrics.integrity.finalPlainTextMatchesBaseline) {
+        setIntegrityError(
+          'Plain-text divergence from expected final output.'
+        );
+        return;
+      }
+
+      if (mode === 'isolated') {
+        const structure = compareStructuralHighlight(
+          finalRenderedHtml,
+          baselineHtml ?? ''
+        );
+        if (structure.looksPlainTextFallback) {
+          setIntegrityError(
+            'Structural highlight mismatch detected (plain-text fallback).'
+          );
+          return;
+        }
+      } else {
+        const blocks = Array.from(
+          chatContainerRef.current?.querySelectorAll(
+            '[data-chat-block]'
+          ) ?? []
+        );
+        const lostHighlight = blocks.some((node) => {
+          return (
+            !node.innerHTML.includes('style=') &&
+            !node.innerHTML.includes('class=')
+          );
+        });
+
+        if (lostHighlight) {
+          setIntegrityError(
+            'At least one transcript block appears unhighlighted.'
+          );
+          return;
+        }
+      }
+
+      setIntegrityError(null);
+    },
+    [
+      activeSummaries,
+      expectedBlocks,
+      isolatedResult.tokens,
+      latestTranscriptRef,
       mode,
-      source,
-      tokenDelayMs,
-      allowRecalls,
-      events: scenario.events,
-    };
+    ]
+  );
 
-    setExportPayload(JSON.stringify(payload, null, 2));
+  const applyFrame = useCallback((frame: ScenarioPlaybackFrame) => {
+    const now = performance.now();
+    const counters = countersRef.current;
+    const nextCode = frame.frame.snapshot.codeBlocks[0] ?? '';
+    const nextTranscript = frame.frame.snapshot.transcript;
+
+    latestTranscriptRef.current = nextTranscript;
+
+    setCursor(frame.index);
+    setTranscript(nextTranscript);
+    setCode(nextCode);
+    setIsComplete(frame.event.type === 'message-end');
+
+    if (
+      counters.firstAnyOutputMs === 0 &&
+      nextTranscript.length > 0 &&
+      counters.startedAtMs > 0
+    ) {
+      counters.firstAnyOutputMs = now - counters.startedAtMs;
+    }
+
+    if (isCodeMutationEvent(frame.event)) {
+      counters.inputChunkCount += 1;
+      counters.pendingChunkStartedAt.push(now);
+
+      counters.processedChars += nextCode.startsWith(counters.lastCode)
+        ? nextCode.length - counters.lastCode.length
+        : nextCode.length;
+
+      counters.lastCode = nextCode;
+    }
+  }, []);
+
+  const replay = useCallback(async () => {
+    abortRef.current?.abort();
+    const controller = new AbortController();
+    abortRef.current = controller;
+
+    countersRef.current = {
+      ...createCounterState(),
+      startedAtMs: performance.now(),
+    };
+    renderCommitCountRef.current = 0;
+    latestTranscriptRef.current = '';
+    isolatedSummariesRef.current = [];
+    chatSummariesRef.current = new Map();
+
+    setRunStatus('running');
+    setCursor(-1);
+    setTranscript('');
+    setCode('');
+    setIsComplete(false);
+    setIntegrityError(null);
+
+    const result = await playScenarioEvents({
+      events: scenario.events,
+      stepDelayMs,
+      signal: controller.signal,
+      onFrame: (frame) => {
+        applyFrame(frame);
+      },
+    });
+
+    if (result.cancelled) {
+      setRunStatus('stopped');
+      await flushUiCommits();
+      finalizeMetrics(false);
+      return;
+    }
+
+    setRunStatus('completed');
+    await flushUiCommits();
+    finalizeMetrics(true);
   }, [
-    allowRecalls,
-    corpusId,
-    mode,
-    presetId,
+    applyFrame,
+    finalizeMetrics,
+    flushUiCommits,
     scenario.events,
-    seed,
-    source,
-    tokenDelayMs,
+    stepDelayMs,
   ]);
 
+  const stop = useCallback(async () => {
+    abortRef.current?.abort();
+    abortRef.current = null;
+    setRunStatus('stopped');
+    await flushUiCommits();
+    finalizeMetrics(false);
+  }, [finalizeMetrics, flushUiCommits]);
+
+  const chatTree = (
+    <ChatTreeView
+      transcript={transcript}
+      freshOptionsNonce={freshOptions ? cursor : 0}
+      remountSalt={remountChurn ? `step:${cursor}` : 'stable'}
+      onSummary={(blockIndex, summary) => {
+        const existing = chatSummariesRef.current.get(blockIndex) ?? [];
+        existing.push(summary);
+        chatSummariesRef.current.set(blockIndex, existing);
+      }}
+      onRenderCommit={recordRenderCommit}
+    />
+  );
+
   return (
-    <section className="streaming-page mx-auto w-full max-w-[1400px] px-4 pb-10 pt-6 text-slate-100">
+    <section className="mx-auto w-full max-w-[1300px] px-4 pb-10 pt-6 text-slate-100">
       <header className="mb-6">
         <h1 className="text-3xl font-semibold tracking-tight">
           Streaming Chat Lab
         </h1>
-        <p className="mt-2 max-w-3xl text-sm leading-relaxed text-slate-300">
-          Deterministic scenario playback for validating streaming
-          correctness, work amplification, and user-perceived latency. Use
-          the same scenarios in tests, benches, and this playground view.
+        <p className="mt-2 max-w-3xl text-sm text-slate-300">
+          Transcript-driven playback with live commit pressure and
+          integrity diagnostics. Use isolated mode for fast hook checks
+          and chat mode for markdown tree behavior.
         </p>
       </header>
 
-      <div className="grid gap-5 lg:grid-cols-[280px_1fr_340px]">
-        <aside className="space-y-4 rounded-2xl border border-slate-700/70 bg-slate-900/70 p-4">
-          <div>
-            <label className="mb-1 block text-xs uppercase tracking-wide text-slate-400">
-              Scenario
-            </label>
+      <div className="grid gap-4 lg:grid-cols-[290px_1fr_340px]">
+        <aside className="space-y-3 rounded-xl border border-slate-700/70 bg-slate-900/70 p-4">
+          <label className="block text-xs uppercase text-slate-400">
+            Scenario
             <select
               value={presetId}
               onChange={(event) => {
                 setPresetId(event.target.value as ScenarioPresetId);
-                resetSession();
+                resetPlaybackState();
               }}
-              className="w-full rounded-md border border-slate-700 bg-slate-950 px-2 py-1.5 text-sm"
+              className="mt-1 w-full rounded border border-slate-700 bg-slate-950 px-2 py-1"
             >
               {STREAMING_SCENARIO_PRESETS.map((preset) => (
                 <option key={preset.id} value={preset.id}>
@@ -510,19 +562,17 @@ export default function StreamingBenchmarkPage() {
                 </option>
               ))}
             </select>
-          </div>
+          </label>
 
-          <div>
-            <label className="mb-1 block text-xs uppercase tracking-wide text-slate-400">
-              Corpus
-            </label>
+          <label className="block text-xs uppercase text-slate-400">
+            Corpus
             <select
               value={corpusId}
               onChange={(event) => {
                 setCorpusId(event.target.value as CorpusId);
-                resetSession();
+                resetPlaybackState();
               }}
-              className="w-full rounded-md border border-slate-700 bg-slate-950 px-2 py-1.5 text-sm"
+              className="mt-1 w-full rounded border border-slate-700 bg-slate-950 px-2 py-1"
             >
               {STREAMING_CORPUS_LIST.map((corpus) => (
                 <option key={corpus.id} value={corpus.id}>
@@ -530,331 +580,237 @@ export default function StreamingBenchmarkPage() {
                 </option>
               ))}
             </select>
-          </div>
+          </label>
 
-          <div>
-            <label className="mb-1 block text-xs uppercase tracking-wide text-slate-400">
-              Mode
-            </label>
+          <label className="block text-xs uppercase text-slate-400">
+            Lane
             <select
               value={mode}
               onChange={(event) => {
                 setMode(event.target.value as LabMode);
-                resetSession();
+                resetPlaybackState();
               }}
-              className="w-full rounded-md border border-slate-700 bg-slate-950 px-2 py-1.5 text-sm"
+              className="mt-1 w-full rounded border border-slate-700 bg-slate-950 px-2 py-1"
             >
-              <option value="static">Static</option>
-              <option value="incremental">Incremental</option>
-              <option value="split">Split</option>
+              <option value="isolated">Isolated code lane</option>
+              <option value="chat">Transcript/chat lane</option>
             </select>
-          </div>
+          </label>
 
-          <div>
-            <label className="mb-1 block text-xs uppercase tracking-wide text-slate-400">
-              Source
-            </label>
-            <select
-              value={source}
-              onChange={(event) => {
-                setSource(event.target.value as SourceMode);
-                resetSession();
-              }}
-              className="w-full rounded-md border border-slate-700 bg-slate-950 px-2 py-1.5 text-sm"
-            >
-              <option value="controlled-code">Controlled code</option>
-              <option value="markdown-chat">Markdown chat</option>
-              <option
-                value="readable-stream"
-                disabled={!scenario.appendOnly}
-              >
-                ReadableStream
-              </option>
-              <option
-                value="async-iterable"
-                disabled={!scenario.appendOnly}
-              >
-                AsyncIterable
-              </option>
-            </select>
-          </div>
-
-          <div>
-            <label className="mb-1 block text-xs uppercase tracking-wide text-slate-400">
-              Step delay ({tokenDelayMs} ms)
-            </label>
+          <label className="block text-xs uppercase text-slate-400">
+            Step delay ({stepDelayMs} ms)
             <input
               type="range"
               min={0}
-              max={80}
+              max={60}
               step={1}
-              value={tokenDelayMs}
+              value={stepDelayMs}
               onChange={(event) => {
-                setTokenDelayMs(Number(event.target.value));
+                setStepDelayMs(Number(event.target.value));
               }}
-              className="w-full"
+              className="mt-1 w-full"
             />
-          </div>
+          </label>
 
-          <div>
-            <label className="mb-1 block text-xs uppercase tracking-wide text-slate-400">
-              Seed ({seed})
-            </label>
+          <label className="block text-xs uppercase text-slate-400">
+            Seed ({seed})
             <input
               type="range"
               min={1}
-              max={999}
+              max={500}
               step={1}
               value={seed}
               onChange={(event) => {
                 setSeed(Number(event.target.value));
-                resetSession();
+                resetPlaybackState();
               }}
-              className="w-full"
+              className="mt-1 w-full"
             />
-          </div>
+          </label>
 
           <label className="flex items-center gap-2 text-sm text-slate-300">
             <input
               type="checkbox"
-              checked={allowRecalls}
+              checked={strictMode}
               onChange={(event) => {
-                setAllowRecalls(event.target.checked);
-                resetSession();
+                setStrictMode(event.target.checked);
+                resetPlaybackState();
               }}
             />
-            allowRecalls
+            StrictMode wrapper
+          </label>
+          <label className="flex items-center gap-2 text-sm text-slate-300">
+            <input
+              type="checkbox"
+              checked={freshOptions}
+              onChange={(event) => {
+                setFreshOptions(event.target.checked);
+                resetPlaybackState();
+              }}
+            />
+            Fresh options churn
+          </label>
+          <label className="flex items-center gap-2 text-sm text-slate-300">
+            <input
+              type="checkbox"
+              checked={remountChurn}
+              onChange={(event) => {
+                setRemountChurn(event.target.checked);
+                resetPlaybackState();
+              }}
+            />
+            Remount key churn
           </label>
 
-          <div className="flex flex-wrap gap-2">
+          <div className="flex gap-2 pt-2">
             <button
               type="button"
               onClick={() => {
-                void startRun();
+                void replay();
               }}
-              className="rounded-md bg-emerald-500/80 px-3 py-1.5 text-sm font-medium text-emerald-50 hover:bg-emerald-500"
               disabled={runStatus === 'running'}
+              className="rounded bg-emerald-500/80 px-3 py-1.5 text-sm"
             >
               Replay
             </button>
             <button
               type="button"
-              onClick={stopRun}
-              className="rounded-md border border-slate-600 bg-slate-800 px-3 py-1.5 text-sm hover:bg-slate-700"
+              onClick={stop}
               disabled={runStatus !== 'running'}
+              className="rounded border border-slate-600 px-3 py-1.5 text-sm"
             >
               Stop
             </button>
             <button
               type="button"
-              onClick={stepOnce}
-              className="rounded-md border border-slate-600 bg-slate-800 px-3 py-1.5 text-sm hover:bg-slate-700"
-            >
-              Step
-            </button>
-            <button
-              type="button"
-              onClick={resetSession}
-              className="rounded-md border border-slate-600 bg-slate-800 px-3 py-1.5 text-sm hover:bg-slate-700"
+              onClick={resetPlaybackState}
+              className="rounded border border-slate-600 px-3 py-1.5 text-sm"
             >
               Reset
             </button>
           </div>
 
-          <button
-            type="button"
-            onClick={exportSession}
-            className="w-full rounded-md border border-slate-600 bg-slate-800 px-3 py-1.5 text-sm hover:bg-slate-700"
-          >
-            Export JSON session
-          </button>
-
-          <div className="flex items-center gap-2 pt-2 text-xs text-slate-300">
-            <span
-              className={`h-2 w-2 rounded-full ${statusDot[runStatus]} ${runStatus === 'running' ? 'animate-pulse' : ''}`}
-            />
-            <span className="capitalize">{runStatus}</span>
-            <span className="text-slate-500">
-              event #{Math.max(0, cursor)}
-            </span>
-          </div>
+          <p className="text-xs text-slate-400">
+            Status: <span className="capitalize">{runStatus}</span> |
+            event # {Math.max(0, cursor)}
+          </p>
         </aside>
 
-        <main className="space-y-4 rounded-2xl border border-slate-700/70 bg-slate-950/50 p-4">
-          <div className="rounded-xl border border-slate-700/60 bg-slate-900/80 p-3">
-            <p className="mb-2 text-xs uppercase tracking-wide text-slate-400">
+        <main className="space-y-4 rounded-xl border border-slate-700/70 bg-slate-950/60 p-4">
+          {integrityError ? (
+            <div className="rounded border border-rose-500/60 bg-rose-500/15 px-3 py-2 text-sm text-rose-100">
+              {integrityError}
+            </div>
+          ) : null}
+
+          <div className="rounded border border-slate-700/70 bg-slate-900/80 p-3">
+            <p className="mb-2 text-xs uppercase text-slate-400">
               Transcript
             </p>
-            <pre className="max-h-60 overflow-auto whitespace-pre-wrap text-sm leading-relaxed text-slate-200">
-              {transcript ||
-                'No transcript yet. Start or step the scenario.'}
+            <pre className="max-h-48 overflow-auto whitespace-pre-wrap text-sm text-slate-200">
+              {transcript || 'No transcript yet.'}
             </pre>
           </div>
 
-          {divergence ? (
-            <div className="rounded-lg border border-amber-500/40 bg-amber-500/10 px-3 py-2 text-sm text-amber-200">
-              Output divergence detected between static and incremental
-              rendering.
-            </div>
-          ) : null}
-
-          <div className="rounded-xl border border-slate-700/60 bg-slate-900/80 p-3">
-            <p className="mb-2 text-xs uppercase tracking-wide text-slate-400">
-              Highlighted output ({language})
+          <div className="rounded border border-slate-700/70 bg-slate-900/80 p-3">
+            <p className="mb-2 text-xs uppercase text-slate-400">
+              Rendered output ({mode})
             </p>
 
-            {mode === 'static' ? (
-              <div className="max-h-[520px] overflow-auto rounded-lg bg-black/40 p-3 text-sm">
-                {staticHighlighted}
+            {mode === 'isolated' ? (
+              <div
+                ref={isolatedOutputRef}
+                className="max-h-[520px] overflow-auto whitespace-pre"
+              >
+                <ShikiTokenRenderer tokens={isolatedResult.tokens} />
               </div>
             ) : null}
 
-            {mode === 'incremental' ? (
-              <pre className="max-h-[520px] overflow-auto rounded-lg bg-black/40 p-3 text-sm">
-                <ShikiTokenRenderer tokens={incrementalResult.tokens} />
-              </pre>
-            ) : null}
-
-            {mode === 'split' ? (
-              <div className="grid gap-3 md:grid-cols-2">
-                <div>
-                  <p className="mb-1 text-xs text-slate-400">Static</p>
-                  <div className="max-h-[520px] overflow-auto rounded-lg bg-black/40 p-3 text-sm">
-                    {staticHighlighted}
-                  </div>
-                </div>
-                <div>
-                  <p className="mb-1 text-xs text-slate-400">
-                    Incremental
-                  </p>
-                  <pre className="max-h-[520px] overflow-auto rounded-lg bg-black/40 p-3 text-sm">
-                    <ShikiTokenRenderer
-                      tokens={incrementalResult.tokens}
-                    />
-                  </pre>
-                </div>
+            {mode === 'chat' ? (
+              <div
+                ref={chatContainerRef}
+                className="max-h-[520px] overflow-auto"
+              >
+                {strictMode ? (
+                  <StrictMode>{chatTree}</StrictMode>
+                ) : (
+                  chatTree
+                )}
               </div>
             ) : null}
           </div>
 
-          {exportPayload ? (
-            <div className="rounded-xl border border-slate-700/60 bg-slate-900/80 p-3">
-              <p className="mb-2 text-xs uppercase tracking-wide text-slate-400">
-                Session JSON
-              </p>
-              <pre className="max-h-48 overflow-auto whitespace-pre-wrap text-xs text-slate-200">
-                {exportPayload}
-              </pre>
-            </div>
-          ) : null}
+          <div className="hidden" ref={baselineContainerRef}>
+            {baselineStatic}
+          </div>
         </main>
 
-        <aside className="space-y-4 rounded-2xl border border-slate-700/70 bg-slate-900/70 p-4">
+        <aside className="space-y-4 rounded-xl border border-slate-700/70 bg-slate-900/70 p-4 text-sm">
           <div>
-            <p className="mb-2 text-xs uppercase tracking-wide text-slate-400">
+            <p className="mb-1 text-xs uppercase text-slate-400">
               Integrity
             </p>
-            <div className="space-y-1 text-sm text-slate-200">
-              <p>
-                parity:{' '}
-                {metrics.integrity.finalPlainTextMatchesBaseline
+            <p>
+              plain parity:{' '}
+              {metrics.integrity.finalPlainTextMatchesBaseline
+                ? 'pass'
+                : 'fail'}
+            </p>
+            <p>
+              structural:{' '}
+              {metrics.integrity
+                .finalStructuralHighlightMatchesBaseline == null
+                ? 'n/a'
+                : metrics.integrity
+                      .finalStructuralHighlightMatchesBaseline
                   ? 'pass'
                   : 'fail'}
-              </p>
-              <p>
-                duplicate chars: {formatNumber(diff.duplicateCharCount)}
-              </p>
-              <p>missing chars: {formatNumber(diff.missingCharCount)}</p>
-              <p>
-                ended cleanly:{' '}
-                {metrics.integrity.endedCleanly ? 'yes' : 'no'}
-              </p>
-            </div>
+            </p>
+            <p>
+              plain-text fallback:{' '}
+              {metrics.integrity.looksPlainTextFallback ? 'yes' : 'no'}
+            </p>
           </div>
 
           <div>
-            <p className="mb-2 text-xs uppercase tracking-wide text-slate-400">
+            <p className="mb-1 text-xs uppercase text-slate-400">
               Compute
             </p>
-            <div className="space-y-1 text-sm text-slate-200">
-              <p>
-                final chars:{' '}
-                {formatNumber(metrics.compute.finalCodeChars)}
-              </p>
-              <p>
-                input chunks:{' '}
-                {formatNumber(metrics.compute.inputChunkCount)}
-              </p>
-              <p>
-                processed chars:{' '}
-                {formatNumber(metrics.compute.processedChars)}
-              </p>
-              <p>
-                highlight calls:{' '}
-                {formatNumber(metrics.compute.highlightCalls)}
-              </p>
-              <p>
-                render commits:{' '}
-                {formatNumber(metrics.compute.renderCommits)}
-              </p>
-              <p>work amp: {workAmplification.toFixed(2)}x</p>
-              <p>
-                resync count: {formatNumber(metrics.compute.resyncCount)}
-              </p>
-            </div>
+            <p>chunks: {metrics.compute.inputChunkCount}</p>
+            <p>final chars: {metrics.compute.finalCodeChars}</p>
+            <p>processed chars: {metrics.compute.processedChars}</p>
+            <p>token events: {metrics.compute.tokenEvents}</p>
+            <p>recall events: {metrics.compute.recallEvents}</p>
+            <p>scheduled commits: {metrics.compute.scheduledCommits}</p>
+            <p>render commits: {metrics.compute.actualRenderCommits}</p>
+            <p>restarts: {metrics.compute.restartCount}</p>
+            <p>work amp: {getWorkAmplification(metrics).toFixed(2)}x</p>
+            <p>
+              commit amp: {metrics.compute.commitAmplification.toFixed(2)}
+              x
+            </p>
           </div>
 
           <div>
-            <p className="mb-2 text-xs uppercase tracking-wide text-slate-400">
-              UX
+            <p className="mb-1 text-xs uppercase text-slate-400">UX</p>
+            <p>
+              first any output:{' '}
+              {formatMs(metrics.ux.timeToFirstAnyOutputMs)}
             </p>
-            <div className="space-y-1 text-sm text-slate-200">
-              <p>
-                first any output:{' '}
-                {formatMs(metrics.ux.timeToFirstAnyOutputMs)}
-              </p>
-              <p>
-                first highlighted:{' '}
-                {formatMs(metrics.ux.timeToFirstHighlightedCodeMs)}
-              </p>
-              <p>
-                p50 chunk latency:{' '}
-                {formatMs(metrics.ux.p50ChunkLatencyMs)}
-              </p>
-              <p>
-                p95 chunk latency:{' '}
-                {formatMs(metrics.ux.p95ChunkLatencyMs)}
-              </p>
-              <p>
-                max chunk latency:{' '}
-                {formatMs(metrics.ux.maxChunkLatencyMs)}
-              </p>
-              <p>session total: {formatMs(metrics.ux.sessionTotalMs)}</p>
-            </div>
-          </div>
-
-          <div>
-            <p className="mb-2 text-xs uppercase tracking-wide text-slate-400">
-              Event timeline
+            <p>
+              first highlighted:{' '}
+              {formatMs(metrics.ux.timeToFirstHighlightedOutputMs)}
             </p>
-            <div className="max-h-72 space-y-1 overflow-auto rounded-lg border border-slate-700/60 bg-slate-950/70 p-2">
-              {timeline.length === 0 ? (
-                <p className="text-xs text-slate-500">No events yet.</p>
-              ) : (
-                timeline.map((item) => (
-                  <div
-                    key={`${item.index}:${item.type}:${item.elapsedMs}`}
-                    className="rounded bg-slate-900/80 px-2 py-1 text-xs text-slate-300"
-                  >
-                    <span className="font-mono text-slate-400">
-                      #{item.index}
-                    </span>{' '}
-                    {item.type} - {item.elapsedMs.toFixed(1)} ms - code{' '}
-                    {item.codeChars} - text {item.transcriptChars}
-                  </div>
-                ))
-              )}
-            </div>
+            <p>
+              p50 chunk latency: {formatMs(metrics.ux.p50ChunkLatencyMs)}
+            </p>
+            <p>
+              p95 chunk latency: {formatMs(metrics.ux.p95ChunkLatencyMs)}
+            </p>
+            <p>
+              max chunk latency: {formatMs(metrics.ux.maxChunkLatencyMs)}
+            </p>
+            <p>session total: {formatMs(metrics.ux.sessionTotalMs)}</p>
           </div>
         </aside>
       </div>

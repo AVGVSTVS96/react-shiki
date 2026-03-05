@@ -85,6 +85,11 @@ describe('useShikiStreamHighlighter stream source parity', () => {
       expect(chunksRef.current?.getResult().status).toBe('done');
     });
 
+    await waitFor(() => {
+      expect(readRenderedCode(streamRef)).toBe(expected);
+      expect(readRenderedCode(chunksRef)).toBe(expected);
+    });
+
     expect(readRenderedCode(streamRef)).toBe(expected);
     expect(readRenderedCode(chunksRef)).toBe(expected);
   });

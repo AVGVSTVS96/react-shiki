@@ -16,6 +16,7 @@ import type {
   ShikiStreamInput,
   StreamHighlighterOptions,
   StreamHighlighterResult,
+  StreamSessionSummary,
   StreamStatus,
 } from './stream-types';
 
@@ -66,8 +67,12 @@ export const useShikiStreamHighlighter = (
 
   const onStreamStartRef = useRef(stableOpts.onStreamStart);
   const onStreamEndRef = useRef(stableOpts.onStreamEnd);
+  // Dev-only instrumentation sink for streaming-lab tests/benches/playground.
+  // Do not remove without replacing the equivalent emitted session summary.
+  const onSessionSummaryRef = useRef(stableOpts.onSessionSummary);
   onStreamStartRef.current = stableOpts.onStreamStart;
   onStreamEndRef.current = stableOpts.onStreamEnd;
+  onSessionSummaryRef.current = stableOpts.onSessionSummary;
 
   const { languageId, langsToLoad } = useMemo(
     () =>

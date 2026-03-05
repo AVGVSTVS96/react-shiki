@@ -17,6 +17,7 @@ export {
 export {
   STREAMING_SCENARIO_PRESETS,
   createStreamingScenario,
+  type RestartClass,
   type ScenarioPreset,
   type ScenarioPresetId,
   type StreamingScenario,
@@ -38,13 +39,19 @@ export {
 
 export {
   buildSessionMetrics,
+  buildHighlightStructure,
   calculateTextDiffCounts,
+  compareStructuralHighlight,
   createEmptySessionMetrics,
+  getCommitAmplification,
   getWorkAmplification,
   normalizeHtml,
+  normalizePlainText,
   percentile,
   type ComputeMetrics,
+  type HighlightStructure,
   type IntegrityMetrics,
+  type StructuralHighlightComparison,
   type StreamingSessionMetrics,
   type UxMetrics,
 } from './metrics';
@@ -62,3 +69,10 @@ export {
   type ScenarioSummaryRow,
   type ScenarioVariantReport,
 } from './reporters';
+
+export {
+  extractFencedCodeBlocks,
+  parseTranscriptNodes,
+  type TranscriptCodeBlock,
+  type TranscriptNode,
+} from './transcript';

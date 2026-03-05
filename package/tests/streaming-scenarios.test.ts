@@ -46,6 +46,23 @@ describe('streaming lab scenarios', () => {
     expect(a.events).toEqual(b.events);
   });
 
+  test('delayed-fence-language alias maps to intentional model edit behavior', () => {
+    const late = createStreamingScenario({
+      presetId: 'late-fence-language',
+      corpusId: 'tsx-chat-ui',
+      seed: 12,
+    });
+
+    const delayed = createStreamingScenario({
+      presetId: 'delayed-fence-language',
+      corpusId: 'tsx-chat-ui',
+      seed: 12,
+    });
+
+    expect(delayed.restartClass).toBe('intentional-model-edit');
+    expect(delayed.events).toEqual(late.events);
+  });
+
   test('replace-tail keeps prefix and converges to expected final code', () => {
     const scenario = createStreamingScenario({
       presetId: 'replace-tail',

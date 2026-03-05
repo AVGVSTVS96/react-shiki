@@ -33,6 +33,9 @@ export type {
   ShikiStreamInput,
   StreamHighlighterOptions,
   StreamHighlighterResult,
+  StreamSessionSummary,
+  StreamSessionMode,
+  StreamSessionEndReason,
   StreamStatus,
 } from './lib/stream-types';
 

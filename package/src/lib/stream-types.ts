@@ -35,6 +35,27 @@ export type ShikiStreamInput =
  */
 export type StreamStatus = 'idle' | 'streaming' | 'done' | 'error';
 
+export type StreamSessionMode = 'code' | 'stream' | 'chunks';
+
+export type StreamSessionEndReason =
+  | 'done'
+  | 'cleanup'
+  | 'restart'
+  | 'error';
+
+export interface StreamSessionSummary {
+  reason: StreamSessionEndReason;
+  sessionId: number;
+  mode: StreamSessionMode | null;
+  elapsedMs: number;
+  inputChunkCount: number;
+  processedChars: number;
+  tokenEvents: number;
+  recallEvents: number;
+  scheduledCommits: number;
+  restartCount: number;
+}
+
 /**
  * Options for the streaming syntax highlighter hook.
  */
@@ -82,6 +103,15 @@ export interface StreamHighlighterOptions {
    * Callback fired when the stream finishes.
    */
   onStreamEnd?: () => void;
+
+  /**
+   * Internal diagnostics callback for session-level instrumentation.
+   *
+   * NOTE: This powers the streaming-lab test/benchmark/playground tooling in
+   * this repo. Keep this hook-level signal (or provide an equivalent) so
+   * commit/restart metrics remain measurable from real rendered paths.
+   */
+  onSessionSummary?: (summary: StreamSessionSummary) => void;
 }
 
 /**

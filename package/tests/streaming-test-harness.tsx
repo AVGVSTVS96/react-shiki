@@ -10,15 +10,20 @@ import type { Highlighter } from 'shiki';
 import { useShikiStreamHighlighter } from '../src/index';
 import type {
   ShikiStreamInput,
+  StreamSessionSummary,
   StreamHighlighterResult,
 } from '../src/lib/stream-types';
 import type { Language, Theme, Themes } from '../src/lib/types';
+import { ShikiTokenRenderer } from '../src/lib/stream-renderer';
 
 export interface StreamHarnessHandle {
   setInput: (value: ShikiStreamInput) => void;
   setLanguage: (value: Language) => void;
   setTheme: (value: Theme | Themes) => void;
   getResult: () => StreamHighlighterResult;
+  getRenderedHtml: () => string;
+  getRenderedText: () => string;
+  getSessionSummaries: () => StreamSessionSummary[];
   getStatusSequence: () => string[];
   getRenderCommits: () => number;
   getStartCount: () => number;
@@ -54,6 +59,8 @@ export const StreamHarness = forwardRef<
   const renderCommitsRef = useRef(0);
   const startCountRef = useRef(0);
   const endCountRef = useRef(0);
+  const sessionSummariesRef = useRef<StreamSessionSummary[]>([]);
+  const renderedRef = useRef<HTMLDivElement | null>(null);
 
   const result = useShikiStreamHighlighter(input, language, theme, {
     highlighter,
@@ -63,6 +70,9 @@ export const StreamHarness = forwardRef<
     },
     onStreamEnd: () => {
       endCountRef.current += 1;
+    },
+    onSessionSummary: (summary) => {
+      sessionSummariesRef.current.push(summary);
     },
   });
 
@@ -84,6 +94,9 @@ export const StreamHarness = forwardRef<
       setLanguage,
       setTheme,
       getResult: () => result,
+      getRenderedHtml: () => renderedRef.current?.innerHTML ?? '',
+      getRenderedText: () => renderedRef.current?.textContent ?? '',
+      getSessionSummaries: () => [...sessionSummariesRef.current],
       getStatusSequence: () => [...statusSequenceRef.current],
       getRenderCommits: () => renderCommitsRef.current,
       getStartCount: () => startCountRef.current,
@@ -94,6 +107,9 @@ export const StreamHarness = forwardRef<
 
   return (
     <div>
+      <div ref={renderedRef} data-testid="rendered-code">
+        <ShikiTokenRenderer tokens={result.tokens} />
+      </div>
       <span data-testid="content">
         {result.tokens.map((t) => t.content).join('')}
       </span>

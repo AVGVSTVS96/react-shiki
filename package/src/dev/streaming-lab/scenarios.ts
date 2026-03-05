@@ -3,15 +3,25 @@ import { getStreamingCorpus } from './corpora';
 import type { StreamingEvent } from './events';
 import { chunkTextWithSeed, createSeededRandom } from './events';
 
+// Internal deterministic scenario catalog for streaming-lab coverage lanes
+// (hook perf, chat-tree integration, and playground transcript playback).
+
 export type ScenarioPresetId =
   | 'openai-steady'
   | 'anthropic-bursty'
   | 'firehose'
+  | 'recall-heavy-append'
   | 'late-fence-language'
+  | 'delayed-fence-language'
   | 'replace-tail'
   | 'prose-code-prose'
   | 'two-code-blocks'
   | 'cancel-resume';
+
+export type RestartClass =
+  | 'append-only'
+  | 'intentional-model-edit'
+  | 'consumer-induced';
 
 export interface StreamingScenario {
   id: string;
@@ -19,6 +29,7 @@ export interface StreamingScenario {
   corpusId: CorpusId;
   seed: number;
   appendOnly: boolean;
+  restartClass: RestartClass;
   events: StreamingEvent[];
 }
 
@@ -27,6 +38,7 @@ export interface ScenarioPreset {
   label: string;
   description: string;
   appendOnly: boolean;
+  restartClass: RestartClass;
 }
 
 const INTRO_TEXT =
@@ -98,6 +110,7 @@ const createOpenAiSteadyScenario = (
     corpusId,
     seed,
     appendOnly: true,
+    restartClass: 'append-only',
     events,
   };
 };
@@ -136,6 +149,7 @@ const createAnthropicBurstyScenario = (
     corpusId,
     seed,
     appendOnly: true,
+    restartClass: 'append-only',
     events,
   };
 };
@@ -165,6 +179,42 @@ const createFirehoseScenario = (
     corpusId,
     seed,
     appendOnly: true,
+    restartClass: 'append-only',
+    events,
+  };
+};
+
+const createRecallHeavyAppendScenario = (
+  corpusId: CorpusId,
+  seed: number
+): StreamingScenario => {
+  const corpus = getStreamingCorpus(corpusId);
+  const events: StreamingEvent[] = [
+    { type: 'message-start' },
+    {
+      type: 'text-delta',
+      value: 'Streaming with tiny chunks to amplify recall pressure:\n\n',
+    },
+    { type: 'fence-open', language: corpus.language },
+    ...toCodeEvents(corpus.source, {
+      seed,
+      minChunk: 1,
+      maxChunk: 2,
+      pauseEvery: 17,
+      pauseMs: 14,
+      pingEvery: 19,
+    }),
+    { type: 'fence-close' },
+    { type: 'message-end' },
+  ];
+
+  return {
+    id: `recall-heavy-append:${corpusId}:${seed}`,
+    presetId: 'recall-heavy-append',
+    corpusId,
+    seed,
+    appendOnly: true,
+    restartClass: 'append-only',
     events,
   };
 };
@@ -204,7 +254,20 @@ const createLateFenceLanguageScenario = (
     corpusId,
     seed,
     appendOnly: true,
+    restartClass: 'intentional-model-edit',
     events,
+  };
+};
+
+const createDelayedFenceLanguageScenario = (
+  corpusId: CorpusId,
+  seed: number
+): StreamingScenario => {
+  const scenario = createLateFenceLanguageScenario(corpusId, seed);
+  return {
+    ...scenario,
+    id: `delayed-fence-language:${corpusId}:${seed}`,
+    presetId: 'delayed-fence-language',
   };
 };
 
@@ -280,6 +343,7 @@ const createReplaceTailScenario = (
     corpusId,
     seed,
     appendOnly: false,
+    restartClass: 'intentional-model-edit',
     events,
   };
 };
@@ -319,6 +383,7 @@ const createProseCodeProseScenario = (
     corpusId,
     seed,
     appendOnly: true,
+    restartClass: 'append-only',
     events,
   };
 };
@@ -371,6 +436,7 @@ const createTwoCodeBlocksScenario = (
     corpusId,
     seed,
     appendOnly: true,
+    restartClass: 'append-only',
     events,
   };
 };
@@ -421,6 +487,7 @@ const createCancelResumeScenario = (
     corpusId,
     seed,
     appendOnly: true,
+    restartClass: 'append-only',
     events,
   };
 };
@@ -432,7 +499,9 @@ const SCENARIO_BUILDERS: Record<
   'openai-steady': createOpenAiSteadyScenario,
   'anthropic-bursty': createAnthropicBurstyScenario,
   firehose: createFirehoseScenario,
+  'recall-heavy-append': createRecallHeavyAppendScenario,
   'late-fence-language': createLateFenceLanguageScenario,
+  'delayed-fence-language': createDelayedFenceLanguageScenario,
   'replace-tail': createReplaceTailScenario,
   'prose-code-prose': createProseCodeProseScenario,
   'two-code-blocks': createTwoCodeBlocksScenario,
@@ -445,48 +514,71 @@ export const STREAMING_SCENARIO_PRESETS: ScenarioPreset[] = [
     label: 'OpenAI steady',
     description: 'Mostly sequential deltas with light pauses.',
     appendOnly: true,
+    restartClass: 'append-only',
   },
   {
     id: 'anthropic-bursty',
     label: 'Anthropic bursty',
     description: 'Chunk bursts with regular pings and pauses.',
     appendOnly: true,
+    restartClass: 'append-only',
   },
   {
     id: 'firehose',
     label: 'Firehose',
     description: 'Very small chunks and minimal waiting.',
     appendOnly: true,
+    restartClass: 'append-only',
+  },
+  {
+    id: 'recall-heavy-append',
+    label: 'Recall-heavy append',
+    description:
+      'Small chunks and punctuation churn to amplify recall behavior.',
+    appendOnly: true,
+    restartClass: 'append-only',
   },
   {
     id: 'late-fence-language',
     label: 'Late fence language',
     description: 'Fence opens before language token resolves.',
     appendOnly: true,
+    restartClass: 'intentional-model-edit',
+  },
+  {
+    id: 'delayed-fence-language',
+    label: 'Delayed fence language',
+    description: 'Alias scenario for late fence language arrival.',
+    appendOnly: true,
+    restartClass: 'intentional-model-edit',
   },
   {
     id: 'replace-tail',
     label: 'Replace tail',
     description: 'Tail replacement simulating model correction.',
     appendOnly: false,
+    restartClass: 'intentional-model-edit',
   },
   {
     id: 'prose-code-prose',
     label: 'Prose-code-prose',
     description: 'Common chat shape with prose around code.',
     appendOnly: true,
+    restartClass: 'append-only',
   },
   {
     id: 'two-code-blocks',
     label: 'Two code blocks',
     description: 'Assistant message with multiple fenced blocks.',
     appendOnly: true,
+    restartClass: 'append-only',
   },
   {
     id: 'cancel-resume',
     label: 'Cancel/resume',
     description: 'Stall and resume in the middle of code streaming.',
     appendOnly: true,
+    restartClass: 'append-only',
   },
 ];
 
