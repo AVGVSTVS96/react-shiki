@@ -23,6 +23,8 @@ export interface ControlledCodeState {
   eventIndex: number;
 }
 
+export type TranscriptPlaybackMode = 'streaming' | 'final-only';
+
 interface ReplayState {
   transcript: string;
   codeBlocks: string[];
@@ -182,6 +184,19 @@ export const buildMarkdownStates = (
   }
 
   return states;
+};
+
+export const buildTranscriptPlaybackStates = (
+  events: StreamingEvent[],
+  { mode = 'streaming' }: { mode?: TranscriptPlaybackMode } = {}
+): string[] => {
+  if (mode === 'final-only') {
+    const finalTranscript = extractFinalTranscript(events);
+    if (!finalTranscript) return [''];
+    return ['', finalTranscript];
+  }
+
+  return buildMarkdownStates(events);
 };
 
 export const buildControlledCodeStates = (

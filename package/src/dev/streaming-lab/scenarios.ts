@@ -2,6 +2,8 @@ import type { CorpusId } from './corpora';
 import { getStreamingCorpus } from './corpora';
 import type { StreamingEvent } from './events';
 import { chunkTextWithSeed, createSeededRandom } from './events';
+import type { MessageCorpusId } from './message-corpuses';
+import { getAssistantMessageCorpus } from './message-corpuses';
 
 // Internal deterministic scenario catalog for streaming-lab coverage lanes
 // (hook perf, chat-tree integration, and playground transcript playback).
@@ -16,20 +18,42 @@ export type ScenarioPresetId =
   | 'replace-tail'
   | 'prose-code-prose'
   | 'two-code-blocks'
-  | 'cancel-resume';
+  | 'cancel-resume'
+  | 'assistant-multi-block-steady'
+  | 'assistant-multi-block-bursty'
+  | 'assistant-multi-block-firehose';
+
+export type AssistantMessagePresetId =
+  | 'assistant-multi-block-steady'
+  | 'assistant-multi-block-bursty'
+  | 'assistant-multi-block-firehose';
+
+export type SingleCodePresetId = Exclude<
+  ScenarioPresetId,
+  AssistantMessagePresetId
+>;
+
+export type ScenarioFamily = 'single-block' | 'assistant-message';
 
 export type RestartClass =
   | 'append-only'
   | 'intentional-model-edit'
   | 'consumer-induced';
 
+export type ScenarioCorpusTarget =
+  | { type: 'single-code'; corpusId: CorpusId }
+  | { type: 'assistant-message'; messageCorpusId: MessageCorpusId };
+
 export interface StreamingScenario {
   id: string;
   presetId: ScenarioPresetId;
-  corpusId: CorpusId;
   seed: number;
   appendOnly: boolean;
   restartClass: RestartClass;
+  family: ScenarioFamily;
+  corpusTarget: ScenarioCorpusTarget;
+  corpusId?: CorpusId;
+  messageCorpusId?: MessageCorpusId;
   events: StreamingEvent[];
 }
 
@@ -39,12 +63,39 @@ export interface ScenarioPreset {
   description: string;
   appendOnly: boolean;
   restartClass: RestartClass;
+  family: ScenarioFamily;
 }
+
+type SingleCodeScenarioRequest = {
+  presetId: SingleCodePresetId;
+  corpusId: CorpusId;
+  seed: number;
+};
+
+type AssistantMessageScenarioRequest = {
+  presetId: AssistantMessagePresetId;
+  seed: number;
+  messageCorpusId?: MessageCorpusId;
+  corpusId?: CorpusId;
+};
+
+export type CreateStreamingScenarioRequest =
+  | SingleCodeScenarioRequest
+  | AssistantMessageScenarioRequest;
 
 const INTRO_TEXT =
   'Sure - here is a focused implementation. I will walk through the key bits as we stream it.\n\n';
 const OUTRO_TEXT =
   '\n\nIf you want, I can also provide tests and a quick perf pass next.';
+
+const ASSISTANT_DEFAULT_MESSAGE_CORPUS: MessageCorpusId =
+  'assistant-mixed-stack-6';
+
+const ASSISTANT_PRESET_IDS = new Set<ScenarioPresetId>([
+  'assistant-multi-block-steady',
+  'assistant-multi-block-bursty',
+  'assistant-multi-block-firehose',
+]);
 
 const toCodeEvents = (
   code: string,
@@ -82,6 +133,71 @@ const toCodeEvents = (
   return events;
 };
 
+const toTextEvents = (
+  text: string,
+  {
+    seed,
+    minChunk,
+    maxChunk,
+    pauseEvery,
+    pauseMs,
+  }: {
+    seed: number;
+    minChunk: number;
+    maxChunk: number;
+    pauseEvery?: number;
+    pauseMs?: number;
+  }
+): StreamingEvent[] => {
+  if (!text.trim()) return [];
+
+  const chunks = chunkTextWithSeed(text, { seed, minChunk, maxChunk });
+  const events: StreamingEvent[] = [];
+
+  chunks.forEach((chunk, index) => {
+    events.push({ type: 'text-delta', value: chunk });
+
+    const chunkNumber = index + 1;
+    if (pauseEvery && pauseMs && chunkNumber % pauseEvery === 0) {
+      events.push({ type: 'pause', durationMs: pauseMs });
+    }
+  });
+
+  return events;
+};
+
+const withSingleCorpus = (
+  base: Omit<
+    StreamingScenario,
+    'family' | 'corpusTarget' | 'corpusId' | 'messageCorpusId'
+  >,
+  corpusId: CorpusId
+): StreamingScenario => ({
+  ...base,
+  family: 'single-block',
+  corpusId,
+  corpusTarget: {
+    type: 'single-code',
+    corpusId,
+  },
+});
+
+const withMessageCorpus = (
+  base: Omit<
+    StreamingScenario,
+    'family' | 'corpusTarget' | 'corpusId' | 'messageCorpusId'
+  >,
+  messageCorpusId: MessageCorpusId
+): StreamingScenario => ({
+  ...base,
+  family: 'assistant-message',
+  messageCorpusId,
+  corpusTarget: {
+    type: 'assistant-message',
+    messageCorpusId,
+  },
+});
+
 const createOpenAiSteadyScenario = (
   corpusId: CorpusId,
   seed: number
@@ -104,15 +220,17 @@ const createOpenAiSteadyScenario = (
     { type: 'message-end' },
   ];
 
-  return {
-    id: `openai-steady:${corpusId}:${seed}`,
-    presetId: 'openai-steady',
-    corpusId,
-    seed,
-    appendOnly: true,
-    restartClass: 'append-only',
-    events,
-  };
+  return withSingleCorpus(
+    {
+      id: `openai-steady:${corpusId}:${seed}`,
+      presetId: 'openai-steady',
+      seed,
+      appendOnly: true,
+      restartClass: 'append-only',
+      events,
+    },
+    corpusId
+  );
 };
 
 const createAnthropicBurstyScenario = (
@@ -143,15 +261,17 @@ const createAnthropicBurstyScenario = (
     { type: 'message-end' },
   ];
 
-  return {
-    id: `anthropic-bursty:${corpusId}:${seed}`,
-    presetId: 'anthropic-bursty',
-    corpusId,
-    seed,
-    appendOnly: true,
-    restartClass: 'append-only',
-    events,
-  };
+  return withSingleCorpus(
+    {
+      id: `anthropic-bursty:${corpusId}:${seed}`,
+      presetId: 'anthropic-bursty',
+      seed,
+      appendOnly: true,
+      restartClass: 'append-only',
+      events,
+    },
+    corpusId
+  );
 };
 
 const createFirehoseScenario = (
@@ -173,15 +293,17 @@ const createFirehoseScenario = (
     { type: 'message-end' },
   ];
 
-  return {
-    id: `firehose:${corpusId}:${seed}`,
-    presetId: 'firehose',
-    corpusId,
-    seed,
-    appendOnly: true,
-    restartClass: 'append-only',
-    events,
-  };
+  return withSingleCorpus(
+    {
+      id: `firehose:${corpusId}:${seed}`,
+      presetId: 'firehose',
+      seed,
+      appendOnly: true,
+      restartClass: 'append-only',
+      events,
+    },
+    corpusId
+  );
 };
 
 const createRecallHeavyAppendScenario = (
@@ -208,15 +330,17 @@ const createRecallHeavyAppendScenario = (
     { type: 'message-end' },
   ];
 
-  return {
-    id: `recall-heavy-append:${corpusId}:${seed}`,
-    presetId: 'recall-heavy-append',
-    corpusId,
-    seed,
-    appendOnly: true,
-    restartClass: 'append-only',
-    events,
-  };
+  return withSingleCorpus(
+    {
+      id: `recall-heavy-append:${corpusId}:${seed}`,
+      presetId: 'recall-heavy-append',
+      seed,
+      appendOnly: true,
+      restartClass: 'append-only',
+      events,
+    },
+    corpusId
+  );
 };
 
 const createLateFenceLanguageScenario = (
@@ -248,15 +372,17 @@ const createLateFenceLanguageScenario = (
     { type: 'message-end' },
   ];
 
-  return {
-    id: `late-fence-language:${corpusId}:${seed}`,
-    presetId: 'late-fence-language',
-    corpusId,
-    seed,
-    appendOnly: true,
-    restartClass: 'intentional-model-edit',
-    events,
-  };
+  return withSingleCorpus(
+    {
+      id: `late-fence-language:${corpusId}:${seed}`,
+      presetId: 'late-fence-language',
+      seed,
+      appendOnly: true,
+      restartClass: 'intentional-model-edit',
+      events,
+    },
+    corpusId
+  );
 };
 
 const createDelayedFenceLanguageScenario = (
@@ -337,15 +463,17 @@ const createReplaceTailScenario = (
     { type: 'message-end' },
   ];
 
-  return {
-    id: `replace-tail:${corpusId}:${seed}`,
-    presetId: 'replace-tail',
-    corpusId,
-    seed,
-    appendOnly: false,
-    restartClass: 'intentional-model-edit',
-    events,
-  };
+  return withSingleCorpus(
+    {
+      id: `replace-tail:${corpusId}:${seed}`,
+      presetId: 'replace-tail',
+      seed,
+      appendOnly: false,
+      restartClass: 'intentional-model-edit',
+      events,
+    },
+    corpusId
+  );
 };
 
 const createProseCodeProseScenario = (
@@ -377,15 +505,17 @@ const createProseCodeProseScenario = (
     { type: 'message-end' },
   ];
 
-  return {
-    id: `prose-code-prose:${corpusId}:${seed}`,
-    presetId: 'prose-code-prose',
-    corpusId,
-    seed,
-    appendOnly: true,
-    restartClass: 'append-only',
-    events,
-  };
+  return withSingleCorpus(
+    {
+      id: `prose-code-prose:${corpusId}:${seed}`,
+      presetId: 'prose-code-prose',
+      seed,
+      appendOnly: true,
+      restartClass: 'append-only',
+      events,
+    },
+    corpusId
+  );
 };
 
 const createTwoCodeBlocksScenario = (
@@ -430,15 +560,17 @@ const createTwoCodeBlocksScenario = (
     { type: 'message-end' },
   ];
 
-  return {
-    id: `two-code-blocks:${corpusId}:${seed}`,
-    presetId: 'two-code-blocks',
-    corpusId,
-    seed,
-    appendOnly: true,
-    restartClass: 'append-only',
-    events,
-  };
+  return withSingleCorpus(
+    {
+      id: `two-code-blocks:${corpusId}:${seed}`,
+      presetId: 'two-code-blocks',
+      seed,
+      appendOnly: true,
+      restartClass: 'append-only',
+      events,
+    },
+    corpusId
+  );
 };
 
 const createCancelResumeScenario = (
@@ -481,31 +613,139 @@ const createCancelResumeScenario = (
     { type: 'message-end' },
   ];
 
-  return {
-    id: `cancel-resume:${corpusId}:${seed}`,
-    presetId: 'cancel-resume',
-    corpusId,
-    seed,
-    appendOnly: true,
-    restartClass: 'append-only',
-    events,
-  };
+  return withSingleCorpus(
+    {
+      id: `cancel-resume:${corpusId}:${seed}`,
+      presetId: 'cancel-resume',
+      seed,
+      appendOnly: true,
+      restartClass: 'append-only',
+      events,
+    },
+    corpusId
+  );
 };
 
-const SCENARIO_BUILDERS: Record<
-  ScenarioPresetId,
-  (corpusId: CorpusId, seed: number) => StreamingScenario
-> = {
-  'openai-steady': createOpenAiSteadyScenario,
-  'anthropic-bursty': createAnthropicBurstyScenario,
-  firehose: createFirehoseScenario,
-  'recall-heavy-append': createRecallHeavyAppendScenario,
-  'late-fence-language': createLateFenceLanguageScenario,
-  'delayed-fence-language': createDelayedFenceLanguageScenario,
-  'replace-tail': createReplaceTailScenario,
-  'prose-code-prose': createProseCodeProseScenario,
-  'two-code-blocks': createTwoCodeBlocksScenario,
-  'cancel-resume': createCancelResumeScenario,
+const createAssistantMessageScenario = ({
+  presetId,
+  seed,
+  messageCorpusId,
+}: {
+  presetId: AssistantMessagePresetId;
+  seed: number;
+  messageCorpusId?: MessageCorpusId;
+}): StreamingScenario => {
+  const corpusId = messageCorpusId ?? ASSISTANT_DEFAULT_MESSAGE_CORPUS;
+  const corpus = getAssistantMessageCorpus(corpusId);
+
+  const profile =
+    presetId === 'assistant-multi-block-firehose'
+      ? {
+          prose: { minChunk: 3, maxChunk: 9 },
+          code: { minChunk: 1, maxChunk: 3, pingEvery: 55 },
+        }
+      : presetId === 'assistant-multi-block-bursty'
+        ? {
+            prose: { minChunk: 11, maxChunk: 28, pauseEvery: 3, pauseMs: 12 },
+            code: {
+              minChunk: 6,
+              maxChunk: 18,
+              pauseEvery: 5,
+              pauseMs: 20,
+              pingEvery: 4,
+            },
+          }
+        : {
+            prose: { minChunk: 8, maxChunk: 20, pauseEvery: 5, pauseMs: 14 },
+            code: {
+              minChunk: 3,
+              maxChunk: 10,
+              pauseEvery: 9,
+              pauseMs: 24,
+              pingEvery: 12,
+            },
+          };
+
+  const events: StreamingEvent[] = [{ type: 'message-start' }];
+
+  events.push(
+    ...toTextEvents(corpus.openingProse + '\n\n', {
+      seed: seed + 1,
+      ...profile.prose,
+    })
+  );
+
+  corpus.blocks.forEach((block, index) => {
+    if (index > 0) {
+      const bridge = corpus.interBlockProse?.[index - 1];
+      if (bridge) {
+        events.push(
+          ...toTextEvents(`\n\n${bridge}\n\n`, {
+            seed: seed + 10 + index,
+            ...profile.prose,
+          })
+        );
+      }
+    }
+
+    events.push({ type: 'fence-open', language: block.language });
+    events.push(
+      ...toCodeEvents(block.source, {
+        seed: seed + 100 + index * 13,
+        ...profile.code,
+      })
+    );
+    events.push({ type: 'fence-close' });
+  });
+
+  events.push(
+    ...toTextEvents(`\n\n${corpus.closingProse}`, {
+      seed: seed + 501,
+      ...profile.prose,
+    })
+  );
+  events.push({ type: 'message-end' });
+
+  return withMessageCorpus(
+    {
+      id: `${presetId}:${corpusId}:${seed}`,
+      presetId,
+      seed,
+      appendOnly: true,
+      restartClass: 'append-only',
+      events,
+    },
+    corpusId
+  );
+};
+
+const createSingleCodeScenario = ({
+  presetId,
+  corpusId,
+  seed,
+}: SingleCodeScenarioRequest): StreamingScenario => {
+  switch (presetId) {
+    case 'openai-steady':
+      return createOpenAiSteadyScenario(corpusId, seed);
+    case 'anthropic-bursty':
+      return createAnthropicBurstyScenario(corpusId, seed);
+    case 'firehose':
+      return createFirehoseScenario(corpusId, seed);
+    case 'recall-heavy-append':
+      return createRecallHeavyAppendScenario(corpusId, seed);
+    case 'late-fence-language':
+      return createLateFenceLanguageScenario(corpusId, seed);
+    case 'delayed-fence-language':
+      return createDelayedFenceLanguageScenario(corpusId, seed);
+    case 'replace-tail':
+      return createReplaceTailScenario(corpusId, seed);
+    case 'prose-code-prose':
+      return createProseCodeProseScenario(corpusId, seed);
+    case 'two-code-blocks':
+      return createTwoCodeBlocksScenario(corpusId, seed);
+    case 'cancel-resume':
+      return createCancelResumeScenario(corpusId, seed);
+  }
 };
 
 export const STREAMING_SCENARIO_PRESETS: ScenarioPreset[] = [
@@ -515,6 +755,7 @@ export const STREAMING_SCENARIO_PRESETS: ScenarioPreset[] = [
     description: 'Mostly sequential deltas with light pauses.',
     appendOnly: true,
     restartClass: 'append-only',
+    family: 'single-block',
   },
   {
     id: 'anthropic-bursty',
@@ -522,6 +763,7 @@ export const STREAMING_SCENARIO_PRESETS: ScenarioPreset[] = [
     description: 'Chunk bursts with regular pings and pauses.',
     appendOnly: true,
     restartClass: 'append-only',
+    family: 'single-block',
   },
   {
     id: 'firehose',
@@ -529,6 +771,7 @@ export const STREAMING_SCENARIO_PRESETS: ScenarioPreset[] = [
     description: 'Very small chunks and minimal waiting.',
     appendOnly: true,
     restartClass: 'append-only',
+    family: 'single-block',
   },
   {
     id: 'recall-heavy-append',
@@ -537,6 +780,7 @@ export const STREAMING_SCENARIO_PRESETS: ScenarioPreset[] = [
       'Small chunks and punctuation churn to amplify recall behavior.',
     appendOnly: true,
     restartClass: 'append-only',
+    family: 'single-block',
   },
   {
     id: 'late-fence-language',
@@ -544,6 +788,7 @@ export const STREAMING_SCENARIO_PRESETS: ScenarioPreset[] = [
     description: 'Fence opens before language token resolves.',
     appendOnly: true,
     restartClass: 'intentional-model-edit',
+    family: 'single-block',
   },
   {
     id: 'delayed-fence-language',
@@ -551,6 +796,7 @@ export const STREAMING_SCENARIO_PRESETS: ScenarioPreset[] = [
     description: 'Alias scenario for late fence language arrival.',
     appendOnly: true,
     restartClass: 'intentional-model-edit',
+    family: 'single-block',
   },
   {
     id: 'replace-tail',
@@ -558,6 +804,7 @@ export const STREAMING_SCENARIO_PRESETS: ScenarioPreset[] = [
     description: 'Tail replacement simulating model correction.',
     appendOnly: false,
     restartClass: 'intentional-model-edit',
+    family: 'single-block',
   },
   {
     id: 'prose-code-prose',
@@ -565,6 +812,7 @@ export const STREAMING_SCENARIO_PRESETS: ScenarioPreset[] = [
     description: 'Common chat shape with prose around code.',
     appendOnly: true,
     restartClass: 'append-only',
+    family: 'single-block',
   },
   {
     id: 'two-code-blocks',
@@ -572,6 +820,7 @@ export const STREAMING_SCENARIO_PRESETS: ScenarioPreset[] = [
     description: 'Assistant message with multiple fenced blocks.',
     appendOnly: true,
     restartClass: 'append-only',
+    family: 'single-block',
   },
   {
     id: 'cancel-resume',
@@ -579,15 +828,56 @@ export const STREAMING_SCENARIO_PRESETS: ScenarioPreset[] = [
     description: 'Stall and resume in the middle of code streaming.',
     appendOnly: true,
     restartClass: 'append-only',
+    family: 'single-block',
+  },
+  {
+    id: 'assistant-multi-block-steady',
+    label: 'Assistant multi-block steady',
+    description:
+      'Single assistant response with 4+ mixed-language blocks and steady pacing.',
+    appendOnly: true,
+    restartClass: 'append-only',
+    family: 'assistant-message',
+  },
+  {
+    id: 'assistant-multi-block-bursty',
+    label: 'Assistant multi-block bursty',
+    description:
+      'Single assistant response with bursty chunk delivery across many blocks.',
+    appendOnly: true,
+    restartClass: 'append-only',
+    family: 'assistant-message',
+  },
+  {
+    id: 'assistant-multi-block-firehose',
+    label: 'Assistant multi-block firehose',
+    description:
+      'Single assistant response with tiny chunks and minimal waits across blocks.',
+    appendOnly: true,
+    restartClass: 'append-only',
+    family: 'assistant-message',
   },
 ];
 
-export const createStreamingScenario = ({
-  presetId,
-  corpusId,
-  seed,
-}: {
-  presetId: ScenarioPresetId;
-  corpusId: CorpusId;
-  seed: number;
-}): StreamingScenario => SCENARIO_BUILDERS[presetId](corpusId, seed);
+export const createStreamingScenario = (
+  request: CreateStreamingScenarioRequest
+): StreamingScenario => {
+  const isAssistantRequest = (
+    value: CreateStreamingScenarioRequest
+  ): value is AssistantMessageScenarioRequest =>
+    ASSISTANT_PRESET_IDS.has(value.presetId);
+
+  if (isAssistantRequest(request)) {
+    return createAssistantMessageScenario({
+      presetId: request.presetId,
+      seed: request.seed,
+      messageCorpusId: request.messageCorpusId,
+    });
+  }
+
+  return createSingleCodeScenario({
+    presetId: request.presetId,
+    corpusId: request.corpusId,
+    seed: request.seed,
+  });
+};

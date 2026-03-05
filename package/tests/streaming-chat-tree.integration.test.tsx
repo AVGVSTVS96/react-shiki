@@ -1,5 +1,5 @@
 import type React from 'react';
-import { StrictMode } from 'react';
+import { StrictMode, useCallback, useMemo } from 'react';
 import { act, render, waitFor } from '@testing-library/react';
 import { beforeAll, describe, expect, test } from 'vitest';
 import { getSingletonHighlighter, type Highlighter } from 'shiki';
@@ -43,15 +43,22 @@ const ChatCodeBlock = ({
   freshOptionsNonce: number;
   onSummary: (blockIndex: number, summary: StreamSessionSummary) => void;
 }) => {
-  const options = {
-    highlighter,
-    allowRecalls: true,
-    onSessionSummary: (summary: StreamSessionSummary) => {
-      if (freshOptionsNonce >= 0) {
-        onSummary(blockIndex, summary);
-      }
+  const stableSummary = useCallback(
+    (summary: StreamSessionSummary) => {
+      onSummary(blockIndex, summary);
     },
-  };
+    [blockIndex, onSummary]
+  );
+  const stableOptions = useMemo(
+    () => ({
+      highlighter,
+      allowRecalls: true,
+      onSessionSummary: stableSummary,
+    }),
+    [highlighter, stableSummary]
+  );
+  const options =
+    freshOptionsNonce > 0 ? { ...stableOptions } : stableOptions;
 
   const result = useShikiStreamHighlighter(
     { code, isComplete },

@@ -28,7 +28,8 @@ export interface ScenarioSummaryRow {
   maxLatencyMs: number;
   sessionTotalMs: number;
   parity: boolean;
-  structuralParity: boolean | null;
+  highlightPresencePass: boolean;
+  strictStructuralMatch: boolean | null;
   plainTextFallback: boolean;
 }
 
@@ -56,7 +57,8 @@ export const toScenarioSummaryRows = (
     maxLatencyMs: report.metrics.ux.maxChunkLatencyMs,
     sessionTotalMs: report.metrics.ux.sessionTotalMs,
     parity: report.metrics.integrity.finalPlainTextMatchesBaseline,
-    structuralParity:
+    highlightPresencePass: report.metrics.integrity.highlightPresencePass,
+    strictStructuralMatch:
       report.metrics.integrity.finalStructuralHighlightMatchesBaseline,
     plainTextFallback: report.metrics.integrity.looksPlainTextFallback,
   }));
@@ -65,8 +67,8 @@ export const formatScenarioSummaryMarkdown = (
   rows: ScenarioSummaryRow[]
 ): string => {
   const header = [
-    '| Scenario | Class | Variant | Chunks | Work x | Commit x | Token x | Restarts | P95 ms | Total ms | Parity | Structural |',
-    '| --- | --- | --- | ---: | ---: | ---: | ---: | ---: | ---: | ---: | --- | --- |',
+    '| Scenario | Class | Variant | Chunks | Work x | Commit x | Token x | Restarts | P95 ms | Total ms | Plain Text | Highlight Presence | Strict Structural |',
+    '| --- | --- | --- | ---: | ---: | ---: | ---: | ---: | ---: | ---: | --- | --- | --- |',
   ];
 
   const lines = rows.map((row) => {
@@ -76,14 +78,15 @@ export const formatScenarioSummaryMarkdown = (
     const p95 = row.p95LatencyMs.toFixed(2);
     const total = row.sessionTotalMs.toFixed(2);
     const parity = row.parity ? 'pass' : 'fail';
+    const highlightPresence = row.highlightPresencePass ? 'pass' : 'fail';
     const structural =
-      row.structuralParity == null
+      row.strictStructuralMatch == null
         ? 'n/a'
-        : row.structuralParity
+        : row.strictStructuralMatch
           ? 'pass'
           : 'fail';
 
-    return `| ${row.scenario} | ${row.restartClass} | ${row.variant} | ${row.inputChunkCount} | ${work} | ${commit} | ${tokenAmp} | ${row.restartCount} | ${p95} | ${total} | ${parity} | ${structural} |`;
+    return `| ${row.scenario} | ${row.restartClass} | ${row.variant} | ${row.inputChunkCount} | ${work} | ${commit} | ${tokenAmp} | ${row.restartCount} | ${p95} | ${total} | ${parity} | ${highlightPresence} | ${structural} |`;
   });
 
   return [...header, ...lines].join('\n');

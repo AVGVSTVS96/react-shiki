@@ -1,13 +1,18 @@
 import { describe, expect, test } from 'vitest';
 
 import {
+  buildMarkdownStates,
+  buildTranscriptPlaybackStates,
   buildCodeChunks,
   buildScenarioFrames,
   buildControlledCodeStates,
   createAsyncCodeIterableFromScenario,
   createReadableCodeStreamFromScenario,
   createStreamingScenario,
+  extractFencedCodeBlocks,
   extractFinalCode,
+  extractFinalTranscript,
+  getAssistantMessageCorpus,
 } from '../src/dev/streaming-lab';
 
 const readStreamText = async (stream: ReadableStream<string>) => {
@@ -146,5 +151,49 @@ describe('streaming lab scenarios', () => {
     expect(chunkText).toBe(expectedCode);
     expect(streamText).toBe(expectedCode);
     expect(iterableText).toBe(expectedCode);
+  });
+
+  test('assistant multi-block scenarios are deterministic and message-corpus driven', () => {
+    const steady = createStreamingScenario({
+      presetId: 'assistant-multi-block-steady',
+      messageCorpusId: 'assistant-mixed-stack-6',
+      seed: 91,
+    });
+    const repeat = createStreamingScenario({
+      presetId: 'assistant-multi-block-steady',
+      messageCorpusId: 'assistant-mixed-stack-6',
+      seed: 91,
+    });
+    const corpus = getAssistantMessageCorpus('assistant-mixed-stack-6');
+    const transcript = extractFinalTranscript(steady.events);
+    const blocks = extractFencedCodeBlocks(transcript);
+
+    expect(steady.events).toEqual(repeat.events);
+    expect(steady.corpusTarget.type).toBe('assistant-message');
+    expect(steady.messageCorpusId).toBe('assistant-mixed-stack-6');
+    expect(steady.corpusId).toBeUndefined();
+    expect(blocks).toHaveLength(corpus.blocks.length);
+    expect(blocks.map((block) => block.language)).toEqual(
+      corpus.blocks.map((block) => block.language)
+    );
+  });
+
+  test('assistant playback path supports streaming and final-only controls', () => {
+    const scenario = createStreamingScenario({
+      presetId: 'assistant-multi-block-bursty',
+      seed: 13,
+    });
+
+    const streaming = buildTranscriptPlaybackStates(scenario.events, {
+      mode: 'streaming',
+    });
+    const finalOnly = buildTranscriptPlaybackStates(scenario.events, {
+      mode: 'final-only',
+    });
+
+    expect(streaming.length).toBeGreaterThan(2);
+    expect(finalOnly).toHaveLength(2);
+    expect(finalOnly[1]).toBe(extractFinalTranscript(scenario.events));
+    expect(buildMarkdownStates(scenario.events)).toEqual(streaming);
   });
 });

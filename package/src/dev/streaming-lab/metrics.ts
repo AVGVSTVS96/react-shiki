@@ -42,6 +42,7 @@ export interface StructuralHighlightComparison {
 
 export interface IntegrityMetrics {
   finalPlainTextMatchesBaseline: boolean;
+  highlightPresencePass: boolean;
   finalStructuralHighlightMatchesBaseline: boolean | null;
   looksPlainTextFallback: boolean;
   duplicateCharCount: number;
@@ -265,6 +266,7 @@ export const createEmptySessionMetrics = (): StreamingSessionMetrics => ({
   },
   integrity: {
     finalPlainTextMatchesBaseline: false,
+    highlightPresencePass: false,
     finalStructuralHighlightMatchesBaseline: null,
     looksPlainTextFallback: false,
     duplicateCharCount: 0,
@@ -356,6 +358,10 @@ export const buildSessionMetrics = ({
     integrity: {
       finalPlainTextMatchesBaseline:
         normalizedFinalCode === normalizedBaselineCode,
+      highlightPresencePass:
+        structuralComparison != null
+          ? !structuralComparison.looksPlainTextFallback
+          : true,
       finalStructuralHighlightMatchesBaseline:
         structuralComparison?.matches ?? null,
       looksPlainTextFallback:

@@ -62,6 +62,7 @@ describe('streaming metrics math', () => {
     expect(metrics.ux.p95ChunkLatencyMs).toBe(32);
     expect(metrics.ux.maxChunkLatencyMs).toBe(32);
     expect(metrics.integrity.finalPlainTextMatchesBaseline).toBe(true);
+    expect(metrics.integrity.highlightPresencePass).toBe(true);
     expect(getWorkAmplification(metrics)).toBeCloseTo(55 / 12, 5);
     expect(getCommitAmplification(metrics)).toBeCloseTo(1, 5);
   });

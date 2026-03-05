@@ -59,6 +59,7 @@
     "bench": "vitest bench",
     "bench:streaming": "pnpm bench:streaming:session",
     "bench:streaming:micro": "vitest bench tests/streaming-micro.bench.ts",
+    "bench:streaming:assistant-message": "vitest bench tests/streaming-assistant-message.bench.tsx",
     "bench:streaming:session": "pnpm bench:streaming:session:quick",
     "bench:streaming:session:quick": "STREAMING_BENCH_PROFILE=quick vitest bench tests/streaming-session.bench.tsx",
     "bench:streaming:session:full": "STREAMING_BENCH_PROFILE=full vitest bench tests/streaming-session.bench.tsx",
