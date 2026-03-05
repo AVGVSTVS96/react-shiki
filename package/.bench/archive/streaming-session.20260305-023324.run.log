@@ -1,0 +1,52 @@
+
+ RUN  v4.0.18 /Users/bassimshahidy/Documents/GitHub/react-shiki/package
+
+
+ RUN  v4.0.18 /Users/bassimshahidy/Documents/GitHub/react-shiki/package
+
+
+ ✓ tests/streaming-session.bench.tsx > streaming session benchmark 2670ms
+     name                                                          hz      min      max     mean      p75      p99     p995     p999     rme  samples
+   · append-steady-short :: full-rehighlight-react             2.6601   375.92   375.92   375.92   375.92   375.92   375.92   375.92  ±0.00%        1
+   · append-steady-short :: incremental-hook-controlled       14.7699  67.7050  67.7050  67.7050  67.7050  67.7050  67.7050  67.7050  ±0.00%        1
+   · append-bursty-long :: full-rehighlight-react              1.0299   970.94   970.94   970.94   970.94   970.94   970.94   970.94  ±0.00%        1
+   · append-bursty-long :: incremental-hook-controlled         8.0160   124.75   124.75   124.75   124.75   124.75   124.75   124.75  ±0.00%        1
+   · firehose :: full-rehighlight-react                        1.2785   782.14   782.14   782.14   782.14   782.14   782.14   782.14  ±0.00%        1
+   · firehose :: incremental-hook-controlled                   5.4057   184.99   184.99   184.99   184.99   184.99   184.99   184.99  ±0.00%        1
+   · replace-tail-intentional :: full-rehighlight-react       10.3049  97.0412  97.0412  97.0412  97.0412  97.0412  97.0412  97.0412  ±0.00%        1
+   · replace-tail-intentional :: incremental-hook-controlled  20.4541  48.8899  48.8899  48.8899  48.8899  48.8899  48.8899  48.8899  ±0.00%        1
+
+ ✓ tests/streaming-session.bench.tsx > streaming session benchmark 2670ms
+     name                                                          hz      min      max     mean      p75      p99     p995     p999     rme  samples
+   · append-steady-short :: full-rehighlight-react             2.6601   375.92   375.92   375.92   375.92   375.92   375.92   375.92  ±0.00%        1
+   · append-steady-short :: incremental-hook-controlled       14.7699  67.7050  67.7050  67.7050  67.7050  67.7050  67.7050  67.7050  ±0.00%        1
+   · append-bursty-long :: full-rehighlight-react              1.0299   970.94   970.94   970.94   970.94   970.94   970.94   970.94  ±0.00%        1
+   · append-bursty-long :: incremental-hook-controlled         8.0160   124.75   124.75   124.75   124.75   124.75   124.75   124.75  ±0.00%        1
+   · firehose :: full-rehighlight-react                        1.2785   782.14   782.14   782.14   782.14   782.14   782.14   782.14  ±0.00%        1
+   · firehose :: incremental-hook-controlled                   5.4057   184.99   184.99   184.99   184.99   184.99   184.99   184.99  ±0.00%        1
+   · replace-tail-intentional :: full-rehighlight-react       10.3049  97.0412  97.0412  97.0412  97.0412  97.0412  97.0412  97.0412  ±0.00%        1
+   · replace-tail-intentional :: incremental-hook-controlled  20.4541  48.8899  48.8899  48.8899  48.8899  48.8899  48.8899  48.8899  ±0.00%        1
+
+ BENCH  Summary
+
+  replace-tail-intentional :: incremental-hook-controlled - tests/streaming-session.bench.tsx > streaming session benchmark
+    1.38x faster than append-steady-short :: incremental-hook-controlled
+    1.98x faster than replace-tail-intentional :: full-rehighlight-react
+    2.55x faster than append-bursty-long :: incremental-hook-controlled
+    3.78x faster than firehose :: incremental-hook-controlled
+    7.69x faster than append-steady-short :: full-rehighlight-react
+    16.00x faster than firehose :: full-rehighlight-react
+    19.86x faster than append-bursty-long :: full-rehighlight-react
+
+
+ BENCH  Summary
+
+  replace-tail-intentional :: incremental-hook-controlled - tests/streaming-session.bench.tsx > streaming session benchmark
+    1.38x faster than append-steady-short :: incremental-hook-controlled
+    1.98x faster than replace-tail-intentional :: full-rehighlight-react
+    2.55x faster than append-bursty-long :: incremental-hook-controlled
+    3.78x faster than firehose :: incremental-hook-controlled
+    7.69x faster than append-steady-short :: full-rehighlight-react
+    16.00x faster than firehose :: full-rehighlight-react
+    19.86x faster than append-bursty-long :: full-rehighlight-react
+

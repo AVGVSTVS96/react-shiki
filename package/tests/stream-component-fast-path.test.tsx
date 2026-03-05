@@ -105,9 +105,10 @@ describe('ShikiStreamHighlighter fast path', () => {
     );
 
     await waitFor(() => {
-      const { stable, tail } = getRoots(container);
-      expect(stable?.textContent).toBe('let value = 1;');
-      expect(tail?.textContent).toBe('');
+      const { code, stable, tail } = getRoots(container);
+      expect(code?.textContent).toBe('let value = 1;');
+      expect(stable).toBeNull();
+      expect(tail).toBeNull();
     });
   });
 });

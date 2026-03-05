@@ -1,0 +1,68 @@
+
+ RUN  v4.0.18 /Users/bassimshahidy/Documents/GitHub/react-shiki/package
+
+
+ RUN  v4.0.18 /Users/bassimshahidy/Documents/GitHub/react-shiki/package
+
+
+ ✓ tests/streaming-assistant-message.bench.tsx > assistant-message chat-tree benchmark 13236ms
+     name                                                                 hz       min       max      mean       p75       p99      p995      p999     rme  samples
+   · assistant-steady :: incremental-chat-tree                        0.7269  1,375.72  1,375.72  1,375.72  1,375.72  1,375.72  1,375.72  1,375.72  ±0.00%        1
+   · assistant-steady :: static-chat-tree                             0.7038  1,420.81  1,420.81  1,420.81  1,420.81  1,420.81  1,420.81  1,420.81  ±0.00%        1
+   · assistant-steady :: plaintext-chat-tree                          1.2617    792.61    792.61    792.61    792.61    792.61    792.61    792.61  ±0.00%        1
+   · assistant-steady :: incremental-chat-tree-final-only-control    14.0317   71.2673   71.2673   71.2673   71.2673   71.2673   71.2673   71.2673  ±0.00%        1
+   · assistant-bursty :: incremental-chat-tree                        1.8713    534.39    534.39    534.39    534.39    534.39    534.39    534.39  ±0.00%        1
+   · assistant-bursty :: static-chat-tree                             1.2498    800.11    800.11    800.11    800.11    800.11    800.11    800.11  ±0.00%        1
+   · assistant-bursty :: plaintext-chat-tree                          2.8883    346.23    346.23    346.23    346.23    346.23    346.23    346.23  ±0.00%        1
+   · assistant-bursty :: incremental-chat-tree-final-only-control    15.4400   64.7669   64.7669   64.7669   64.7669   64.7669   64.7669   64.7669  ±0.00%        1
+   · assistant-firehose :: incremental-chat-tree                      0.4305  2,322.98  2,322.98  2,322.98  2,322.98  2,322.98  2,322.98  2,322.98  ±0.00%        1
+   · assistant-firehose :: static-chat-tree                           0.2773  3,606.61  3,606.61  3,606.61  3,606.61  3,606.61  3,606.61  3,606.61  ±0.00%        1
+   · assistant-firehose :: plaintext-chat-tree                        0.5479  1,825.05  1,825.05  1,825.05  1,825.05  1,825.05  1,825.05  1,825.05  ±0.00%        1
+   · assistant-firehose :: incremental-chat-tree-final-only-control  17.4776   57.2160   57.2160   57.2160   57.2160   57.2160   57.2160   57.2160  ±0.00%        1
+
+ ✓ tests/streaming-assistant-message.bench.tsx > assistant-message chat-tree benchmark 13236ms
+     name                                                                 hz       min       max      mean       p75       p99      p995      p999     rme  samples
+   · assistant-steady :: incremental-chat-tree                        0.7269  1,375.72  1,375.72  1,375.72  1,375.72  1,375.72  1,375.72  1,375.72  ±0.00%        1
+   · assistant-steady :: static-chat-tree                             0.7038  1,420.81  1,420.81  1,420.81  1,420.81  1,420.81  1,420.81  1,420.81  ±0.00%        1
+   · assistant-steady :: plaintext-chat-tree                          1.2617    792.61    792.61    792.61    792.61    792.61    792.61    792.61  ±0.00%        1
+   · assistant-steady :: incremental-chat-tree-final-only-control    14.0317   71.2673   71.2673   71.2673   71.2673   71.2673   71.2673   71.2673  ±0.00%        1
+   · assistant-bursty :: incremental-chat-tree                        1.8713    534.39    534.39    534.39    534.39    534.39    534.39    534.39  ±0.00%        1
+   · assistant-bursty :: static-chat-tree                             1.2498    800.11    800.11    800.11    800.11    800.11    800.11    800.11  ±0.00%        1
+   · assistant-bursty :: plaintext-chat-tree                          2.8883    346.23    346.23    346.23    346.23    346.23    346.23    346.23  ±0.00%        1
+   · assistant-bursty :: incremental-chat-tree-final-only-control    15.4400   64.7669   64.7669   64.7669   64.7669   64.7669   64.7669   64.7669  ±0.00%        1
+   · assistant-firehose :: incremental-chat-tree                      0.4305  2,322.98  2,322.98  2,322.98  2,322.98  2,322.98  2,322.98  2,322.98  ±0.00%        1
+   · assistant-firehose :: static-chat-tree                           0.2773  3,606.61  3,606.61  3,606.61  3,606.61  3,606.61  3,606.61  3,606.61  ±0.00%        1
+   · assistant-firehose :: plaintext-chat-tree                        0.5479  1,825.05  1,825.05  1,825.05  1,825.05  1,825.05  1,825.05  1,825.05  ±0.00%        1
+   · assistant-firehose :: incremental-chat-tree-final-only-control  17.4776   57.2160   57.2160   57.2160   57.2160   57.2160   57.2160   57.2160  ±0.00%        1
+
+ BENCH  Summary
+
+  assistant-firehose :: incremental-chat-tree-final-only-control - tests/streaming-assistant-message.bench.tsx > assistant-message chat-tree benchmark
+    1.13x faster than assistant-bursty :: incremental-chat-tree-final-only-control
+    1.25x faster than assistant-steady :: incremental-chat-tree-final-only-control
+    6.05x faster than assistant-bursty :: plaintext-chat-tree
+    9.34x faster than assistant-bursty :: incremental-chat-tree
+    13.85x faster than assistant-steady :: plaintext-chat-tree
+    13.98x faster than assistant-bursty :: static-chat-tree
+    24.04x faster than assistant-steady :: incremental-chat-tree
+    24.83x faster than assistant-steady :: static-chat-tree
+    31.90x faster than assistant-firehose :: plaintext-chat-tree
+    40.60x faster than assistant-firehose :: incremental-chat-tree
+    63.03x faster than assistant-firehose :: static-chat-tree
+
+
+ BENCH  Summary
+
+  assistant-firehose :: incremental-chat-tree-final-only-control - tests/streaming-assistant-message.bench.tsx > assistant-message chat-tree benchmark
+    1.13x faster than assistant-bursty :: incremental-chat-tree-final-only-control
+    1.25x faster than assistant-steady :: incremental-chat-tree-final-only-control
+    6.05x faster than assistant-bursty :: plaintext-chat-tree
+    9.34x faster than assistant-bursty :: incremental-chat-tree
+    13.85x faster than assistant-steady :: plaintext-chat-tree
+    13.98x faster than assistant-bursty :: static-chat-tree
+    24.04x faster than assistant-steady :: incremental-chat-tree
+    24.83x faster than assistant-steady :: static-chat-tree
+    31.90x faster than assistant-firehose :: plaintext-chat-tree
+    40.60x faster than assistant-firehose :: incremental-chat-tree
+    63.03x faster than assistant-firehose :: static-chat-tree
+

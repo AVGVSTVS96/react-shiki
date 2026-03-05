@@ -1,0 +1,625 @@
+{
+  "ts": "20260305-023332",
+  "session": {
+    "baseline": "20260305-014454",
+    "rows": [
+      {
+        "scenario": "append-bursty-long",
+        "variant": "full-rehighlight-react",
+        "prev": {
+          "scenario": "append-bursty-long",
+          "restartClass": "append-only",
+          "variant": "full-rehighlight-react",
+          "inputChunkCount": 100,
+          "finalCodeChars": 2177,
+          "processedChars": 109332,
+          "tokenEvents": 0,
+          "recallEvents": 0,
+          "scheduledCommits": 0,
+          "actualRenderCommits": 202,
+          "restartCount": 0,
+          "workAmplification": 50.22140560404226,
+          "commitAmplification": 2.02,
+          "tokenEventAmplification": 0,
+          "p50LatencyMs": 6.9712919999999485,
+          "p95LatencyMs": 13.832042000000001,
+          "maxLatencyMs": 15.721999999999753,
+          "sessionTotalMs": 703.7598330000001,
+          "parity": true,
+          "highlightPresencePass": true,
+          "strictStructuralMatch": true,
+          "plainTextFallback": false
+        },
+        "curr": {
+          "scenario": "append-bursty-long",
+          "restartClass": "append-only",
+          "variant": "full-rehighlight-react",
+          "inputChunkCount": 100,
+          "finalCodeChars": 2177,
+          "processedChars": 109332,
+          "tokenEvents": 0,
+          "recallEvents": 0,
+          "scheduledCommits": 0,
+          "actualRenderCommits": 202,
+          "restartCount": 0,
+          "workAmplification": 50.22140560404226,
+          "commitAmplification": 2.02,
+          "tokenEventAmplification": 0,
+          "p50LatencyMs": 6.859332999999879,
+          "p95LatencyMs": 12.767374999999902,
+          "maxLatencyMs": 16.561083000000053,
+          "sessionTotalMs": 698.147334,
+          "parity": true,
+          "highlightPresencePass": true,
+          "strictStructuralMatch": true,
+          "plainTextFallback": false
+        },
+        "deltaTotalPct": -0.7975020364653392,
+        "deltaP95Pct": -7.697106472060303
+      },
+      {
+        "scenario": "append-bursty-long",
+        "variant": "incremental-hook-controlled",
+        "prev": {
+          "scenario": "append-bursty-long",
+          "restartClass": "append-only",
+          "variant": "incremental-hook-controlled",
+          "inputChunkCount": 100,
+          "finalCodeChars": 2177,
+          "processedChars": 2177,
+          "tokenEvents": 1100,
+          "recallEvents": 94,
+          "scheduledCommits": 1100,
+          "actualRenderCommits": 205,
+          "restartCount": 0,
+          "workAmplification": 1,
+          "commitAmplification": 2.05,
+          "tokenEventAmplification": 0.5052824988516307,
+          "p50LatencyMs": 0.9510420000001432,
+          "p95LatencyMs": 1.8273749999998472,
+          "maxLatencyMs": 2.1190419999998085,
+          "sessionTotalMs": 104.90904200000023,
+          "parity": true,
+          "highlightPresencePass": true,
+          "strictStructuralMatch": true,
+          "plainTextFallback": false
+        },
+        "curr": {
+          "scenario": "append-bursty-long",
+          "restartClass": "append-only",
+          "variant": "incremental-hook-controlled",
+          "inputChunkCount": 100,
+          "finalCodeChars": 2177,
+          "processedChars": 2177,
+          "tokenEvents": 1100,
+          "recallEvents": 94,
+          "scheduledCommits": 1100,
+          "actualRenderCommits": 205,
+          "restartCount": 0,
+          "workAmplification": 1,
+          "commitAmplification": 2.05,
+          "tokenEventAmplification": 0.5052824988516307,
+          "p50LatencyMs": 0.8151669999997466,
+          "p95LatencyMs": 1.4637499999998909,
+          "maxLatencyMs": 2.0111249999999927,
+          "sessionTotalMs": 89.68158300000005,
+          "parity": true,
+          "highlightPresencePass": true,
+          "strictStructuralMatch": true,
+          "plainTextFallback": false
+        },
+        "deltaTotalPct": -14.514915692395844,
+        "deltaP95Pct": -19.89876188521714
+      },
+      {
+        "scenario": "append-steady-short",
+        "variant": "full-rehighlight-react",
+        "prev": {
+          "scenario": "append-steady-short",
+          "restartClass": "append-only",
+          "variant": "full-rehighlight-react",
+          "inputChunkCount": 69,
+          "finalCodeChars": 309,
+          "processedChars": 11075,
+          "tokenEvents": 0,
+          "recallEvents": 0,
+          "scheduledCommits": 0,
+          "actualRenderCommits": 140,
+          "restartCount": 0,
+          "workAmplification": 35.84142394822006,
+          "commitAmplification": 2.028985507246377,
+          "tokenEventAmplification": 0,
+          "p50LatencyMs": 1.693125000000009,
+          "p95LatencyMs": 2.9367919999999685,
+          "maxLatencyMs": 4.7097499999999854,
+          "sessionTotalMs": 126.65100000000007,
+          "parity": true,
+          "highlightPresencePass": true,
+          "strictStructuralMatch": true,
+          "plainTextFallback": false
+        },
+        "curr": {
+          "scenario": "append-steady-short",
+          "restartClass": "append-only",
+          "variant": "full-rehighlight-react",
+          "inputChunkCount": 69,
+          "finalCodeChars": 309,
+          "processedChars": 11075,
+          "tokenEvents": 0,
+          "recallEvents": 0,
+          "scheduledCommits": 0,
+          "actualRenderCommits": 140,
+          "restartCount": 0,
+          "workAmplification": 35.84142394822006,
+          "commitAmplification": 2.028985507246377,
+          "tokenEventAmplification": 0,
+          "p50LatencyMs": 2.565375000000131,
+          "p95LatencyMs": 5.452417000000196,
+          "maxLatencyMs": 7.400916000000052,
+          "sessionTotalMs": 202.92095799999993,
+          "parity": true,
+          "highlightPresencePass": true,
+          "strictStructuralMatch": true,
+          "plainTextFallback": false
+        },
+        "deltaTotalPct": 60.22057307087968,
+        "deltaP95Pct": 85.65894350026336
+      },
+      {
+        "scenario": "append-steady-short",
+        "variant": "incremental-hook-controlled",
+        "prev": {
+          "scenario": "append-steady-short",
+          "restartClass": "append-only",
+          "variant": "incremental-hook-controlled",
+          "inputChunkCount": 69,
+          "finalCodeChars": 309,
+          "processedChars": 309,
+          "tokenEvents": 418,
+          "recallEvents": 66,
+          "scheduledCommits": 418,
+          "actualRenderCommits": 143,
+          "restartCount": 0,
+          "workAmplification": 1,
+          "commitAmplification": 2.072463768115942,
+          "tokenEventAmplification": 1.3527508090614886,
+          "p50LatencyMs": 0.6677499999998417,
+          "p95LatencyMs": 1.6309590000000753,
+          "maxLatencyMs": 3.743832999999995,
+          "sessionTotalMs": 58.848000000000184,
+          "parity": true,
+          "highlightPresencePass": true,
+          "strictStructuralMatch": true,
+          "plainTextFallback": false
+        },
+        "curr": {
+          "scenario": "append-steady-short",
+          "restartClass": "append-only",
+          "variant": "incremental-hook-controlled",
+          "inputChunkCount": 69,
+          "finalCodeChars": 309,
+          "processedChars": 309,
+          "tokenEvents": 418,
+          "recallEvents": 66,
+          "scheduledCommits": 418,
+          "actualRenderCommits": 143,
+          "restartCount": 0,
+          "workAmplification": 1,
+          "commitAmplification": 2.072463768115942,
+          "tokenEventAmplification": 1.3527508090614886,
+          "p50LatencyMs": 0.6401250000001255,
+          "p95LatencyMs": 1.4167500000000928,
+          "maxLatencyMs": 3.183375000000069,
+          "sessionTotalMs": 53.49787500000002,
+          "parity": true,
+          "highlightPresencePass": true,
+          "strictStructuralMatch": true,
+          "plainTextFallback": false
+        },
+        "deltaTotalPct": -9.091430464926837,
+        "deltaP95Pct": -13.133929179088662
+      },
+      {
+        "scenario": "firehose",
+        "variant": "full-rehighlight-react",
+        "prev": {
+          "scenario": "firehose",
+          "restartClass": "append-only",
+          "variant": "full-rehighlight-react",
+          "inputChunkCount": 138,
+          "finalCodeChars": 2177,
+          "processedChars": 149183,
+          "tokenEvents": 0,
+          "recallEvents": 0,
+          "scheduledCommits": 0,
+          "actualRenderCommits": 278,
+          "restartCount": 0,
+          "workAmplification": 68.52687184198439,
+          "commitAmplification": 2.0144927536231885,
+          "tokenEventAmplification": 0,
+          "p50LatencyMs": 5.199416999999812,
+          "p95LatencyMs": 12.934041999999863,
+          "maxLatencyMs": 25.659541999999874,
+          "sessionTotalMs": 799.7887920000003,
+          "parity": true,
+          "highlightPresencePass": true,
+          "strictStructuralMatch": true,
+          "plainTextFallback": false
+        },
+        "curr": {
+          "scenario": "firehose",
+          "restartClass": "append-only",
+          "variant": "full-rehighlight-react",
+          "inputChunkCount": 138,
+          "finalCodeChars": 2177,
+          "processedChars": 149183,
+          "tokenEvents": 0,
+          "recallEvents": 0,
+          "scheduledCommits": 0,
+          "actualRenderCommits": 278,
+          "restartCount": 0,
+          "workAmplification": 68.52687184198439,
+          "commitAmplification": 2.0144927536231885,
+          "tokenEventAmplification": 0,
+          "p50LatencyMs": 5.11304199999995,
+          "p95LatencyMs": 13.312874999999622,
+          "maxLatencyMs": 19.150375000000167,
+          "sessionTotalMs": 745.128291,
+          "parity": true,
+          "highlightPresencePass": true,
+          "strictStructuralMatch": true,
+          "plainTextFallback": false
+        },
+        "deltaTotalPct": -6.834366966222786,
+        "deltaP95Pct": 2.9289606450927144
+      },
+      {
+        "scenario": "firehose",
+        "variant": "incremental-hook-controlled",
+        "prev": {
+          "scenario": "firehose",
+          "restartClass": "append-only",
+          "variant": "incremental-hook-controlled",
+          "inputChunkCount": 138,
+          "finalCodeChars": 2177,
+          "processedChars": 2177,
+          "tokenEvents": 1332,
+          "recallEvents": 131,
+          "scheduledCommits": 1332,
+          "actualRenderCommits": 281,
+          "restartCount": 0,
+          "workAmplification": 1,
+          "commitAmplification": 2.036231884057971,
+          "tokenEventAmplification": 0.6118511713367019,
+          "p50LatencyMs": 0.7395409999999174,
+          "p95LatencyMs": 1.5682919999999285,
+          "maxLatencyMs": 3.6975829999996677,
+          "sessionTotalMs": 116.33129099999996,
+          "parity": true,
+          "highlightPresencePass": true,
+          "strictStructuralMatch": true,
+          "plainTextFallback": false
+        },
+        "curr": {
+          "scenario": "firehose",
+          "restartClass": "append-only",
+          "variant": "incremental-hook-controlled",
+          "inputChunkCount": 138,
+          "finalCodeChars": 2177,
+          "processedChars": 2177,
+          "tokenEvents": 1332,
+          "recallEvents": 131,
+          "scheduledCommits": 1332,
+          "actualRenderCommits": 281,
+          "restartCount": 0,
+          "workAmplification": 1,
+          "commitAmplification": 2.036231884057971,
+          "tokenEventAmplification": 0.6118511713367019,
+          "p50LatencyMs": 0.9059579999998277,
+          "p95LatencyMs": 2.1005420000001322,
+          "maxLatencyMs": 6.274042000000009,
+          "sessionTotalMs": 147.55470800000012,
+          "parity": true,
+          "highlightPresencePass": true,
+          "strictStructuralMatch": true,
+          "plainTextFallback": false
+        },
+        "deltaTotalPct": 26.840084668191437,
+        "deltaP95Pct": 33.93819518305443
+      },
+      {
+        "scenario": "replace-tail-intentional",
+        "variant": "full-rehighlight-react",
+        "prev": {
+          "scenario": "replace-tail-intentional",
+          "restartClass": "intentional-model-edit",
+          "variant": "full-rehighlight-react",
+          "inputChunkCount": 58,
+          "finalCodeChars": 309,
+          "processedChars": 9578,
+          "tokenEvents": 0,
+          "recallEvents": 0,
+          "scheduledCommits": 0,
+          "actualRenderCommits": 118,
+          "restartCount": 0,
+          "workAmplification": 30.996763754045308,
+          "commitAmplification": 2.0344827586206895,
+          "tokenEventAmplification": 0,
+          "p50LatencyMs": 1.1097089999998389,
+          "p95LatencyMs": 2.4639170000000377,
+          "maxLatencyMs": 8.137625000000298,
+          "sessionTotalMs": 74.22229100000004,
+          "parity": true,
+          "highlightPresencePass": true,
+          "strictStructuralMatch": true,
+          "plainTextFallback": false
+        },
+        "curr": {
+          "scenario": "replace-tail-intentional",
+          "restartClass": "intentional-model-edit",
+          "variant": "full-rehighlight-react",
+          "inputChunkCount": 58,
+          "finalCodeChars": 309,
+          "processedChars": 9578,
+          "tokenEvents": 0,
+          "recallEvents": 0,
+          "scheduledCommits": 0,
+          "actualRenderCommits": 118,
+          "restartCount": 0,
+          "workAmplification": 30.996763754045308,
+          "commitAmplification": 2.0344827586206895,
+          "tokenEventAmplification": 0,
+          "p50LatencyMs": 1.3842079999999441,
+          "p95LatencyMs": 2.6385409999998046,
+          "maxLatencyMs": 9.257708000000093,
+          "sessionTotalMs": 88.83237499999996,
+          "parity": true,
+          "highlightPresencePass": true,
+          "strictStructuralMatch": true,
+          "plainTextFallback": false
+        },
+        "deltaTotalPct": 19.6842266698557,
+        "deltaP95Pct": 7.087251721537872
+      },
+      {
+        "scenario": "replace-tail-intentional",
+        "variant": "incremental-hook-controlled",
+        "prev": {
+          "scenario": "replace-tail-intentional",
+          "restartClass": "intentional-model-edit",
+          "variant": "incremental-hook-controlled",
+          "inputChunkCount": 58,
+          "finalCodeChars": 309,
+          "processedChars": 549,
+          "tokenEvents": 314,
+          "recallEvents": 39,
+          "scheduledCommits": 314,
+          "actualRenderCommits": 109,
+          "restartCount": 1,
+          "workAmplification": 1.7766990291262137,
+          "commitAmplification": 1.8793103448275863,
+          "tokenEventAmplification": 1.0161812297734627,
+          "p50LatencyMs": 0.3761250000002292,
+          "p95LatencyMs": 1.3670830000000933,
+          "maxLatencyMs": 3.8650000000002365,
+          "sessionTotalMs": 28.253209000000425,
+          "parity": true,
+          "highlightPresencePass": true,
+          "strictStructuralMatch": true,
+          "plainTextFallback": false
+        },
+        "curr": {
+          "scenario": "replace-tail-intentional",
+          "restartClass": "intentional-model-edit",
+          "variant": "incremental-hook-controlled",
+          "inputChunkCount": 58,
+          "finalCodeChars": 309,
+          "processedChars": 549,
+          "tokenEvents": 314,
+          "recallEvents": 39,
+          "scheduledCommits": 314,
+          "actualRenderCommits": 109,
+          "restartCount": 1,
+          "workAmplification": 1.7766990291262137,
+          "commitAmplification": 1.8793103448275863,
+          "tokenEventAmplification": 1.0161812297734627,
+          "p50LatencyMs": 0.4092080000000351,
+          "p95LatencyMs": 2.199167000000216,
+          "maxLatencyMs": 4.021750000000338,
+          "sessionTotalMs": 42.10474999999997,
+          "parity": true,
+          "highlightPresencePass": true,
+          "strictStructuralMatch": true,
+          "plainTextFallback": false
+        },
+        "deltaTotalPct": 49.02643448395308,
+        "deltaP95Pct": 60.86565336560149
+      }
+    ]
+  },
+  "assistant": {
+    "baseline": "20260305-014454",
+    "rows": [
+      {
+        "name": "assistant-steady :: incremental-chat-tree",
+        "prev": {
+          "name": "assistant-steady :: incremental-chat-tree",
+          "hz": 0.7225,
+          "mean": 1384.14
+        },
+        "curr": {
+          "name": "assistant-steady :: incremental-chat-tree",
+          "hz": 0.7269,
+          "mean": 1375.72
+        },
+        "deltaMeanPct": -0.6083199676333372,
+        "deltaHzPct": 0.6089965397923819
+      },
+      {
+        "name": "assistant-steady :: static-chat-tree",
+        "prev": {
+          "name": "assistant-steady :: static-chat-tree",
+          "hz": 0.7522,
+          "mean": 1329.4
+        },
+        "curr": {
+          "name": "assistant-steady :: static-chat-tree",
+          "hz": 0.7038,
+          "mean": 1420.81
+        },
+        "deltaMeanPct": 6.876034301188495,
+        "deltaHzPct": -6.434458920499867
+      },
+      {
+        "name": "assistant-steady :: plaintext-chat-tree",
+        "prev": {
+          "name": "assistant-steady :: plaintext-chat-tree",
+          "hz": 1.7148,
+          "mean": 583.16
+        },
+        "curr": {
+          "name": "assistant-steady :: plaintext-chat-tree",
+          "hz": 1.2617,
+          "mean": 792.61
+        },
+        "deltaMeanPct": 35.91638658344195,
+        "deltaHzPct": -26.42290646139492
+      },
+      {
+        "name": "assistant-steady :: incremental-chat-tree-final-only-control",
+        "prev": {
+          "name": "assistant-steady :: incremental-chat-tree-final-only-control",
+          "hz": 14.991,
+          "mean": 66.7065
+        },
+        "curr": {
+          "name": "assistant-steady :: incremental-chat-tree-final-only-control",
+          "hz": 14.0317,
+          "mean": 71.2673
+        },
+        "deltaMeanPct": 6.837114823892724,
+        "deltaHzPct": -6.399172837035548
+      },
+      {
+        "name": "assistant-bursty :: incremental-chat-tree",
+        "prev": {
+          "name": "assistant-bursty :: incremental-chat-tree",
+          "hz": 1.9347,
+          "mean": 516.88
+        },
+        "curr": {
+          "name": "assistant-bursty :: incremental-chat-tree",
+          "hz": 1.8713,
+          "mean": 534.39
+        },
+        "deltaMeanPct": 3.3876334932672947,
+        "deltaHzPct": -3.276993849175589
+      },
+      {
+        "name": "assistant-bursty :: static-chat-tree",
+        "prev": {
+          "name": "assistant-bursty :: static-chat-tree",
+          "hz": 1.1697,
+          "mean": 854.94
+        },
+        "curr": {
+          "name": "assistant-bursty :: static-chat-tree",
+          "hz": 1.2498,
+          "mean": 800.11
+        },
+        "deltaMeanPct": -6.41331555430791,
+        "deltaHzPct": 6.847909720441144
+      },
+      {
+        "name": "assistant-bursty :: plaintext-chat-tree",
+        "prev": {
+          "name": "assistant-bursty :: plaintext-chat-tree",
+          "hz": 2.8358,
+          "mean": 352.63
+        },
+        "curr": {
+          "name": "assistant-bursty :: plaintext-chat-tree",
+          "hz": 2.8883,
+          "mean": 346.23
+        },
+        "deltaMeanPct": -1.814933499702231,
+        "deltaHzPct": 1.8513294308484454
+      },
+      {
+        "name": "assistant-bursty :: incremental-chat-tree-final-only-control",
+        "prev": {
+          "name": "assistant-bursty :: incremental-chat-tree-final-only-control",
+          "hz": 18.3851,
+          "mean": 54.3918
+        },
+        "curr": {
+          "name": "assistant-bursty :: incremental-chat-tree-final-only-control",
+          "hz": 15.44,
+          "mean": 64.7669
+        },
+        "deltaMeanPct": 19.07475023808736,
+        "deltaHzPct": -16.018950128092865
+      },
+      {
+        "name": "assistant-firehose :: incremental-chat-tree",
+        "prev": {
+          "name": "assistant-firehose :: incremental-chat-tree",
+          "hz": 0.45,
+          "mean": 2222.04
+        },
+        "curr": {
+          "name": "assistant-firehose :: incremental-chat-tree",
+          "hz": 0.4305,
+          "mean": 2322.98
+        },
+        "deltaMeanPct": 4.542672499144933,
+        "deltaHzPct": -4.333333333333337
+      },
+      {
+        "name": "assistant-firehose :: static-chat-tree",
+        "prev": {
+          "name": "assistant-firehose :: static-chat-tree",
+          "hz": 0.2712,
+          "mean": 3686.64
+        },
+        "curr": {
+          "name": "assistant-firehose :: static-chat-tree",
+          "hz": 0.2773,
+          "mean": 3606.61
+        },
+        "deltaMeanPct": -2.170811362107495,
+        "deltaHzPct": 2.2492625368731543
+      },
+      {
+        "name": "assistant-firehose :: plaintext-chat-tree",
+        "prev": {
+          "name": "assistant-firehose :: plaintext-chat-tree",
+          "hz": 0.5568,
+          "mean": 1795.9
+        },
+        "curr": {
+          "name": "assistant-firehose :: plaintext-chat-tree",
+          "hz": 0.5479,
+          "mean": 1825.05
+        },
+        "deltaMeanPct": 1.6231416003118135,
+        "deltaHzPct": -1.5984195402298687
+      },
+      {
+        "name": "assistant-firehose :: incremental-chat-tree-final-only-control",
+        "prev": {
+          "name": "assistant-firehose :: incremental-chat-tree-final-only-control",
+          "hz": 16.9664,
+          "mean": 58.9399
+        },
+        "curr": {
+          "name": "assistant-firehose :: incremental-chat-tree-final-only-control",
+          "hz": 17.4776,
+          "mean": 57.216
+        },
+        "deltaMeanPct": -2.9248437815469663,
+        "deltaHzPct": 3.0130139569973524
+      }
+    ]
+  }
+}

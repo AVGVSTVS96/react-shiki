@@ -39,6 +39,7 @@ type ActiveSession = {
   textClosed: boolean;
   codeLength: number;
   lastCode: string;
+  fullText: string;
   cancelled: boolean;
   cancel: () => void;
 };
@@ -47,7 +48,6 @@ type RecallToken = { recall: number };
 
 type FastPathMetrics = {
   startedAt: number;
-  completeAt: number;
   mode: ActiveSession['mode'] | null;
   sessionId: number;
   chunks: number;
@@ -55,11 +55,11 @@ type FastPathMetrics = {
   tokenEvents: number;
   recallEvents: number;
   restarts: number;
-  stableLineAppends: number;
-  tailMutations: number;
-  domNodesCreated: number;
-  finalFlushMs: number;
-  completeToFrozenMs: number;
+  stableLineHtmlAppends: number;
+  stableLineMergedTokenCount: number;
+  stableLineSpanCount: number;
+  tailPlaintextMutations: number;
+  finalExactSwapMs: number;
   terminalLogged: boolean;
 };
 
@@ -68,9 +68,23 @@ type StyleCacheValue = {
   cssText: string;
 };
 
+type CoalescedToken = {
+  signature: string;
+  cssText: string;
+  content: string;
+};
+
+type PaletteRegistry = {
+  styleEl: HTMLStyleElement;
+  classBySignature: Map<string, string>;
+  nextClassId: number;
+};
+
+const STYLE_PALETTE_ATTR = 'data-react-shiki-stream-palette';
+const paletteByDocument = new WeakMap<Document, PaletteRegistry>();
+
 const createMetrics = (): FastPathMetrics => ({
   startedAt: 0,
-  completeAt: 0,
   mode: null,
   sessionId: 0,
   chunks: 0,
@@ -78,11 +92,11 @@ const createMetrics = (): FastPathMetrics => ({
   tokenEvents: 0,
   recallEvents: 0,
   restarts: 0,
-  stableLineAppends: 0,
-  tailMutations: 0,
-  domNodesCreated: 0,
-  finalFlushMs: 0,
-  completeToFrozenMs: 0,
+  stableLineHtmlAppends: 0,
+  stableLineMergedTokenCount: 0,
+  stableLineSpanCount: 0,
+  tailPlaintextMutations: 0,
+  finalExactSwapMs: 0,
   terminalLogged: false,
 });
 
@@ -143,22 +157,6 @@ const buildStyleCssText = (token: ThemedToken): string => {
   return parts.join('');
 };
 
-const createStyledNode = (
-  doc: Document,
-  text: string,
-  style: StyleCacheValue,
-  metrics: FastPathMetrics
-): Node => {
-  const span = doc.createElement('span');
-  span.textContent = text;
-  if (style.cssText) {
-    span.style.cssText = style.cssText;
-  }
-
-  metrics.domNodesCreated += 1;
-  return span;
-};
-
 const getTokenStyle = (
   token: ThemedToken,
   styleCache: Map<string, StyleCacheValue>
@@ -177,24 +175,128 @@ const getTokenStyle = (
   return cached;
 };
 
-const appendTokensToFragment = (
+const escapeHtml = (text: string): string =>
+  text
+    .replaceAll('&', '&amp;')
+    .replaceAll('<', '&lt;')
+    .replaceAll('>', '&gt;')
+    .replaceAll('"', '&quot;')
+    .replaceAll("'", '&#39;');
+
+const getPaletteRegistry = (doc: Document): PaletteRegistry => {
+  const existing = paletteByDocument.get(doc);
+  if (existing) return existing;
+
+  let styleEl = doc.head?.querySelector<HTMLStyleElement>(
+    `style[${STYLE_PALETTE_ATTR}]`
+  );
+  if (!styleEl) {
+    styleEl = doc.createElement('style');
+    styleEl.setAttribute(STYLE_PALETTE_ATTR, 'true');
+    doc.head?.appendChild(styleEl);
+  }
+
+  const created: PaletteRegistry = {
+    styleEl,
+    classBySignature: new Map(),
+    nextClassId: 0,
+  };
+  paletteByDocument.set(doc, created);
+  return created;
+};
+
+const getPaletteClassName = (
   doc: Document,
-  fragment: DocumentFragment,
+  style: StyleCacheValue
+): string | null => {
+  if (!style.cssText) {
+    return null;
+  }
+
+  const palette = getPaletteRegistry(doc);
+  const existing = palette.classBySignature.get(style.signature);
+  if (existing) {
+    return existing;
+  }
+
+  palette.nextClassId += 1;
+  const className = `rsks-${palette.nextClassId.toString(36)}`;
+  palette.classBySignature.set(style.signature, className);
+
+  palette.styleEl.appendChild(
+    doc.createTextNode(`.${className}{${style.cssText}}\n`)
+  );
+
+  return className;
+};
+
+const coalesceTokensByStyle = (
   tokens: ThemedToken[],
   styleCache: Map<string, StyleCacheValue>,
   metrics: FastPathMetrics
-) => {
+): CoalescedToken[] => {
+  const out: CoalescedToken[] = [];
+  let sourceTokenCount = 0;
+
   for (const token of tokens) {
     if (!token.content) continue;
-    fragment.appendChild(
-      createStyledNode(
-        doc,
-        token.content,
-        getTokenStyle(token, styleCache),
-        metrics
-      )
-    );
+    sourceTokenCount += 1;
+    const style = getTokenStyle(token, styleCache);
+    const prev = out[out.length - 1];
+    if (
+      prev &&
+      prev.signature === style.signature &&
+      prev.cssText === style.cssText
+    ) {
+      prev.content += token.content;
+      continue;
+    }
+
+    out.push({
+      signature: style.signature,
+      cssText: style.cssText,
+      content: token.content,
+    });
   }
+
+  metrics.stableLineMergedTokenCount += Math.max(
+    0,
+    sourceTokenCount - out.length
+  );
+  return out;
+};
+
+const buildStableLineHtml = (
+  lineTokens: ThemedToken[],
+  doc: Document,
+  styleCache: Map<string, StyleCacheValue>,
+  metrics: FastPathMetrics
+): string => {
+  const coalesced = coalesceTokensByStyle(lineTokens, styleCache, metrics);
+  let html = '';
+
+  for (const token of coalesced) {
+    if (!token.content) continue;
+    const escapedContent = escapeHtml(token.content);
+    if (!token.cssText) {
+      html += escapedContent;
+      continue;
+    }
+
+    const className = getPaletteClassName(doc, {
+      signature: token.signature,
+      cssText: token.cssText,
+    });
+
+    if (className) {
+      html += `<span class="${className}">${escapedContent}</span>`;
+      metrics.stableLineSpanCount += 1;
+    } else {
+      html += escapedContent;
+    }
+  }
+
+  return html;
 };
 
 const appendFinalizedLineFromTail = (
@@ -202,7 +304,7 @@ const appendFinalizedLineFromTail = (
   stableRoot: HTMLElement,
   styleCache: Map<string, StyleCacheValue>,
   metrics: FastPathMetrics
-): boolean => {
+): number => {
   const doc = stableRoot.ownerDocument;
   const lineTokens: ThemedToken[] = [];
   let consumedCount = 0;
@@ -247,23 +349,26 @@ const appendFinalizedLineFromTail = (
   }
 
   if (!found) {
-    return false;
+    return 0;
   }
 
-  const fragment = doc.createDocumentFragment();
-  appendTokensToFragment(doc, fragment, lineTokens, styleCache, metrics);
-  metrics.domNodesCreated += 1;
-  fragment.appendChild(doc.createTextNode('\n'));
-
-  stableRoot.appendChild(fragment);
-  metrics.stableLineAppends += 1;
+  const lineCharLength =
+    lineTokens.reduce((sum, token) => sum + token.content.length, 0) + 1;
+  const lineHtml = buildStableLineHtml(
+    lineTokens,
+    doc,
+    styleCache,
+    metrics
+  );
+  stableRoot.insertAdjacentHTML('beforeend', `${lineHtml}\n`);
+  metrics.stableLineHtmlAppends += 1;
 
   tailTokens.splice(0, consumedCount);
   if (remainder) {
     tailTokens.unshift(remainder);
   }
 
-  return true;
+  return lineCharLength;
 };
 
 const consumeFinalizedLines = (
@@ -271,81 +376,46 @@ const consumeFinalizedLines = (
   stableRoot: HTMLElement,
   styleCache: Map<string, StyleCacheValue>,
   metrics: FastPathMetrics
-) => {
-  while (
-    appendFinalizedLineFromTail(
+): number => {
+  let consumedChars = 0;
+  while (true) {
+    const lineChars = appendFinalizedLineFromTail(
       tailTokens,
       stableRoot,
       styleCache,
       metrics
-    )
-  ) {
-    // Keep draining complete lines from the mutable tail.
+    );
+    if (lineChars <= 0) {
+      break;
+    }
+    consumedChars += lineChars;
   }
+  return consumedChars;
 };
 
 const renderTailPlain = (
-  tailTokens: ThemedToken[],
+  tailText: string,
   tailRoot: HTMLElement,
   metrics: FastPathMetrics,
   lastTailSnapshotRef: { current: string }
 ) => {
-  const text = tailTokens.map((token) => token.content).join('');
-  if (text === lastTailSnapshotRef.current) {
+  if (tailText === lastTailSnapshotRef.current) {
     return;
   }
 
-  tailRoot.textContent = text;
-  lastTailSnapshotRef.current = text;
-  metrics.tailMutations += 1;
+  tailRoot.textContent = tailText;
+  lastTailSnapshotRef.current = tailText;
+  metrics.tailPlaintextMutations += 1;
 };
 
-const renderTailHighlighted = (
-  tailTokens: ThemedToken[],
-  tailRoot: HTMLElement,
-  styleCache: Map<string, StyleCacheValue>,
-  metrics: FastPathMetrics,
-  lastTailSnapshotRef: { current: string }
-) => {
-  const doc = tailRoot.ownerDocument;
-  const fragment = doc.createDocumentFragment();
-  appendTokensToFragment(doc, fragment, tailTokens, styleCache, metrics);
-
-  tailRoot.replaceChildren(fragment);
-  lastTailSnapshotRef.current = tailTokens
-    .map((token) => token.content)
-    .join('');
-  metrics.tailMutations += 1;
-};
-
-const finalizeTailToStable = (
-  tailTokens: ThemedToken[],
-  stableRoot: HTMLElement,
-  tailRoot: HTMLElement,
-  styleCache: Map<string, StyleCacheValue>,
-  metrics: FastPathMetrics,
-  lastTailSnapshotRef: { current: string }
-) => {
-  if (tailTokens.length > 0) {
-    const doc = stableRoot.ownerDocument;
-    const fragment = doc.createDocumentFragment();
-    appendTokensToFragment(
-      doc,
-      fragment,
-      tailTokens,
-      styleCache,
-      metrics
-    );
-    stableRoot.appendChild(fragment);
-    tailTokens.length = 0;
-  }
-
-  if (tailRoot.textContent || tailRoot.childNodes.length > 0) {
-    tailRoot.replaceChildren();
-    metrics.tailMutations += 1;
-  }
-
-  lastTailSnapshotRef.current = '';
+const extractCanonicalCodeInnerHtml = (
+  doc: Document,
+  html: string
+): string => {
+  const template = doc.createElement('template');
+  template.innerHTML = html.trim();
+  const codeEl = template.content.querySelector('code');
+  return codeEl ? codeEl.innerHTML : html;
 };
 
 const ensureRoots = (
@@ -513,7 +583,6 @@ export const createShikiStreamComponent = (
       const sessionIdRef = useRef(0);
       const sessionVersionRef = useRef(0);
       const [sessionVersion, setSessionVersion] = useState(0);
-      const frozenRef = useRef(false);
       const metricsRef = useRef<FastPathMetrics>(createMetrics());
 
       const { languageId, langsToLoad } = useMemo(
@@ -584,7 +653,7 @@ export const createShikiStreamComponent = (
             processedChars: metrics.chars,
             tokenEvents: metrics.tokenEvents,
             recallEvents: metrics.recallEvents,
-            scheduledCommits: metrics.tailMutations,
+            scheduledCommits: metrics.tailPlaintextMutations,
             restartCount: metrics.restarts,
           };
 
@@ -598,12 +667,13 @@ export const createShikiStreamComponent = (
               reason,
               sessionId: metrics.sessionId,
               mode: metrics.mode,
-              stableLineAppends: metrics.stableLineAppends,
-              tailMutations: metrics.tailMutations,
-              domNodesCreated: metrics.domNodesCreated,
-              finalFlushMs: Number(metrics.finalFlushMs.toFixed(2)),
-              completeToFrozenMs: Number(
-                metrics.completeToFrozenMs.toFixed(2)
+              stableLineHtmlAppends: metrics.stableLineHtmlAppends,
+              stableLineMergedTokenCount:
+                metrics.stableLineMergedTokenCount,
+              stableLineSpanCount: metrics.stableLineSpanCount,
+              tailPlaintextMutations: metrics.tailPlaintextMutations,
+              finalExactSwapMs: Number(
+                metrics.finalExactSwapMs.toFixed(2)
               ),
             });
           }
@@ -669,7 +739,6 @@ export const createShikiStreamComponent = (
 
         sessionRef.current?.cancel();
         sessionRef.current = null;
-        frozenRef.current = false;
 
         const roots = resetRoots(codeRoot);
         rootsRef.current = roots;
@@ -708,8 +777,10 @@ export const createShikiStreamComponent = (
         let textClosed = false;
         let codeLength = 0;
         let lastCode = '';
+        let fullText = '';
+        let stableTextLength = 0;
 
-        const textStream =
+        const sourceTextStream =
           inputMode === 'code'
             ? new ReadableStream<string>({
                 start(controller) {
@@ -721,8 +792,6 @@ export const createShikiStreamComponent = (
 
                   if (initialCode.length > 0) {
                     controller.enqueue(initialCode);
-                    metricsRef.current.chunks += 1;
-                    metricsRef.current.chars += initialCode.length;
                   }
 
                   if (isComplete) {
@@ -748,8 +817,6 @@ export const createShikiStreamComponent = (
                           }
 
                           controller.enqueue(chunk);
-                          metricsRef.current.chunks += 1;
-                          metricsRef.current.chars += chunk.length;
                         }
                         controller.close();
                       } catch (err) {
@@ -759,7 +826,35 @@ export const createShikiStreamComponent = (
                   },
                 });
 
-        const tokenStream = textStream.pipeThrough(
+        const renderTailFromSource = (sourceText: string) => {
+          const rootsCurrent = rootsRef.current;
+          if (!rootsCurrent) return;
+          const nextTail = sourceText.slice(stableTextLength);
+          renderTailPlain(
+            nextTail,
+            rootsCurrent.tailRoot,
+            metricsRef.current,
+            lastTailSnapshotRef
+          );
+        };
+
+        const tappedTextStream = sourceTextStream.pipeThrough(
+          new TransformStream<string, string>({
+            transform(chunk, controller) {
+              fullText += chunk;
+              const session = sessionRef.current;
+              if (session && session.id === id) {
+                session.fullText = fullText;
+              }
+              metricsRef.current.chunks += 1;
+              metricsRef.current.chars += chunk.length;
+              renderTailFromSource(fullText);
+              controller.enqueue(chunk);
+            },
+          })
+        );
+
+        const tokenStream = tappedTextStream.pipeThrough(
           new CodeToTokenTransformStream({
             highlighter: resolvedHighlighter,
             lang: langToUse,
@@ -784,54 +879,38 @@ export const createShikiStreamComponent = (
           const rootsCurrent = rootsRef.current;
           if (!rootsCurrent) return;
 
-          consumeFinalizedLines(
+          const consumedChars = consumeFinalizedLines(
             tailTokensRef.current,
             rootsCurrent.stableRoot,
             styleCacheRef.current,
             metricsRef.current
           );
-
-          if (recallsEnabled) {
-            renderTailHighlighted(
-              tailTokensRef.current,
-              rootsCurrent.tailRoot,
-              styleCacheRef.current,
-              metricsRef.current,
-              lastTailSnapshotRef
-            );
-            return;
-          }
-
-          renderTailPlain(
-            tailTokensRef.current,
-            rootsCurrent.tailRoot,
-            metricsRef.current,
-            lastTailSnapshotRef
-          );
+          stableTextLength += consumedChars;
+          const session = sessionRef.current;
+          renderTailFromSource(session?.fullText ?? fullText);
         };
 
-        const freezeCompletedSession = () => {
-          const rootsCurrent = rootsRef.current;
-          if (!rootsCurrent) return;
+        const finalExactSwap = (session: ActiveSession) => {
+          const codeNode = codeRef.current;
+          if (!codeNode) return;
 
-          const completeAt = performance.now();
-          metricsRef.current.completeAt = completeAt;
-
-          const flushStart = performance.now();
-          finalizeTailToStable(
-            tailTokensRef.current,
-            rootsCurrent.stableRoot,
-            rootsCurrent.tailRoot,
-            styleCacheRef.current,
-            metricsRef.current,
-            lastTailSnapshotRef
+          const swapStart = performance.now();
+          const canonicalHtml = resolvedHighlighter.codeToHtml(
+            session.fullText,
+            {
+              lang: langToUse,
+              ...themeOpts,
+            }
           );
-          metricsRef.current.finalFlushMs =
-            performance.now() - flushStart;
-
-          frozenRef.current = true;
-          metricsRef.current.completeToFrozenMs =
-            performance.now() - metricsRef.current.completeAt;
+          codeNode.innerHTML = extractCanonicalCodeInnerHtml(
+            codeNode.ownerDocument,
+            canonicalHtml
+          );
+          metricsRef.current.finalExactSwapMs =
+            performance.now() - swapStart;
+          tailTokensRef.current = [];
+          lastTailSnapshotRef.current = '';
+          rootsRef.current = null;
         };
 
         const consume = async () => {
@@ -875,7 +954,7 @@ export const createShikiStreamComponent = (
               return;
             }
 
-            freezeCompletedSession();
+            finalExactSwap(session);
             logSummary('done');
             stableOptions.onStreamEnd?.();
             session.cancelled = true;
@@ -894,6 +973,7 @@ export const createShikiStreamComponent = (
           textClosed,
           codeLength,
           lastCode,
+          fullText,
           cancelled: false,
           cancel: cancelSession,
         };
@@ -908,8 +988,6 @@ export const createShikiStreamComponent = (
         };
       }, [
         inputMode,
-        code,
-        isComplete,
         stream,
         chunks,
         languageId,
@@ -975,12 +1053,11 @@ export const createShikiStreamComponent = (
         const delta = nextCode.slice(session.codeLength);
         if (delta.length > 0) {
           controller.enqueue(delta);
-          metricsRef.current.chunks += 1;
-          metricsRef.current.chars += delta.length;
         }
 
         session.codeLength = nextCode.length;
         session.lastCode = nextCode;
+        session.fullText = nextCode;
 
         if (isComplete && !session.textClosed) {
           controller.close();

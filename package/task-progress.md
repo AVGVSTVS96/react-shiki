@@ -217,3 +217,46 @@
 - handoff patch commit `1256f3d` covers:
   - `package/src/lib/stream-renderer.tsx` duplicate-key fix.
   - `package/task-progress.md` consolidated findings + instrumentation map.
+
+## stop-12.completed (2026-03-05 progressive coarse renderer + rerun comparison)
+- redesigned `ShikiStreamHighlighter` fast path in `package/src/lib/stream-component.tsx` around coarse browser updates:
+  - phase 1: unstable tail renders as immediate plaintext during streaming.
+  - phase 2: finalized stable lines append as HTML chunks (`insertAdjacentHTML`) and are never patched again.
+  - phase 3: stream completion triggers one exact canonical `codeToHtml` swap of the full `<code>` contents.
+- hot-path style emission moved from inline styles to internal class palette registry:
+  - per-document shared style block + signature-to-class mapping.
+- stable-line emission now merges adjacent tokens with identical style signature before HTML generation.
+- reduced fast-path diagnostics to requested counters:
+  - `stableLineHtmlAppends`
+  - `stableLineMergedTokenCount`
+  - `stableLineSpanCount`
+  - `tailPlaintextMutations`
+  - `finalExactSwapMs`
+- updated fast-path completion test to assert canonical final swap semantics:
+  - `package/tests/stream-component-fast-path.test.tsx`.
+- reran benchmark lanes and archived new artifacts:
+  - session quick compare output in `.bench/archive/streaming-session.20260305-023324.*`
+  - assistant-message output in `.bench/archive/assistant-message.20260305-023332.run.log`
+
+## stop-12.observed (vs benchmark-report.20260305-014454 baseline)
+- session benchmark (incremental path):
+  - improved:
+    - `append-steady-short`: `58.85ms -> 53.50ms` (`-9.09%`)
+    - `append-bursty-long`: `104.91ms -> 89.68ms` (`-14.51%`)
+  - regressed:
+    - `firehose`: `116.33ms -> 147.55ms` (`+26.84%`)
+    - `replace-tail-intentional`: `28.25ms -> 42.10ms` (`+49.03%`)
+- incremental/full speedup deltas:
+  - better on steady + bursty (`2.15x -> 3.79x`, `6.71x -> 7.78x`)
+  - worse on firehose + replace-tail (`6.88x -> 5.05x`, `2.63x -> 2.11x`)
+- assistant-message benchmark:
+  - incremental steady slightly improved (`1384.14ms -> 1375.72ms`, `-0.61%`)
+  - incremental bursty/firehose slightly regressed (`+3.39%`, `+4.54%`)
+  - final-only-control mixed (`steady +6.84%`, `bursty +19.07%`, `firehose -2.92%`)
+- all session parity/highlight/structural checks remain pass in emitted summaries.
+
+## inference.current (post stop-12)
+- coarse progressive rendering is implemented and functionally stable, but benchmark deltas are mixed rather than universally improved.
+- strongest wins are in append-steady and append-bursty session shapes; weakest spots are firehose and intentional tail-rewrite lanes.
+- current benchmark configuration remains single-sample per scenario, so variance can dominate local regressions/wins.
+- before locking performance claims, run repeated-sample (multi-iteration) compare in same environment and use median deltas.
