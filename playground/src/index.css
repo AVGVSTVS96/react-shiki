@@ -111,8 +111,32 @@ button:focus-visible {
 }
 
 .streaming-page .code-scroll {
+  scrollbar-gutter: stable;
   scrollbar-width: thin;
   scrollbar-color: rgba(255, 255, 255, 0.08) transparent;
+  overscroll-behavior: contain;
+}
+
+.streaming-page {
+  --stream-bottom-gap: 72px;
+}
+
+.streaming-page .streaming-autoscroll {
+  scroll-padding-block-end: var(--stream-bottom-gap);
+  padding-bottom: var(--stream-bottom-gap);
+}
+
+.streaming-page main,
+.streaming-page aside {
+  backdrop-filter: blur(10px);
+}
+
+.streaming-page main {
+  background: rgba(2, 6, 23, 0.68);
+}
+
+.streaming-page aside {
+  box-shadow: 0 14px 32px rgba(2, 6, 23, 0.28);
 }
 
 .streaming-page .code-scroll::-webkit-scrollbar {

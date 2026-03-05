@@ -77,6 +77,7 @@ type AssistantMessageScenarioRequest = {
   seed: number;
   messageCorpusId?: MessageCorpusId;
   corpusId?: CorpusId;
+  messageRepeatCount?: number;
 };
 
 export type CreateStreamingScenarioRequest =
@@ -630,13 +631,16 @@ const createAssistantMessageScenario = ({
   presetId,
   seed,
   messageCorpusId,
+  messageRepeatCount,
 }: {
   presetId: AssistantMessagePresetId;
   seed: number;
   messageCorpusId?: MessageCorpusId;
+  messageRepeatCount?: number;
 }): StreamingScenario => {
   const corpusId = messageCorpusId ?? ASSISTANT_DEFAULT_MESSAGE_CORPUS;
   const corpus = getAssistantMessageCorpus(corpusId);
+  const repeatCount = Math.max(1, Math.min(50, messageRepeatCount ?? 1));
 
   const profile =
     presetId === 'assistant-multi-block-firehose'
@@ -675,28 +679,43 @@ const createAssistantMessageScenario = ({
     })
   );
 
-  corpus.blocks.forEach((block, index) => {
-    if (index > 0) {
-      const bridge = corpus.interBlockProse?.[index - 1];
-      if (bridge) {
+  for (let cycle = 0; cycle < repeatCount; cycle += 1) {
+    const cycleOffset = cycle * corpus.blocks.length;
+    if (cycle > 0) {
+      events.push(
+        ...toTextEvents(
+          `\n\n---\n\nContinuing with batch ${cycle + 1}.\n\n`,
+          {
+            seed: seed + 700 + cycle,
+            ...profile.prose,
+          }
+        )
+      );
+    }
+
+    corpus.blocks.forEach((block, index) => {
+      const globalIndex = cycleOffset + index;
+      if (globalIndex > 0) {
+        const bridge = corpus.interBlockProse?.[index - 1];
+        const fallbackBridge = `Next block (${globalIndex + 1}/${corpus.blocks.length * repeatCount}):`;
         events.push(
-          ...toTextEvents(`\n\n${bridge}\n\n`, {
-            seed: seed + 10 + index,
+          ...toTextEvents(`\n\n${bridge ?? fallbackBridge}\n\n`, {
+            seed: seed + 10 + globalIndex,
             ...profile.prose,
           })
         );
       }
-    }
 
-    events.push({ type: 'fence-open', language: block.language });
-    events.push(
-      ...toCodeEvents(block.source, {
-        seed: seed + 100 + index * 13,
-        ...profile.code,
-      })
-    );
-    events.push({ type: 'fence-close' });
-  });
+      events.push({ type: 'fence-open', language: block.language });
+      events.push(
+        ...toCodeEvents(block.source, {
+          seed: seed + 100 + globalIndex * 13,
+          ...profile.code,
+        })
+      );
+      events.push({ type: 'fence-close' });
+    });
+  }
 
   events.push(
     ...toTextEvents(`\n\n${corpus.closingProse}`, {
@@ -708,7 +727,7 @@ const createAssistantMessageScenario = ({
 
   return withMessageCorpus(
     {
-      id: `${presetId}:${corpusId}:${seed}`,
+      id: `${presetId}:${corpusId}:x${repeatCount}:${seed}`,
       presetId,
       seed,
       appendOnly: true,
@@ -872,6 +891,7 @@ export const createStreamingScenario = (
       presetId: request.presetId,
       seed: request.seed,
       messageCorpusId: request.messageCorpusId,
+      messageRepeatCount: request.messageRepeatCount,
     });
   }
 

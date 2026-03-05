@@ -4,10 +4,11 @@ import StreamingBenchmarkPage from './pages/StreamingBenchmarkPage';
 
 function App() {
   const [view, setView] = useState<'demo' | 'streaming'>('demo');
+  const maxWidthClass = view === 'streaming' ? 'max-w-[1800px]' : 'max-w-6xl';
 
   return (
     <main className="dark flex min-h-screen w-full flex-col items-center text-slate-100">
-      <div className="mx-auto w-full max-w-6xl px-4 pt-8">
+      <div className={`mx-auto w-full px-4 pt-8 ${maxWidthClass}`}>
         <nav className="mb-6 flex flex-wrap items-center gap-2">
           <button
             type="button"

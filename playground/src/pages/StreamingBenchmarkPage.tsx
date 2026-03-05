@@ -5,7 +5,9 @@ import {
   useEffect,
   useMemo,
   useRef,
+  type ReactNode,
   useState,
+  type RefObject,
 } from 'react';
 import {
   ShikiTokenRenderer,
@@ -201,7 +203,7 @@ const SingleChatCodeBlock = ({
 
   return (
     <div
-      className="whitespace-pre rounded border border-slate-700/70 bg-black/50 p-2"
+      className="code-scroll min-w-0 w-full overflow-x-auto whitespace-pre rounded border border-slate-700/70 bg-black/50 p-2"
       data-chat-block
       data-block-index={blockIndex}
       data-language={language || 'plaintext'}
@@ -307,7 +309,7 @@ const AssistantBlockView = ({
 
     return (
       <pre
-        className="whitespace-pre rounded border border-slate-700/70 bg-black/40 p-2"
+        className="code-scroll min-w-0 w-full overflow-x-auto whitespace-pre rounded border border-slate-700/70 bg-black/40 p-2"
         data-assistant-block
         data-block-id={blockId}
         data-block-index={blockIndex}
@@ -348,7 +350,7 @@ const AssistantBlockView = ({
     return (
       <div
         ref={staticRef}
-        className="whitespace-pre rounded border border-slate-700/70 bg-black/50 p-2"
+        className="code-scroll min-w-0 w-full overflow-x-auto whitespace-pre rounded border border-slate-700/70 bg-black/50 p-2"
         data-assistant-block
         data-block-id={blockId}
         data-block-index={blockIndex}
@@ -405,7 +407,7 @@ const AssistantBlockView = ({
 
   return (
     <div
-      className="whitespace-pre rounded border border-slate-700/70 bg-black/50 p-2"
+      className="code-scroll min-w-0 w-full overflow-x-auto whitespace-pre rounded border border-slate-700/70 bg-black/50 p-2"
       data-assistant-block
       data-block-id={blockId}
       data-block-index={blockIndex}
@@ -475,6 +477,135 @@ const AssistantChatTreeView = ({
   );
 };
 
+const StreamingContentPanel = ({
+  title,
+  panelHeightClass = '',
+  panelRef,
+  autoScroll = false,
+  autoScrollSignal = 0,
+  forcePinned = false,
+  autoScrollBehavior = 'auto',
+  autoScrollBottomPadding = 72,
+  className = '',
+  panelInnerClassName = '',
+  children,
+}: {
+  title: string;
+  panelHeightClass?: string;
+  panelRef: RefObject<HTMLDivElement | null>;
+  autoScroll?: boolean;
+  autoScrollSignal?: number;
+  forcePinned?: boolean;
+  autoScrollBehavior?: ScrollBehavior;
+  autoScrollBottomPadding?: number;
+  className?: string;
+  panelInnerClassName?: string;
+  children: ReactNode;
+}) => {
+  usePinnedAutoScroll({
+    containerRef: panelRef,
+    enabled: autoScroll,
+    signal: autoScrollSignal,
+    forcePinned,
+    behavior: autoScrollBehavior,
+    bottomPadding: autoScrollBottomPadding,
+  });
+
+  return (
+    <section
+      className={`flex min-h-0 w-full flex-col overflow-hidden rounded-xl border border-slate-700/70 bg-slate-900/80 p-3 ${panelHeightClass} ${className}`}
+    >
+      <p className="mb-2 text-xs uppercase tracking-wide text-slate-400">
+        {title}
+      </p>
+      <div
+        ref={panelRef}
+        className={`code-scroll streaming-autoscroll min-h-0 min-w-0 flex-1 overflow-auto ${panelInnerClassName}`}
+      >
+        {children}
+      </div>
+    </section>
+  );
+};
+
+const PANEL_VIEW_CLASS = 'h-[80vh]';
+const PANEL_OVERFLOW_CONTENT_CLASS =
+  'w-full whitespace-pre overflow-x-auto';
+
+const usePinnedAutoScroll = ({
+  containerRef,
+  enabled,
+  signal,
+  forcePinned = false,
+  behavior = 'auto',
+  bottomPadding = 72,
+}: {
+  containerRef: RefObject<HTMLDivElement | null>;
+  enabled: boolean;
+  signal: number;
+  forcePinned?: boolean;
+  behavior?: ScrollBehavior;
+  bottomPadding?: number;
+}) => {
+  const pinnedToBottomRef = useRef(true);
+  const rafRef = useRef<number | null>(null);
+
+  const scheduleScroll = useCallback(
+    (nextBehavior: ScrollBehavior) => {
+      const node = containerRef.current;
+      if (!node || (!forcePinned && !pinnedToBottomRef.current)) return;
+
+      if (rafRef.current != null) {
+        cancelAnimationFrame(rafRef.current);
+      }
+
+      rafRef.current = requestAnimationFrame(() => {
+        node.scrollTo({
+          top: node.scrollHeight + bottomPadding,
+          behavior: nextBehavior,
+        });
+      });
+    },
+    [bottomPadding, containerRef, forcePinned]
+  );
+
+  useEffect(() => {
+    if (!enabled) return;
+    const node = containerRef.current;
+    if (!node) return;
+
+    node.style.setProperty('--stream-bottom-gap', `${bottomPadding}px`);
+    const threshold = Math.max(40, bottomPadding * 0.75);
+
+    const onScroll = () => {
+      if (forcePinned) {
+        pinnedToBottomRef.current = true;
+        return;
+      }
+      const distance =
+        node.scrollHeight - node.scrollTop - node.clientHeight;
+      pinnedToBottomRef.current = distance <= threshold;
+    };
+
+    onScroll();
+    scheduleScroll('auto');
+
+    node.addEventListener('scroll', onScroll, { passive: true });
+    return () => {
+      node.removeEventListener('scroll', onScroll);
+      if (rafRef.current != null) {
+        cancelAnimationFrame(rafRef.current);
+        rafRef.current = null;
+      }
+    };
+  }, [bottomPadding, containerRef, enabled, forcePinned, scheduleScroll]);
+
+  useEffect(() => {
+    if (!enabled) return;
+    scheduleScroll(behavior);
+  }, [behavior, enabled, scheduleScroll, signal]);
+};
+
 export default function StreamingBenchmarkPage() {
   const [labFamily, setLabFamily] = useState<LabFamily>('single-block');
   const [presetId, setPresetId] =
@@ -482,6 +613,7 @@ export default function StreamingBenchmarkPage() {
   const [corpusId, setCorpusId] = useState<CorpusId>('tsx-chat-ui');
   const [messageCorpusId, setMessageCorpusId] =
     useState<MessageCorpusId>('assistant-mixed-stack-6');
+  const [messageRepeatCount, setMessageRepeatCount] = useState(1);
   const [singleLane, setSingleLane] = useState<SingleLane>('isolated');
   const [assistantLane, setAssistantLane] =
     useState<AssistantLane>('incremental-chat-tree');
@@ -490,6 +622,7 @@ export default function StreamingBenchmarkPage() {
   const [strictMode, setStrictMode] = useState(false);
   const [remountChurn, setRemountChurn] = useState(false);
   const [freshOptions, setFreshOptions] = useState(false);
+  const [showTranscriptPanel, setShowTranscriptPanel] = useState(false);
   const [runStatus, setRunStatus] = useState<RunStatus>('idle');
 
   const availablePresets = useMemo(
@@ -522,6 +655,7 @@ export default function StreamingBenchmarkPage() {
           | 'assistant-multi-block-firehose'
         >,
         messageCorpusId,
+        messageRepeatCount,
         seed,
       });
     }
@@ -536,7 +670,24 @@ export default function StreamingBenchmarkPage() {
       corpusId,
       seed,
     });
-  }, [corpusId, labFamily, messageCorpusId, presetId, seed]);
+  }, [
+    corpusId,
+    labFamily,
+    messageCorpusId,
+    messageRepeatCount,
+    presetId,
+    seed,
+  ]);
+
+  const selectedMessageCorpus = useMemo(
+    () =>
+      STREAMING_ASSISTANT_MESSAGE_CORPUS_LIST.find(
+        (corpus) => corpus.messageId === messageCorpusId
+      ),
+    [messageCorpusId]
+  );
+  const projectedAssistantBlocks =
+    (selectedMessageCorpus?.blocks.length ?? 0) * messageRepeatCount;
 
   const playback = useMemo(
     () => buildAssistantChatTreePlaybackPlan(scenario.events),
@@ -576,6 +727,7 @@ export default function StreamingBenchmarkPage() {
   const [integrityError, setIntegrityError] = useState<string | null>(
     null
   );
+  const [streamRevision, setStreamRevision] = useState(0);
 
   const abortRef = useRef<AbortController | null>(null);
   const countersRef = useRef<CounterState>(createCounterState());
@@ -587,6 +739,7 @@ export default function StreamingBenchmarkPage() {
   );
   const isolatedOutputRef = useRef<HTMLDivElement | null>(null);
   const chatContainerRef = useRef<HTMLDivElement | null>(null);
+  const transcriptContainerRef = useRef<HTMLDivElement | null>(null);
   const baselineContainerRef = useRef<HTMLDivElement | null>(null);
 
   const assistantBlockMetricsRef = useRef<
@@ -595,6 +748,7 @@ export default function StreamingBenchmarkPage() {
   const assistantCompleteAtMsRef = useRef(0);
   const assistantProfilerCommitsRef = useRef(0);
   const assistantProfilerDurationRef = useRef(0);
+  const stepDelayMsRef = useRef(stepDelayMs);
 
   const baselineStatic = useShikiHighlighter(
     code,
@@ -617,6 +771,10 @@ export default function StreamingBenchmarkPage() {
     singleLane === 'isolated'
       ? isolatedSummariesRef.current
       : [...chatSummariesRef.current.values()].flat();
+
+  useEffect(() => {
+    stepDelayMsRef.current = stepDelayMs;
+  }, [stepDelayMs]);
 
   const recordRenderCommit = useCallback(() => {
     renderCommitCountRef.current += 1;
@@ -1029,6 +1187,7 @@ export default function StreamingBenchmarkPage() {
         setCode(nextCode);
       }
       setIsComplete(frame.event.type === 'message-end');
+      setStreamRevision((current) => current + 1);
 
       if (
         counters.firstAnyOutputMs === 0 &&
@@ -1093,10 +1252,12 @@ export default function StreamingBenchmarkPage() {
     setCode('');
     setIsComplete(false);
     setIntegrityError(null);
+    setStreamRevision(0);
 
     const result = await playScenarioEvents({
       events: scenario.events,
       stepDelayMs,
+      getStepDelayMs: () => stepDelayMsRef.current,
       signal: controller.signal,
       onFrame: (frame) => {
         applyFrame(frame);
@@ -1167,11 +1328,13 @@ export default function StreamingBenchmarkPage() {
       onRenderCommit={recordRenderCommit}
     />
   );
+  const autoScrollBehavior: ScrollBehavior =
+    runStatus === 'running' && stepDelayMs > 24 ? 'smooth' : 'auto';
 
   return (
-    <section className="mx-auto w-full max-w-[1400px] px-4 pb-10 pt-6 text-slate-100">
-      <header className="mb-6">
-        <h1 className="text-3xl font-semibold tracking-tight">
+    <section className="streaming-page mx-auto w-full max-w-[1800px] px-4 pb-10 pt-6 text-slate-100">
+      <header className="mb-6 rounded-2xl border border-cyan-400/20 bg-slate-950/55 p-5 shadow-[0_20px_40px_rgba(2,6,23,0.35)]">
+        <h1 className="text-3xl font-semibold tracking-tight text-cyan-100">
           Streaming Chat Lab
         </h1>
         <p className="mt-2 max-w-4xl text-sm text-slate-300">
@@ -1181,8 +1344,8 @@ export default function StreamingBenchmarkPage() {
         </p>
       </header>
 
-      <div className="grid gap-4 lg:grid-cols-[320px_1fr_420px]">
-        <aside className="space-y-3 rounded-xl border border-slate-700/70 bg-slate-900/70 p-4">
+      <div className="grid min-h-0 gap-4 lg:grid-cols-[minmax(250px,300px)_minmax(0,1fr)_minmax(320px,380px)]">
+        <aside className="min-w-0 space-y-3 rounded-xl border border-slate-700/70 bg-slate-900/70 p-4 lg:sticky lg:top-6 lg:self-start">
           <label className="block text-xs uppercase text-slate-400">
             Lab Family
             <select
@@ -1258,6 +1421,27 @@ export default function StreamingBenchmarkPage() {
               </select>
             </label>
           )}
+
+          {labFamily === 'assistant-message' ? (
+            <label className="block text-xs uppercase text-slate-400">
+              Message repeat count ({messageRepeatCount}x)
+              <input
+                type="range"
+                min={1}
+                max={20}
+                step={1}
+                value={messageRepeatCount}
+                onChange={(event) => {
+                  setMessageRepeatCount(Number(event.target.value));
+                  resetPlaybackState();
+                }}
+                className="mt-1 w-full"
+              />
+              <span className="mt-1 block text-[11px] normal-case text-slate-400">
+                Projected code blocks: {projectedAssistantBlocks}
+              </span>
+            </label>
+          ) : null}
 
           {labFamily === 'single-block' ? (
             <label className="block text-xs uppercase text-slate-400">
@@ -1351,6 +1535,17 @@ export default function StreamingBenchmarkPage() {
             Unstable options churn (explicit)
           </label>
 
+          <label className="flex items-center gap-2 text-sm text-slate-300">
+            <input
+              type="checkbox"
+              checked={showTranscriptPanel}
+              onChange={(event) => {
+                setShowTranscriptPanel(event.target.checked);
+              }}
+            />
+            Show transcript panel
+          </label>
+
           {labFamily === 'single-block' ? (
             <label className="flex items-center gap-2 text-sm text-slate-300">
               <input
@@ -1400,56 +1595,66 @@ export default function StreamingBenchmarkPage() {
           </p>
         </aside>
 
-        <main className="space-y-4 rounded-xl border border-slate-700/70 bg-slate-950/60 p-4">
+        <main className="min-w-0 space-y-4 rounded-xl border border-slate-700/70 bg-slate-950/60 p-4">
           {integrityError ? (
             <div className="rounded border border-rose-500/60 bg-rose-500/15 px-3 py-2 text-sm text-rose-100">
               {integrityError}
             </div>
           ) : null}
 
-          <div className="rounded border border-slate-700/70 bg-slate-900/80 p-3">
-            <p className="mb-2 text-xs uppercase text-slate-400">
-              Transcript
-            </p>
-            <pre className="max-h-48 overflow-auto whitespace-pre-wrap text-sm text-slate-200">
-              {transcript || 'No transcript yet.'}
-            </pre>
-          </div>
-
-          <div className="rounded border border-slate-700/70 bg-slate-900/80 p-3">
-            <p className="mb-2 text-xs uppercase text-slate-400">
-              Rendered output
-            </p>
-
-            {labFamily === 'single-block' && singleLane === 'isolated' ? (
-              <div
-                ref={isolatedOutputRef}
-                className="max-h-[520px] overflow-auto whitespace-pre"
-              >
+          <div
+            className={
+              showTranscriptPanel
+                ? 'grid gap-3 lg:grid-cols-2'
+                : 'grid gap-3'
+            }
+          >
+            <StreamingContentPanel
+              title="Rendered output"
+              panelHeightClass={PANEL_VIEW_CLASS}
+              autoScroll
+              autoScrollSignal={streamRevision}
+              forcePinned={runStatus === 'running'}
+              autoScrollBehavior={autoScrollBehavior}
+              panelRef={
+                labFamily === 'single-block' && singleLane === 'isolated'
+                  ? isolatedOutputRef
+                  : chatContainerRef
+              }
+              panelInnerClassName={PANEL_OVERFLOW_CONTENT_CLASS}
+            >
+              {labFamily === 'single-block' && singleLane === 'isolated' ? (
                 <ShikiTokenRenderer tokens={isolatedResult.tokens} />
-              </div>
-            ) : null}
+              ) : null}
 
-            {labFamily === 'single-block' && singleLane === 'chat' ? (
-              <div
-                ref={chatContainerRef}
-                className="max-h-[520px] overflow-auto"
-              >
-                {strictMode ? <StrictMode>{singleTree}</StrictMode> : singleTree}
-              </div>
-            ) : null}
+              {labFamily === 'single-block' && singleLane === 'chat' ? (
+                strictMode ? <StrictMode>{singleTree}</StrictMode> : singleTree
+              ) : null}
 
-            {labFamily === 'assistant-message' ? (
-              <div
-                ref={chatContainerRef}
-                className="max-h-[520px] overflow-auto"
-              >
-                {strictMode ? (
+              {labFamily === 'assistant-message' ? (
+                strictMode ? (
                   <StrictMode>{assistantTree}</StrictMode>
                 ) : (
                   assistantTree
-                )}
-              </div>
+                )
+              ) : null}
+            </StreamingContentPanel>
+
+            {showTranscriptPanel ? (
+              <StreamingContentPanel
+                title="Transcript"
+                panelHeightClass={PANEL_VIEW_CLASS}
+                panelRef={transcriptContainerRef}
+                autoScroll
+                autoScrollSignal={streamRevision}
+                forcePinned={runStatus === 'running'}
+                autoScrollBehavior={autoScrollBehavior}
+                panelInnerClassName="w-full whitespace-pre-wrap break-words"
+              >
+                <pre className="w-full whitespace-pre-wrap break-words p-2 text-sm text-slate-200">
+                  {transcript || 'No transcript yet.'}
+                </pre>
+              </StreamingContentPanel>
             ) : null}
           </div>
 
@@ -1458,7 +1663,7 @@ export default function StreamingBenchmarkPage() {
           </div>
         </main>
 
-        <aside className="space-y-4 rounded-xl border border-slate-700/70 bg-slate-900/70 p-4 text-sm">
+        <aside className="min-w-0 space-y-4 rounded-xl border border-slate-700/70 bg-slate-900/70 p-4 text-sm">
           {labFamily === 'single-block' ? (
             <>
               <div>

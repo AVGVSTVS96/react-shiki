@@ -17,6 +17,7 @@ export interface ScenarioPlaybackResult {
 export interface ScenarioPlaybackOptions {
   events: StreamingEvent[];
   stepDelayMs?: number;
+  getStepDelayMs?: () => number;
   speedMultiplier?: number;
   signal?: AbortSignal;
   onFrame?: (
@@ -45,6 +46,7 @@ const getDelayForEvent = (
 export const playScenarioEvents = async ({
   events,
   stepDelayMs = 0,
+  getStepDelayMs,
   speedMultiplier = 1,
   signal,
   onFrame,
@@ -72,9 +74,10 @@ export const playScenarioEvents = async ({
     playbackFrames.push(playbackFrame);
     await onFrame?.(playbackFrame);
 
+    const liveStepDelayMs = getStepDelayMs?.() ?? stepDelayMs;
     const delay = getDelayForEvent(
       frame.event,
-      stepDelayMs,
+      liveStepDelayMs,
       speedMultiplier
     );
 
