@@ -88,7 +88,7 @@ export interface ShikiHighlighterProps extends HighlighterOptions {
 
   /**
    * The HTML element that wraps the generated code block.
-   * @default 'pre'
+   * @default 'div'
    */
   as?: React.ElementType;
 }
@@ -131,7 +131,7 @@ export const createShikiHighlighterComponent = (
         showLineNumbers = false,
         startingLineNumber = 1,
         children: code,
-        as: Element = 'pre',
+        as: Element = 'div',
         customLanguages,
         preloadLanguages,
         ...shikiOptions

@@ -234,7 +234,7 @@ The `ShikiHighlighter` component offers minimal built-in styling and customizati
 | ------------------ | --------- | ------- | ---------------------------------------------------------- |
 | `showLanguage`     | `boolean` | `true`  | Displays language label in top-right corner                |
 | `addDefaultStyles` | `boolean` | `true`  | Adds minimal default styling to the highlighted code block |
-| `as`               | `string`  | `'pre'` | Component's Root HTML element                              |
+| `as`               | `string`  | `'div'` | Component's Root HTML element                              |
 | `className`        | `string`  | -       | Custom class name for the code block                       |
 | `langClassName`    | `string`  | -       | Class name for styling the language label                  |
 | `style`            | `object`  | -       | Inline style object for the code block                     |
