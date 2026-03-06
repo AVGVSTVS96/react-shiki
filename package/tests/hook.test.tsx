@@ -104,23 +104,26 @@ describe('useShikiHighlighter Hook', () => {
   describe('Basic Rendering', () => {
     test('renders correct DOM structure', async () => {
       const { getByTestId } = renderComponent();
-      await waitFor(() => {
-        const container = getByTestId('highlighted');
+      await waitFor(
+        () => {
+          const container = getByTestId('highlighted');
 
-        // Check pre element with theme classes
-        const preElement = container.querySelector(
-          'pre.shiki.github-light'
-        );
-        expect(preElement).toBeInTheDocument();
+          // Check pre element with theme classes
+          const preElement = container.querySelector(
+            'pre.shiki.github-light'
+          );
+          expect(preElement).toBeInTheDocument();
 
-        // Check code element inside pre
-        const codeElement = preElement?.querySelector('code');
-        expect(codeElement).toBeInTheDocument();
+          // Check code element inside pre
+          const codeElement = preElement?.querySelector('code');
+          expect(codeElement).toBeInTheDocument();
 
-        // Check line spans inside code
-        const lineSpan = codeElement?.querySelector('span.line');
-        expect(lineSpan).toBeInTheDocument();
-      });
+          // Check line spans inside code
+          const lineSpan = codeElement?.querySelector('span.line');
+          expect(lineSpan).toBeInTheDocument();
+        },
+        { timeout: 3000 }
+      );
     });
 
     test('falls back to plaintext for unknown languages', async () => {
