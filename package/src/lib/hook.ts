@@ -71,6 +71,7 @@ export const useShikiHighlighter = (
   const [highlightedCode, setHighlightedCode] = useState<
     ReactNode | string | null
   >(null);
+  const requestIdRef = useRef(0);
 
   // Stabilize options, language and theme inputs to prevent unnecessary
   // re-renders or recalculations when object references change
@@ -117,6 +118,7 @@ export const useShikiHighlighter = (
 
   useEffect(() => {
     let isMounted = true;
+    const requestId = ++requestIdRef.current;
 
     const highlightCode = async () => {
       if (!languageId) return;
@@ -147,7 +149,7 @@ export const useShikiHighlighter = (
       );
       const finalOptions = { ...shikiOptions, lang: langToUse };
 
-      if (isMounted) {
+      if (isMounted && requestId === requestIdRef.current) {
         const output =
           stableOpts.outputFormat === 'html'
             ? highlighter.codeToHtml(code, finalOptions)
