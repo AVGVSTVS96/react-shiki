@@ -1,187 +1,88 @@
-import {
-  useEffect,
-  useMemo,
-  useRef,
-  useState,
-  type ReactNode,
-} from 'react';
-
-import { jsx, jsxs, Fragment } from 'react/jsx-runtime';
-import { toJsxRuntime } from 'hast-util-to-jsx-runtime';
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 
 import type {
-  Highlighter,
-  HighlighterCore,
-  Awaitable,
-  LanguageInput,
-  RegexEngine,
-} from 'shiki';
-
-import { guessEmbeddedLanguages } from 'shiki/core';
-
-import type {
+  HighlightedCode,
+  HighlighterOptions,
   Language,
   Theme,
-  HighlighterOptions,
-  TimeoutState,
   Themes,
+  TimeoutState,
 } from './types';
 
+import {
+  type HighlighterFactory,
+  type NormalizedHighlightInput,
+  type ResolvedHighlight,
+  normalizeHighlightInput,
+  resolveHighlight,
+} from './highlight';
 import { throttleHighlighting, useStableValue } from './utils';
-import { resolveLanguage, resolveLoadedLanguage } from './language';
-import { resolveTheme } from './theme';
-import { buildShikiOptions } from './options';
-
-type HighlighterFactory = (
-  langsToLoad: Language[],
-  themesToLoad: Theme[],
-  engine?: Awaitable<RegexEngine>
-) => Promise<Highlighter | HighlighterCore>;
-
-type NormalizedHighlightInput = {
-  code: string;
-  delay: number | undefined;
-  languageId: string;
-  outputFormat: HighlighterOptions['outputFormat'];
-  highlighterConfig: {
-    instance?: Highlighter | HighlighterCore;
-    engine?: Awaitable<RegexEngine>;
-    langsToLoad: Language[];
-    themesToLoad: Theme[];
-  };
-  shikiOptions: ReturnType<typeof buildShikiOptions>;
-};
-
-type ResolvedHighlight =
-  | { format: 'html'; value: string }
-  | { format: 'react'; value: ReactNode };
 
 type HighlightState =
   | { status: 'idle' }
-  | { status: 'resolved'; result: ResolvedHighlight };
+  | { status: 'loading'; lastResult: ResolvedHighlight | null }
+  | { status: 'resolved'; result: ResolvedHighlight }
+  | { status: 'failed'; lastResult: ResolvedHighlight | null };
 
-/**
- * Returns detected embedded languages that are available in the current bundle.
- */
-const getEmbeddedLanguages = (
-  code: string,
-  languageId: string,
-  highlighter: Highlighter | HighlighterCore
-): LanguageInput[] => {
-  const bundled: Record<string, LanguageInput> =
-    highlighter.getBundledLanguages();
-  return guessEmbeddedLanguages(code, languageId).flatMap(
-    (language) => bundled[language] ?? []
-  );
+const getVisibleResult = (state: HighlightState): HighlightedCode => {
+  switch (state.status) {
+    case 'resolved':
+      return state.result;
+    case 'loading':
+    case 'failed':
+      return state.lastResult;
+    case 'idle':
+      return null;
+  }
 };
 
-const normalizeHighlightInput = (
-  code: string,
-  lang: Language,
-  themeInput: Theme | Themes,
-  options: HighlighterOptions
-): NormalizedHighlightInput => {
-  const { languageId, langsToLoad } = resolveLanguage(
-    lang,
-    options.customLanguages,
-    options.langAlias,
-    options.preloadLanguages
-  );
-  const resolvedTheme = resolveTheme(themeInput);
+const useHighlightMachine = () => {
+  const [state, setState] = useState<HighlightState>({ status: 'idle' });
+
+  const getLastResult = useCallback((currentState: HighlightState) => {
+    return currentState.status === 'resolved'
+      ? currentState.result
+      : currentState.status === 'loading' ||
+          currentState.status === 'failed'
+        ? currentState.lastResult
+        : null;
+  }, []);
 
   return {
-    code,
-    delay: options.delay,
-    languageId,
-    outputFormat: options.outputFormat,
-    highlighterConfig: {
-      instance: options.highlighter,
-      engine: options.engine,
-      langsToLoad,
-      themesToLoad: resolvedTheme.themesToLoad,
-    },
-    shikiOptions: buildShikiOptions({
-      languageId,
-      resolvedTheme,
-      options,
-    }),
+    fail: useCallback(() => {
+      setState((currentState) => ({
+        status: 'failed',
+        lastResult: getLastResult(currentState),
+      }));
+    }, [getLastResult]),
+
+    reset: useCallback(() => {
+      setState({ status: 'idle' });
+    }, []),
+
+    resolve: useCallback((result: ResolvedHighlight) => {
+      setState({
+        status: 'resolved',
+        result,
+      });
+    }, []),
+
+    start: useCallback(() => {
+      setState((currentState) => ({
+        status: 'loading',
+        lastResult: getLastResult(currentState),
+      }));
+    }, [getLastResult]),
+
+    state,
   };
-};
-
-const resolveHighlightOutput = (
-  input: NormalizedHighlightInput,
-  highlighter: Highlighter | HighlighterCore,
-  languageId: string
-): ResolvedHighlight => {
-  const langToUse = resolveLoadedLanguage(
-    languageId,
-    highlighter.getLoadedLanguages()
-  );
-  const finalOptions = { ...input.shikiOptions, lang: langToUse };
-
-  return input.outputFormat === 'html'
-    ? {
-        format: 'html',
-        value: highlighter.codeToHtml(input.code, finalOptions),
-      }
-    : {
-        format: 'react',
-        value: toJsxRuntime(highlighter.codeToHast(input.code, finalOptions), {
-          jsx,
-          jsxs,
-          Fragment,
-        }),
-      };
-};
-
-const loadHighlighter = async (
-  input: NormalizedHighlightInput,
-  highlighterFactory: HighlighterFactory
-): Promise<Highlighter | HighlighterCore> => {
-  const highlighter = input.highlighterConfig.instance
-    ? input.highlighterConfig.instance
-    : await highlighterFactory(
-        input.highlighterConfig.langsToLoad,
-        input.highlighterConfig.themesToLoad,
-        input.highlighterConfig.engine
-      );
-
-  // Load embedded language grammars (e.g. ```python inside markdown)
-  if (!input.highlighterConfig.instance) {
-    const embedded = getEmbeddedLanguages(
-      input.code,
-      input.languageId,
-      highlighter
-    );
-    if (embedded.length > 0) {
-      await highlighter.loadLanguage(...embedded);
-    }
-  }
-
-  return highlighter;
-};
-
-const resolveHighlight = async (
-  input: NormalizedHighlightInput,
-  highlighterFactory: HighlighterFactory
-): Promise<ResolvedHighlight> => {
-  const highlighter = await loadHighlighter(input, highlighterFactory);
-  return resolveHighlightOutput(input, highlighter, input.languageId);
-};
-
-const unwrapHighlightState = (state: HighlightState) => {
-  if (state.status !== 'resolved') {
-    return null;
-  }
-
-  return state.result.value;
 };
 
 const useResolvedHighlight = (
   input: NormalizedHighlightInput,
   highlighterFactory: HighlighterFactory
 ) => {
-  const [state, setState] = useState<HighlightState>({ status: 'idle' });
+  const { fail, reset, resolve, start, state } = useHighlightMachine();
   const requestIdRef = useRef(0);
   const timeoutControl = useRef<TimeoutState>({
     nextAllowedTime: 0,
@@ -192,16 +93,29 @@ const useResolvedHighlight = (
     let isMounted = true;
     const requestId = ++requestIdRef.current;
 
+    if (!input.languageId) {
+      reset();
+      return () => {
+        isMounted = false;
+        clearTimeout(timeoutControl.current.timeoutId);
+      };
+    }
+
     const run = async () => {
-      if (!input.languageId) return;
+      start();
 
-      const result = await resolveHighlight(input, highlighterFactory);
+      try {
+        const result = await resolveHighlight(input, highlighterFactory);
 
-      if (isMounted && requestId === requestIdRef.current) {
-        setState({
-          status: 'resolved',
-          result,
-        });
+        if (isMounted && requestId === requestIdRef.current) {
+          resolve(result);
+        }
+      } catch (error) {
+        console.error(error);
+
+        if (isMounted && requestId === requestIdRef.current) {
+          fail();
+        }
       }
     };
 
@@ -215,40 +129,33 @@ const useResolvedHighlight = (
       isMounted = false;
       clearTimeout(timeoutControl.current.timeoutId);
     };
-  }, [highlighterFactory, input]);
+  }, [fail, highlighterFactory, input, reset, resolve, start]);
 
   return state;
 };
 
-/**
- * Base hook for syntax highlighting using Shiki.
- * This is the core implementation used by all entry points.
- *
- * @param code - The code to highlight
- * @param lang - Language for highlighting
- * @param themeInput - Theme or themes to use
- * @param options - Highlighting options
- * @param highlighterFactory - Factory function to create highlighter (internal use)
- */
 export const useShikiHighlighter = (
   code: string,
-  lang: Language,
-  themeInput: Theme | Themes,
+  language: Language,
+  theme: Theme | Themes,
   options: HighlighterOptions = {},
   highlighterFactory: HighlighterFactory
 ) => {
-  // Stabilize options, language and theme inputs to prevent unnecessary
-  // re-renders or recalculations when object references change
-  const stableLang = useStableValue(lang);
-  const stableTheme = useStableValue(themeInput);
-  const stableOpts = useStableValue(options);
+  const stableLanguage = useStableValue(language);
+  const stableTheme = useStableValue(theme);
+  const stableOptions = useStableValue(options);
 
   const input = useMemo(
     () =>
-      normalizeHighlightInput(code, stableLang, stableTheme, stableOpts),
-    [code, stableLang, stableTheme, stableOpts]
+      normalizeHighlightInput(
+        code,
+        stableLanguage,
+        stableTheme,
+        stableOptions
+      ),
+    [code, stableLanguage, stableTheme, stableOptions]
   );
 
   const state = useResolvedHighlight(input, highlighterFactory);
-  return unwrapHighlightState(state);
+  return getVisibleResult(state);
 };
