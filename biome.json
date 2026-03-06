@@ -22,7 +22,15 @@
         "useNamingConvention": {
           "level": "info",
           "options": {
-            "strictCase": false
+            "strictCase": false,
+            "conventions": [
+              {
+                "selector": {
+                  "kind": "objectLiteralProperty"
+                },
+                "match": "Fragment|(.+)"
+              }
+            ]
           }
         }
       },
@@ -53,6 +61,6 @@
     }
   },
   "files": {
-    "includes": ["**", "!node_modules/**", "!dist/**", "!.vscode/**"]
+    "includes": ["**", "!node_modules", "!dist", "!.vscode"]
   }
 }
