@@ -32,6 +32,31 @@ import { resolveLanguage, resolveLoadedLanguage } from './language';
 import { resolveTheme } from './theme';
 import { buildShikiOptions } from './options';
 
+type HighlighterFactory = (
+  langsToLoad: Language[],
+  themesToLoad: Theme[],
+  engine?: Awaitable<RegexEngine>
+) => Promise<Highlighter | HighlighterCore>;
+
+type HighlightRequest = {
+  code: string;
+  languageId: string;
+  langsToLoad: Language[];
+  themesToLoad: Theme[];
+  shikiOptions: ReturnType<typeof buildShikiOptions>;
+  outputFormat: HighlighterOptions['outputFormat'];
+  highlighter?: Highlighter | HighlighterCore;
+  engine?: Awaitable<RegexEngine>;
+};
+
+type HighlightPayload =
+  | { type: 'html'; value: string }
+  | { type: 'react'; value: ReactNode };
+
+type HighlightState =
+  | { status: 'idle' }
+  | { status: 'resolved'; payload: HighlightPayload };
+
 /**
  * Returns detected embedded languages that are available in the current bundle.
  */
@@ -45,6 +70,136 @@ const getEmbeddedLanguages = (
   return guessEmbeddedLanguages(code, languageId).flatMap(
     (language) => bundled[language] ?? []
   );
+};
+
+const createHighlightRequest = (
+  code: string,
+  lang: Language,
+  themeInput: Theme | Themes,
+  options: HighlighterOptions
+): HighlightRequest => {
+  const { languageId, langsToLoad } = resolveLanguage(
+    lang,
+    options.customLanguages,
+    options.langAlias,
+    options.preloadLanguages
+  );
+  const resolvedTheme = resolveTheme(themeInput);
+
+  return {
+    code,
+    languageId,
+    langsToLoad,
+    themesToLoad: resolvedTheme.themesToLoad,
+    shikiOptions: buildShikiOptions({
+      languageId,
+      resolvedTheme,
+      options,
+    }),
+    outputFormat: options.outputFormat,
+    highlighter: options.highlighter,
+    engine: options.engine,
+  };
+};
+
+const renderHighlightPayload = (
+  code: string,
+  highlighter: Highlighter | HighlighterCore,
+  request: HighlightRequest
+): HighlightPayload => {
+  const langToUse = resolveLoadedLanguage(
+    request.languageId,
+    highlighter.getLoadedLanguages()
+  );
+  const finalOptions = { ...request.shikiOptions, lang: langToUse };
+
+  return request.outputFormat === 'html'
+    ? {
+        type: 'html',
+        value: highlighter.codeToHtml(code, finalOptions),
+      }
+    : {
+        type: 'react',
+        value: toJsxRuntime(highlighter.codeToHast(code, finalOptions), {
+          jsx,
+          jsxs,
+          Fragment,
+        }),
+      };
+};
+
+const runHighlightRequest = async (
+  request: HighlightRequest,
+  highlighterFactory: HighlighterFactory
+): Promise<HighlightPayload> => {
+  const highlighter = request.highlighter
+    ? request.highlighter
+    : await highlighterFactory(
+        request.langsToLoad,
+        request.themesToLoad,
+        request.engine
+      );
+
+  // Load embedded language grammars (e.g. ```python inside markdown)
+  if (!request.highlighter) {
+    const embedded = getEmbeddedLanguages(
+      request.code,
+      request.languageId,
+      highlighter
+    );
+    if (embedded.length > 0) {
+      await highlighter.loadLanguage(...embedded);
+    }
+  }
+
+  return renderHighlightPayload(request.code, highlighter, request);
+};
+
+const useHighlightState = (
+  request: HighlightRequest,
+  delay: number | undefined,
+  highlighterFactory: HighlighterFactory
+) => {
+  const [state, setState] = useState<HighlightState>({ status: 'idle' });
+  const requestIdRef = useRef(0);
+  const timeoutControl = useRef<TimeoutState>({
+    nextAllowedTime: 0,
+    timeoutId: undefined,
+  });
+
+  useEffect(() => {
+    let isMounted = true;
+    const requestId = ++requestIdRef.current;
+
+    const resolveHighlight = async () => {
+      if (!request.languageId) return;
+
+      const payload = await runHighlightRequest(
+        request,
+        highlighterFactory
+      );
+
+      if (isMounted && requestId === requestIdRef.current) {
+        setState({
+          status: 'resolved',
+          payload,
+        });
+      }
+    };
+
+    if (delay) {
+      throttleHighlighting(resolveHighlight, timeoutControl, delay);
+    } else {
+      resolveHighlight().catch(console.error);
+    }
+
+    return () => {
+      isMounted = false;
+      clearTimeout(timeoutControl.current.timeoutId);
+    };
+  }, [delay, highlighterFactory, request]);
+
+  return state;
 };
 
 /**
@@ -62,126 +217,29 @@ export const useShikiHighlighter = (
   lang: Language,
   themeInput: Theme | Themes,
   options: HighlighterOptions = {},
-  highlighterFactory: (
-    langsToLoad: Language[],
-    themesToLoad: Theme[],
-    engine?: Awaitable<RegexEngine>
-  ) => Promise<Highlighter | HighlighterCore>
+  highlighterFactory: HighlighterFactory
 ) => {
-  const [highlightedCode, setHighlightedCode] = useState<
-    ReactNode | string | null
-  >(null);
-  const requestIdRef = useRef(0);
-
   // Stabilize options, language and theme inputs to prevent unnecessary
   // re-renders or recalculations when object references change
   const stableLang = useStableValue(lang);
   const stableTheme = useStableValue(themeInput);
   const stableOpts = useStableValue(options);
 
-  const { languageId, langsToLoad } = useMemo(
+  const request = useMemo(
     () =>
-      resolveLanguage(
-        stableLang,
-        stableOpts.customLanguages,
-        stableOpts.langAlias,
-        stableOpts.preloadLanguages
-      ),
-    [
-      stableLang,
-      stableOpts.customLanguages,
-      stableOpts.preloadLanguages,
-      stableOpts.langAlias,
-    ]
+      createHighlightRequest(code, stableLang, stableTheme, stableOpts),
+    [code, stableLang, stableTheme, stableOpts]
   );
 
-  const resolvedTheme = useMemo(
-    () => resolveTheme(stableTheme),
-    [stableTheme]
-  );
-  const { themesToLoad } = resolvedTheme;
-
-  const timeoutControl = useRef<TimeoutState>({
-    nextAllowedTime: 0,
-    timeoutId: undefined,
-  });
-
-  const shikiOptions = useMemo(
-    () =>
-      buildShikiOptions({
-        languageId,
-        resolvedTheme,
-        options: stableOpts,
-      }),
-    [languageId, resolvedTheme, stableOpts]
-  );
-
-  useEffect(() => {
-    let isMounted = true;
-    const requestId = ++requestIdRef.current;
-
-    const highlightCode = async () => {
-      if (!languageId) return;
-
-      const highlighter = stableOpts.highlighter
-        ? stableOpts.highlighter
-        : await highlighterFactory(
-            langsToLoad,
-            themesToLoad,
-            stableOpts.engine
-          );
-
-      // Load embedded language grammars (e.g. ```python inside markdown)
-      if (!stableOpts.highlighter) {
-        const embedded = getEmbeddedLanguages(
-          code,
-          languageId,
-          highlighter
-        );
-        if (embedded.length > 0) {
-          await highlighter.loadLanguage(...embedded);
-        }
-      }
-
-      const langToUse = resolveLoadedLanguage(
-        languageId,
-        highlighter.getLoadedLanguages()
-      );
-      const finalOptions = { ...shikiOptions, lang: langToUse };
-
-      if (isMounted && requestId === requestIdRef.current) {
-        const output =
-          stableOpts.outputFormat === 'html'
-            ? highlighter.codeToHtml(code, finalOptions)
-            : toJsxRuntime(highlighter.codeToHast(code, finalOptions), {
-                jsx,
-                jsxs,
-                Fragment,
-              });
-        setHighlightedCode(output);
-      }
-    };
-
-    const { delay } = stableOpts;
-
-    if (delay) {
-      throttleHighlighting(highlightCode, timeoutControl, delay);
-    } else {
-      highlightCode().catch(console.error);
-    }
-
-    return () => {
-      isMounted = false;
-      clearTimeout(timeoutControl.current.timeoutId);
-    };
-  }, [
-    code,
-    shikiOptions,
+  const state = useHighlightState(
+    request,
     stableOpts.delay,
-    stableOpts.highlighter,
-    langsToLoad,
-    themesToLoad,
-  ]);
+    highlighterFactory
+  );
 
-  return highlightedCode;
+  if (state.status !== 'resolved') {
+    return null;
+  }
+
+  return state.payload.value;
 };

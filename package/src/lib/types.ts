@@ -163,12 +163,14 @@ interface TimeoutState {
 /**
  * Public API signature for the useShikiHighlighter hook.
  */
+type HighlightedCode = ReactNode | string | null;
+
 export type UseShikiHighlighter = (
   code: string,
   lang: Language,
   themeInput: Theme | Themes,
   options?: HighlighterOptions
-) => ReactNode | string | null;
+) => HighlightedCode;
 
 export type {
   Language,
@@ -177,4 +179,5 @@ export type {
   Element,
   TimeoutState,
   HighlighterOptions,
+  HighlightedCode,
 };
