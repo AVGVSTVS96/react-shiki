@@ -1,4 +1,4 @@
-import { render, waitFor } from '@testing-library/react';
+import { act, render, waitFor } from '@testing-library/react';
 import { vi } from 'vitest';
 import {
   useShikiHighlighter,
@@ -239,6 +239,86 @@ describe('useShikiHighlighter Hook', () => {
         expect(preElement).toHaveAttribute(
           'data-custom-transformer',
           'applied'
+        );
+      });
+    });
+  });
+
+  describe('Async robustness', () => {
+    test('ignores stale highlight results from earlier requests', async () => {
+      const deferreds: Array<{
+        resolve: (highlighter: Highlighter) => void;
+      }> = [];
+
+      const createDeferredFactory = vi.fn(
+        () =>
+          new Promise<Highlighter>((resolve) => {
+            deferreds.push({ resolve });
+          })
+      );
+
+      const oldHighlighter = {
+        getBundledLanguages: vi.fn(() => ({})),
+        loadLanguage: vi.fn(async () => {}),
+        getLoadedLanguages: vi.fn(() => ['javascript']),
+        codeToHtml: vi.fn(
+          () => '<pre class="shiki"><code>old result</code></pre>'
+        ),
+        codeToHast: vi.fn(() => ({ type: 'root', children: [] })),
+      } as unknown as Highlighter;
+
+      const newHighlighter = {
+        getBundledLanguages: vi.fn(() => ({})),
+        loadLanguage: vi.fn(async () => {}),
+        getLoadedLanguages: vi.fn(() => ['javascript']),
+        codeToHtml: vi.fn(
+          () => '<pre class="shiki"><code>new result</code></pre>'
+        ),
+        codeToHast: vi.fn(() => ({ type: 'root', children: [] })),
+      } as unknown as Highlighter;
+
+      const Harness = ({ code }: { code: string }) => {
+        const highlighted = useBaseHook(
+          code,
+          'javascript',
+          'github-dark',
+          { outputFormat: 'html' },
+          createDeferredFactory
+        );
+
+        return (
+          <div data-testid="output">
+            {typeof highlighted === 'string' ? highlighted : ''}
+          </div>
+        );
+      };
+
+      const { rerender, getByTestId } = render(
+        <Harness code={'const oldValue = 1;'} />
+      );
+
+      rerender(<Harness code={'const newValue = 2;'} />);
+
+      expect(deferreds).toHaveLength(2);
+
+      await act(async () => {
+        deferreds[1].resolve(newHighlighter);
+        await Promise.resolve();
+      });
+
+      await waitFor(() => {
+        expect(getByTestId('output').innerHTML).toContain('new result');
+      });
+
+      await act(async () => {
+        deferreds[0].resolve(oldHighlighter);
+        await Promise.resolve();
+      });
+
+      await waitFor(() => {
+        expect(getByTestId('output').innerHTML).toContain('new result');
+        expect(getByTestId('output').innerHTML).not.toContain(
+          'old result'
         );
       });
     });
