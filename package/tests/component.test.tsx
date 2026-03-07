@@ -288,9 +288,7 @@ describe('ShikiHighlighter Component', () => {
       await waitFor(() => {
         expect(refCurrent).not.toBeNull();
         expect(refCurrent?.tagName.toLowerCase()).toBe('div');
-        expect(refCurrent?.getAttribute('data-slot')).toBe(
-          'container'
-        );
+        expect(refCurrent?.getAttribute('data-slot')).toBe('container');
       });
     });
 
@@ -309,9 +307,7 @@ describe('ShikiHighlighter Component', () => {
       await waitFor(() => {
         expect(refCurrent).not.toBeNull();
         expect(refCurrent?.tagName.toLowerCase()).toBe('div');
-        expect(refCurrent?.getAttribute('data-slot')).toBe(
-          'container'
-        );
+        expect(refCurrent?.getAttribute('data-slot')).toBe('container');
       });
     });
 
