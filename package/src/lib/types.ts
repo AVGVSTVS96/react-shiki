@@ -11,7 +11,9 @@ import type {
   BundledHighlighterOptions,
 } from 'shiki';
 
-import type { ReactNode } from 'react';
+import type { ReactElement } from 'react';
+
+import type { Awaitable, RegexEngine } from 'shiki';
 
 import type { LanguageRegistration } from 'shiki';
 
@@ -163,7 +165,24 @@ interface TimeoutState {
 /**
  * Public API signature for the useShikiHighlighter hook.
  */
-type HighlightedCode = ReactNode | string | null;
+type HighlightedCode = ReactElement | string | null;
+
+type ReactShikiOptionKeys =
+  | 'delay'
+  | 'customLanguages'
+  | 'preloadLanguages'
+  | 'outputFormat'
+  | 'highlighter'
+  | 'langAlias'
+  | 'engine';
+
+type ShikiInputOptions = Omit<HighlighterOptions, ReactShikiOptionKeys>;
+
+type HighlighterFactory = (
+  langsToLoad: Language[],
+  themesToLoad: Theme[],
+  engine?: Awaitable<RegexEngine>
+) => Promise<Highlighter | HighlighterCore>;
 
 export type UseShikiHighlighter = (
   code: string,
@@ -180,4 +199,6 @@ export type {
   TimeoutState,
   HighlighterOptions,
   HighlightedCode,
+  HighlighterFactory,
+  ShikiInputOptions,
 };

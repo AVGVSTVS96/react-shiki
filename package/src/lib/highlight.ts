@@ -5,29 +5,13 @@ import type { ReactElement } from 'react';
 import type {
   Highlighter,
   HighlighterCore,
-  Awaitable,
+  CodeToHastOptions,
   LanguageInput,
-  RegexEngine,
 } from 'shiki';
 
 import { guessEmbeddedLanguages } from 'shiki/core';
 
-import type {
-  HighlighterOptions,
-  Language,
-  Theme,
-} from './types';
-
 import { resolveLoadedLanguage } from './language';
-import { buildShikiOptions } from './options';
-
-export type HighlighterFactory = (
-  langsToLoad: Language[],
-  themesToLoad: Theme[],
-  engine?: Awaitable<RegexEngine>
-) => Promise<Highlighter | HighlighterCore>;
-
-export type ResolvedHighlight = string | ReactElement;
 
 export const getEmbeddedLanguages = (
   code: string,
@@ -44,10 +28,10 @@ export const getEmbeddedLanguages = (
 export const resolveHighlight = (
   code: string,
   languageId: string,
-  outputFormat: HighlighterOptions['outputFormat'],
-  shikiOptions: ReturnType<typeof buildShikiOptions>,
+  outputFormat: 'react' | 'html' | undefined,
+  shikiOptions: CodeToHastOptions,
   highlighter: Highlighter | HighlighterCore
-): ResolvedHighlight => {
+): string | ReactElement => {
   const lang = resolveLoadedLanguage(
     languageId,
     highlighter.getLoadedLanguages()

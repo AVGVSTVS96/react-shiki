@@ -2,6 +2,7 @@ import { useEffect, useMemo, useRef, useState } from 'react';
 
 import type {
   HighlightedCode,
+  HighlighterFactory,
   HighlighterOptions,
   Language,
   Theme,
@@ -9,12 +10,7 @@ import type {
   TimeoutState,
 } from './types';
 
-import {
-  type HighlighterFactory,
-  type ResolvedHighlight,
-  getEmbeddedLanguages,
-  resolveHighlight,
-} from './highlight';
+import { getEmbeddedLanguages, resolveHighlight } from './highlight';
 import { throttleHighlighting, useStableValue } from './utils';
 import { resolveLanguage } from './language';
 import { resolveTheme } from './theme';
@@ -28,7 +24,7 @@ export const useShikiHighlighter = (
   highlighterFactory: HighlighterFactory
 ) => {
   const [highlightedCode, setHighlightedCode] =
-    useState<ResolvedHighlight | null>(null);
+    useState<HighlightedCode>(null);
 
   const stableLang = useStableValue(lang);
   const stableTheme = useStableValue(themeInput);
@@ -56,15 +52,20 @@ export const useShikiHighlighter = (
   );
   const { themesToLoad } = resolvedTheme;
 
-  const shikiOptions = useMemo(
-    () =>
-      buildShikiOptions({
-        languageId,
-        resolvedTheme,
-        options: stableOpts,
-      }),
-    [languageId, resolvedTheme, stableOpts]
-  );
+  const shikiOptions = useMemo(() => {
+    const {
+      delay,
+      customLanguages,
+      preloadLanguages,
+      outputFormat,
+      highlighter,
+      langAlias,
+      engine,
+      ...shikiOpts
+    } = stableOpts;
+
+    return buildShikiOptions(languageId, resolvedTheme, shikiOpts);
+  }, [languageId, resolvedTheme, stableOpts]);
 
   const requestIdRef = useRef(0);
   const timeoutControl = useRef<TimeoutState>({
@@ -142,5 +143,5 @@ export const useShikiHighlighter = (
     highlighterFactory,
   ]);
 
-  return highlightedCode as HighlightedCode;
+  return highlightedCode;
 };
