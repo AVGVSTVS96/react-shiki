@@ -6,7 +6,7 @@ import {
   useStableValue,
 } from '../src/lib/utils';
 import { useShikiHighlighter as useBaseHook } from '../src/lib/hook';
-import type { Highlighter, LanguageInput } from 'shiki';
+import type { Highlighter } from 'shiki';
 import type { TimeoutState } from '../src/lib/types';
 
 describe('useStableValue', () => {
