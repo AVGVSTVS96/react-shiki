@@ -74,17 +74,11 @@ export const useShikiHighlighter = (
   });
 
   useEffect(() => {
-    let isMounted = true;
     const requestId = ++requestIdRef.current;
 
-    if (!languageId) {
-      return () => {
-        isMounted = false;
-        clearTimeout(timeoutControl.current.timeoutId);
-      };
-    }
-
     const run = async () => {
+      if (!languageId) return;
+
       try {
         const highlighter = stableOpts.highlighter
           ? stableOpts.highlighter
@@ -105,7 +99,7 @@ export const useShikiHighlighter = (
           }
         }
 
-        if (isMounted && requestId === requestIdRef.current) {
+        if (requestId === requestIdRef.current) {
           const result = resolveHighlight(
             code,
             languageId,
@@ -127,19 +121,15 @@ export const useShikiHighlighter = (
     }
 
     return () => {
-      isMounted = false;
       clearTimeout(timeoutControl.current.timeoutId);
     };
   }, [
     code,
-    shikiOptions,
-    stableOpts.delay,
-    stableOpts.highlighter,
-    stableOpts.outputFormat,
-    stableOpts.engine,
     languageId,
     langsToLoad,
     themesToLoad,
+    shikiOptions,
+    stableOpts,
     highlighterFactory,
   ]);
 
