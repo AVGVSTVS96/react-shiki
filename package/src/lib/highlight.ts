@@ -16,12 +16,10 @@ import type {
   HighlighterOptions,
   Language,
   Theme,
-  Themes,
 } from './types';
 
-import { resolveLanguage, resolveLoadedLanguage } from './language';
+import { resolveLoadedLanguage } from './language';
 import { buildShikiOptions } from './options';
-import { resolveTheme } from './theme';
 
 export type HighlighterFactory = (
   langsToLoad: Language[],
@@ -29,21 +27,9 @@ export type HighlighterFactory = (
   engine?: Awaitable<RegexEngine>
 ) => Promise<Highlighter | HighlighterCore>;
 
-export type NormalizedHighlightInput = {
-  code: string;
-  delay: number | undefined;
-  languageId: string;
-  outputFormat: HighlighterOptions['outputFormat'];
-  highlighter?: Highlighter | HighlighterCore;
-  langsToLoad: Language[];
-  themesToLoad: Theme[];
-  engine?: Awaitable<RegexEngine>;
-  shikiOptions: ReturnType<typeof buildShikiOptions>;
-};
-
 export type ResolvedHighlight = string | ReactElement;
 
-const getEmbeddedLanguages = (
+export const getEmbeddedLanguages = (
   code: string,
   languageId: string,
   highlighter: Highlighter | HighlighterCore
@@ -55,70 +41,22 @@ const getEmbeddedLanguages = (
   );
 };
 
-export const normalizeHighlightInput = (
+export const resolveHighlight = (
   code: string,
-  language: Language,
-  theme: Theme | Themes,
-  options: HighlighterOptions
-): NormalizedHighlightInput => {
-  const { languageId, langsToLoad } = resolveLanguage(
-    language,
-    options.customLanguages,
-    options.langAlias,
-    options.preloadLanguages
-  );
-  const resolvedTheme = resolveTheme(theme);
-
-  return {
-    code,
-    delay: options.delay,
-    engine: options.engine,
-    highlighter: options.highlighter,
-    languageId,
-    langsToLoad,
-    outputFormat: options.outputFormat,
-    themesToLoad: resolvedTheme.themesToLoad,
-    shikiOptions: buildShikiOptions({
-      languageId,
-      options,
-      resolvedTheme,
-    }),
-  };
-};
-
-export const resolveHighlight = async (
-  input: NormalizedHighlightInput,
-  highlighterFactory: HighlighterFactory
-): Promise<ResolvedHighlight> => {
-  const highlighter = input.highlighter
-    ? input.highlighter
-    : await highlighterFactory(
-        input.langsToLoad,
-        input.themesToLoad,
-        input.engine
-      );
-
-  if (!input.highlighter) {
-    const embedded = getEmbeddedLanguages(
-      input.code,
-      input.languageId,
-      highlighter
-    );
-
-    if (embedded.length > 0) {
-      await highlighter.loadLanguage(...embedded);
-    }
-  }
-
+  languageId: string,
+  outputFormat: HighlighterOptions['outputFormat'],
+  shikiOptions: ReturnType<typeof buildShikiOptions>,
+  highlighter: Highlighter | HighlighterCore
+): ResolvedHighlight => {
   const lang = resolveLoadedLanguage(
-    input.languageId,
+    languageId,
     highlighter.getLoadedLanguages()
   );
-  const options = { ...input.shikiOptions, lang };
+  const options = { ...shikiOptions, lang };
 
-  return input.outputFormat === 'html'
-    ? highlighter.codeToHtml(input.code, options)
-    : toJsxRuntime(highlighter.codeToHast(input.code, options), {
+  return outputFormat === 'html'
+    ? highlighter.codeToHtml(code, options)
+    : toJsxRuntime(highlighter.codeToHast(code, options), {
         jsx,
         jsxs,
         Fragment,
