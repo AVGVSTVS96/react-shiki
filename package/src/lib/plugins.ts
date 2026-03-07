@@ -1,4 +1,5 @@
 import { visit } from 'unist-util-visit';
+import type { Root } from 'hast';
 import type { Element } from './types';
 
 /**
@@ -12,9 +13,13 @@ import type { Element } from './types';
  * <ReactMarkdown rehypePlugins={[rehypeInlineCodeProperty]} />
  */
 export function rehypeInlineCodeProperty() {
-  return (tree: any): undefined => {
-    visit(tree, 'element', (node: Element, _index, parent: Element) => {
-      if (node.tagName === 'code' && parent.tagName !== 'pre') {
+  return (tree: Root): undefined => {
+    visit(tree, 'element', (node: Element, _index, parent) => {
+      if (
+        node.tagName === 'code' &&
+        parent?.type === 'element' &&
+        parent.tagName !== 'pre'
+      ) {
         node.properties.inline = true;
       }
     });

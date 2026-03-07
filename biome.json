@@ -12,6 +12,8 @@
     "rules": {
       "recommended": true,
       "correctness": {
+        "noUnusedImports": "error",
+        "noUnusedVariables": "error",
         "useExhaustiveDependencies": "off",
         "useHookAtTopLevel": "warn"
       },
@@ -61,6 +63,34 @@
     }
   },
   "files": {
-    "includes": ["**", "!node_modules", "!dist", "!.vscode"]
-  }
+    "includes": [
+      "**",
+      "!node_modules",
+      "!dist",
+      "!package/dist",
+      "!.vscode"
+    ]
+  },
+  "overrides": [
+    {
+      "includes": ["package/src/**"],
+      "linter": {
+        "rules": {
+          "suspicious": {
+            "noExplicitAny": "error"
+          }
+        }
+      }
+    },
+    {
+      "includes": ["package/tests/**"],
+      "linter": {
+        "rules": {
+          "suspicious": {
+            "noExplicitAny": "off"
+          }
+        }
+      }
+    }
+  ]
 }
