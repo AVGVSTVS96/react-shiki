@@ -4,7 +4,6 @@ import { clsx } from 'clsx';
 
 import type {
   HighlighterOptions,
-  HighlightedCode,
   Language,
   Theme,
   Themes,
@@ -101,19 +100,6 @@ export interface ShikiHighlighterProps extends HighlighterOptions {
 export const createShikiHighlighterComponent = (
   useShikiHighlighterImpl: UseShikiHighlighter
 ) => {
-  const renderHighlightedContent = (highlightedCode: HighlightedCode) => {
-    if (typeof highlightedCode === 'string') {
-      return (
-        <div
-          data-slot="content"
-          dangerouslySetInnerHTML={{ __html: highlightedCode }}
-        />
-      );
-    }
-
-    return highlightedCode;
-  };
-
   return forwardRef<HTMLElement, ShikiHighlighterProps>(
     (
       {
@@ -190,7 +176,14 @@ export const createShikiHighlighterComponent = (
               {displayLanguageId}
             </span>
           ) : null}
-          {renderHighlightedContent(highlightedCode)}
+          {typeof highlightedCode === 'string' ? (
+            <div
+              data-slot="content"
+              dangerouslySetInnerHTML={{ __html: highlightedCode }}
+            />
+          ) : (
+            highlightedCode
+          )}
         </Element>
       );
     }

@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 
 import type {
   HighlightedCode,
@@ -11,74 +11,61 @@ import type {
 
 import {
   type HighlighterFactory,
-  type NormalizedHighlightInput,
   type ResolvedHighlight,
-  normalizeHighlightInput,
+  getEmbeddedLanguages,
   resolveHighlight,
 } from './highlight';
 import { throttleHighlighting, useStableValue } from './utils';
+import { resolveLanguage } from './language';
+import { resolveTheme } from './theme';
+import { buildShikiOptions } from './options';
 
-type HighlightState =
-  | { status: 'idle' }
-  | { status: 'loading'; lastResult: ResolvedHighlight | null }
-  | { status: 'resolved'; result: ResolvedHighlight }
-  | { status: 'failed'; lastResult: ResolvedHighlight | null };
-
-const getVisibleResult = (state: HighlightState): HighlightedCode => {
-  switch (state.status) {
-    case 'resolved':
-      return state.result;
-    case 'loading':
-    case 'failed':
-      return state.lastResult;
-    case 'idle':
-      return null;
-  }
-};
-
-const useHighlightMachine = () => {
-  const [state, setState] = useState<HighlightState>({ status: 'idle' });
-
-  const getLastResult = useCallback((currentState: HighlightState) => {
-    return currentState.status === 'resolved'
-      ? currentState.result
-      : currentState.status === 'loading' ||
-          currentState.status === 'failed'
-        ? currentState.lastResult
-        : null;
-  }, []);
-
-  return {
-    fail: useCallback(() => {
-      setState((currentState) => ({
-        status: 'failed',
-        lastResult: getLastResult(currentState),
-      }));
-    }, [getLastResult]),
-
-    resolve: useCallback((result: ResolvedHighlight) => {
-      setState({
-        status: 'resolved',
-        result,
-      });
-    }, []),
-
-    start: useCallback(() => {
-      setState((currentState) => ({
-        status: 'loading',
-        lastResult: getLastResult(currentState),
-      }));
-    }, [getLastResult]),
-
-    state,
-  };
-};
-
-const useResolvedHighlight = (
-  input: NormalizedHighlightInput,
+export const useShikiHighlighter = (
+  code: string,
+  lang: Language,
+  themeInput: Theme | Themes,
+  options: HighlighterOptions = {},
   highlighterFactory: HighlighterFactory
 ) => {
-  const { fail, resolve, start, state } = useHighlightMachine();
+  const [highlightedCode, setHighlightedCode] =
+    useState<ResolvedHighlight | null>(null);
+
+  const stableLang = useStableValue(lang);
+  const stableTheme = useStableValue(themeInput);
+  const stableOpts = useStableValue(options);
+
+  const { languageId, langsToLoad } = useMemo(
+    () =>
+      resolveLanguage(
+        stableLang,
+        stableOpts.customLanguages,
+        stableOpts.langAlias,
+        stableOpts.preloadLanguages
+      ),
+    [
+      stableLang,
+      stableOpts.customLanguages,
+      stableOpts.preloadLanguages,
+      stableOpts.langAlias,
+    ]
+  );
+
+  const resolvedTheme = useMemo(
+    () => resolveTheme(stableTheme),
+    [stableTheme]
+  );
+  const { themesToLoad } = resolvedTheme;
+
+  const shikiOptions = useMemo(
+    () =>
+      buildShikiOptions({
+        languageId,
+        resolvedTheme,
+        options: stableOpts,
+      }),
+    [languageId, resolvedTheme, stableOpts]
+  );
+
   const requestIdRef = useRef(0);
   const timeoutControl = useRef<TimeoutState>({
     nextAllowedTime: 0,
@@ -89,7 +76,7 @@ const useResolvedHighlight = (
     let isMounted = true;
     const requestId = ++requestIdRef.current;
 
-    if (!input.languageId) {
+    if (!languageId) {
       return () => {
         isMounted = false;
         clearTimeout(timeoutControl.current.timeoutId);
@@ -97,25 +84,43 @@ const useResolvedHighlight = (
     }
 
     const run = async () => {
-      start();
-
       try {
-        const result = await resolveHighlight(input, highlighterFactory);
+        const highlighter = stableOpts.highlighter
+          ? stableOpts.highlighter
+          : await highlighterFactory(
+              langsToLoad,
+              themesToLoad,
+              stableOpts.engine
+            );
+
+        if (!stableOpts.highlighter) {
+          const embedded = getEmbeddedLanguages(
+            code,
+            languageId,
+            highlighter
+          );
+          if (embedded.length > 0) {
+            await highlighter.loadLanguage(...embedded);
+          }
+        }
 
         if (isMounted && requestId === requestIdRef.current) {
-          resolve(result);
+          const result = resolveHighlight(
+            code,
+            languageId,
+            stableOpts.outputFormat,
+            shikiOptions,
+            highlighter
+          );
+          setHighlightedCode(result);
         }
       } catch (error) {
         console.error(error);
-
-        if (isMounted && requestId === requestIdRef.current) {
-          fail();
-        }
       }
     };
 
-    if (input.delay) {
-      throttleHighlighting(run, timeoutControl, input.delay);
+    if (stableOpts.delay) {
+      throttleHighlighting(run, timeoutControl, stableOpts.delay);
     } else {
       run().catch(console.error);
     }
@@ -124,33 +129,18 @@ const useResolvedHighlight = (
       isMounted = false;
       clearTimeout(timeoutControl.current.timeoutId);
     };
-  }, [fail, highlighterFactory, input, resolve, start]);
+  }, [
+    code,
+    shikiOptions,
+    stableOpts.delay,
+    stableOpts.highlighter,
+    stableOpts.outputFormat,
+    stableOpts.engine,
+    languageId,
+    langsToLoad,
+    themesToLoad,
+    highlighterFactory,
+  ]);
 
-  return state;
-};
-
-export const useShikiHighlighter = (
-  code: string,
-  language: Language,
-  theme: Theme | Themes,
-  options: HighlighterOptions = {},
-  highlighterFactory: HighlighterFactory
-) => {
-  const stableLanguage = useStableValue(language);
-  const stableTheme = useStableValue(theme);
-  const stableOptions = useStableValue(options);
-
-  const input = useMemo(
-    () =>
-      normalizeHighlightInput(
-        code,
-        stableLanguage,
-        stableTheme,
-        stableOptions
-      ),
-    [code, stableLanguage, stableTheme, stableOptions]
-  );
-
-  const state = useResolvedHighlight(input, highlighterFactory);
-  return getVisibleResult(state);
+  return highlightedCode as HighlightedCode;
 };
