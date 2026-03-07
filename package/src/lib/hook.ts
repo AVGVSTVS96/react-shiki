@@ -56,10 +56,6 @@ const useHighlightMachine = () => {
       }));
     }, [getLastResult]),
 
-    reset: useCallback(() => {
-      setState({ status: 'idle' });
-    }, []),
-
     resolve: useCallback((result: ResolvedHighlight) => {
       setState({
         status: 'resolved',
@@ -82,7 +78,7 @@ const useResolvedHighlight = (
   input: NormalizedHighlightInput,
   highlighterFactory: HighlighterFactory
 ) => {
-  const { fail, reset, resolve, start, state } = useHighlightMachine();
+  const { fail, resolve, start, state } = useHighlightMachine();
   const requestIdRef = useRef(0);
   const timeoutControl = useRef<TimeoutState>({
     nextAllowedTime: 0,
@@ -94,7 +90,6 @@ const useResolvedHighlight = (
     const requestId = ++requestIdRef.current;
 
     if (!input.languageId) {
-      reset();
       return () => {
         isMounted = false;
         clearTimeout(timeoutControl.current.timeoutId);
@@ -129,7 +124,7 @@ const useResolvedHighlight = (
       isMounted = false;
       clearTimeout(timeoutControl.current.timeoutId);
     };
-  }, [fail, highlighterFactory, input, reset, resolve, start]);
+  }, [fail, highlighterFactory, input, resolve, start]);
 
   return state;
 };
