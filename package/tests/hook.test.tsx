@@ -325,6 +325,56 @@ describe('useShikiHighlighter Hook', () => {
         );
       });
     });
+
+    test('preserves the last resolved highlight when language becomes invalid', async () => {
+      const highlighter = {
+        getBundledLanguages: vi.fn(() => ({})),
+        loadLanguage: vi.fn(async () => {}),
+        getLoadedLanguages: vi.fn(() => ['javascript']),
+        codeToHtml: vi.fn(
+          () => '<pre class="shiki"><code>stable result</code></pre>'
+        ),
+        codeToHast: vi.fn(() => ({ type: 'root', children: [] })),
+      } as unknown as Highlighter;
+
+      const factory = vi.fn(async () => highlighter);
+
+      const Harness = ({ language }: { language: Language | any }) => {
+        const highlighted = useBaseHook(
+          'const value = 1;',
+          language,
+          'github-dark',
+          { outputFormat: 'html' },
+          factory
+        );
+
+        return (
+          <div data-testid="output">
+            {typeof highlighted === 'string' ? highlighted : ''}
+          </div>
+        );
+      };
+
+      const { getByTestId, rerender } = render(
+        <Harness language="javascript" />
+      );
+
+      await waitFor(() => {
+        expect(getByTestId('output').innerHTML).toContain(
+          'stable result'
+        );
+      });
+
+      rerender(<Harness language={{ scopeName: 'source.invalid' }} />);
+
+      await waitFor(() => {
+        expect(getByTestId('output').innerHTML).toContain(
+          'stable result'
+        );
+      });
+
+      expect(factory).toHaveBeenCalledTimes(1);
+    });
   });
 
   describe('Line Numbers', () => {
