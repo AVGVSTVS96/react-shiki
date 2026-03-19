@@ -156,9 +156,9 @@ export const createShikiHighlighterComponent = (
           ref={ref}
           data-testid="shiki-container"
           className={clsx(
-            'relative',
+            'rs-root',
             'not-prose',
-            addDefaultStyles && 'defaultStyles',
+            addDefaultStyles && 'rs-default-styles',
             className
           )}
           style={style}
@@ -166,7 +166,10 @@ export const createShikiHighlighterComponent = (
         >
           {showLanguage && displayLanguageId ? (
             <span
-              className={clsx('languageLabel', langClassName)}
+              className={clsx(
+                'rs-language-label',
+                langClassName
+              )}
               style={langStyle}
               id="language-label"
             >

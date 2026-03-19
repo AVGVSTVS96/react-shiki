@@ -1,55 +1,59 @@
-.relative {
-  position: relative;
-}
+@layer base {
+  .rs-root {
+    position: relative;
+  }
 
-.defaultStyles pre {
-  overflow: auto;
-  border-radius: 0.5rem;
-  padding-left: 1.5rem;
-  padding-right: 1.5rem;
-  padding-top: 1.25rem;
-  padding-bottom: 1.25rem;
-}
+  .rs-default-styles pre {
+    overflow: auto;
+    border-radius: 0.5rem;
+    padding-left: 1.5rem;
+    padding-right: 1.5rem;
+    padding-top: 1.25rem;
+    padding-bottom: 1.25rem;
+  }
 
-.languageLabel {
-  position: absolute;
-  right: 0.75rem;
-  top: 0.5rem;
-  font-family: monospace;
-  font-size: 0.75rem;
-  letter-spacing: -0.05em;
-  color: rgba(107, 114, 128, 0.85);
-}
+  .rs-language-label {
+    position: absolute;
+    right: 0.75rem;
+    top: 0.5rem;
+    font-family: monospace;
+    font-size: 0.75rem;
+    letter-spacing: -0.05em;
+    color: rgba(107, 114, 128, 0.85);
+  }
 
-.line-numbers::before {
-  counter-increment: line-number;
-  content: counter(line-number);
-  display: inline-flex;
-  justify-content: flex-end;
-  align-items: flex-start;
-  box-sizing: content-box;
-  min-width: var(--line-numbers-width, 2ch);
-  padding-left: var(--line-numbers-padding-left, 2ch);
-  padding-right: var(--line-numbers-padding-right, 2ch);
-  color: var(--line-numbers-foreground, rgba(107, 114, 128, 0.6));
-  font-size: var(--line-numbers-font-size, inherit);
-  font-weight: var(--line-numbers-font-weight, inherit);
-  line-height: var(--line-numbers-line-height, inherit);
-  font-family: var(--line-numbers-font-family, inherit);
-  opacity: var(--line-numbers-opacity, 1);
-  user-select: none;
-  pointer-events: none;
-}
+  .line-numbers::before,
+  .rs-line-number::before {
+    counter-increment: line-number;
+    content: counter(line-number);
+    display: inline-flex;
+    justify-content: flex-end;
+    align-items: flex-start;
+    box-sizing: content-box;
+    min-width: var(--line-numbers-width, 2ch);
+    padding-left: var(--line-numbers-padding-left, 2ch);
+    padding-right: var(--line-numbers-padding-right, 2ch);
+    color: var(--line-numbers-foreground, rgba(107, 114, 128, 0.6));
+    font-size: var(--line-numbers-font-size, inherit);
+    font-weight: var(--line-numbers-font-weight, inherit);
+    line-height: var(--line-numbers-line-height, inherit);
+    font-family: var(--line-numbers-font-family, inherit);
+    opacity: var(--line-numbers-opacity, 1);
+    user-select: none;
+    pointer-events: none;
+  }
 
-.has-line-numbers {
-  counter-reset: line-number calc(var(--line-start, 1) - 1);
-  --line-numbers-foreground: rgba(107, 114, 128, 0.5);
-  --line-numbers-width: 2ch;
-  --line-numbers-padding-left: 0ch;
-  --line-numbers-padding-right: 2ch;
-  --line-numbers-font-size: inherit;
-  --line-numbers-font-weight: inherit;
-  --line-numbers-line-height: inherit;
-  --line-numbers-font-family: inherit;
-  --line-numbers-opacity: 1;
+  .has-line-numbers,
+  .rs-has-line-numbers {
+    counter-reset: line-number calc(var(--line-start, 1) - 1);
+    --line-numbers-foreground: rgba(107, 114, 128, 0.5);
+    --line-numbers-width: 2ch;
+    --line-numbers-padding-left: 0ch;
+    --line-numbers-padding-right: 2ch;
+    --line-numbers-font-size: inherit;
+    --line-numbers-font-weight: inherit;
+    --line-numbers-line-height: inherit;
+    --line-numbers-font-family: inherit;
+    --line-numbers-opacity: 1;
+  }
 }

@@ -456,7 +456,10 @@ const highlightedCode = useShikiHighlighter(code, "javascript", "github-dark", {
 > ```tsx
 > import 'react-shiki/css';
 > ```
-> Or provide your own CSS counter implementation and styles for `.line-numbers` (line `span`) and `.has-line-numbers` (container `code` element)
+> Or provide your own CSS counter implementation and styles for `.rs-line-number` (line `span`) and `.rs-has-line-numbers` (container `code` element).
+> Legacy selectors `.line-numbers` and `.has-line-numbers` are still supported for this release cycle, but are deprecated and will be removed in the next major.
+
+Component-internal default classes are namespaced under `rs-*` and shipped inside `@layer base` so app-level utilities can override them more predictably.
 
 Available CSS variables for customization:
 ```css
