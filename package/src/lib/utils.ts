@@ -33,12 +33,14 @@ export const throttleHighlighting = (
   timeoutControl: React.RefObject<TimeoutState>,
   throttleMs: number
 ) => {
-  const now = Date.now();
   clearTimeout(timeoutControl.current.timeoutId);
 
-  const delay = Math.max(0, timeoutControl.current.nextAllowedTime - now);
+  const delay = Math.max(
+    0,
+    timeoutControl.current.nextAllowedTime - Date.now()
+  );
   timeoutControl.current.timeoutId = setTimeout(() => {
     performHighlight().catch(console.error);
-    timeoutControl.current.nextAllowedTime = now + throttleMs;
+    timeoutControl.current.nextAllowedTime = Date.now() + throttleMs;
   }, delay);
 };

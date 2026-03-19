@@ -1,9 +1,10 @@
-import { useMemo } from 'react';
+import { useMemo, useRef } from 'react';
 import { renderHook, render, waitFor } from '@testing-library/react';
 import { vi } from 'vitest';
-import { useStableValue } from '../src/lib/utils';
+import { throttleHighlighting, useStableValue } from '../src/lib/utils';
 import { useShikiHighlighter as useBaseHook } from '../src/lib/hook';
-import type { Highlighter, LanguageInput } from 'shiki';
+import type { Highlighter } from 'shiki';
+import type { TimeoutState } from '../src/lib/types';
 
 describe('useStableValue', () => {
   test('preserves reference for deep-equal objects across rerenders', () => {
@@ -31,7 +32,9 @@ describe('useStableValue', () => {
   });
 
   test('useMemo depending on stable value skips recomputation', () => {
-    const compute = vi.fn((opts: { theme: string }) => `styled-${opts.theme}`);
+    const compute = vi.fn(
+      (opts: { theme: string }) => `styled-${opts.theme}`
+    );
 
     const { result, rerender } = renderHook(
       ({ opts }) => {
@@ -71,9 +74,23 @@ describe('useShikiHighlighter render stability', () => {
 
     type HookFactory = Parameters<typeof useBaseHook>[4];
 
-    const Harness = ({ opts }: { opts: { outputFormat: 'html'; highlighter: Highlighter } }) => {
-      const result = useBaseHook('const x = 1', 'javascript', 'github-dark', opts, factory as HookFactory);
-      return <div data-testid="out">{typeof result === 'string' ? result : ''}</div>;
+    const Harness = ({
+      opts,
+    }: {
+      opts: { outputFormat: 'html'; highlighter: Highlighter };
+    }) => {
+      const result = useBaseHook(
+        'const x = 1',
+        'javascript',
+        'github-dark',
+        opts,
+        factory as HookFactory
+      );
+      return (
+        <div data-testid="out">
+          {typeof result === 'string' ? result : ''}
+        </div>
+      );
     };
 
     const opts = { outputFormat: 'html' as const, highlighter };
@@ -83,7 +100,8 @@ describe('useShikiHighlighter render stability', () => {
       expect(highlighter.codeToHtml).toHaveBeenCalledTimes(1);
     });
 
-    const callCount = (highlighter.codeToHtml as ReturnType<typeof vi.fn>).mock.calls.length;
+    const callCount = (highlighter.codeToHtml as ReturnType<typeof vi.fn>)
+      .mock.calls.length;
 
     // Rerender with new object reference, identical content
     rerender(<Harness opts={{ outputFormat: 'html', highlighter }} />);
@@ -95,5 +113,30 @@ describe('useShikiHighlighter render stability', () => {
     });
 
     expect(highlighter.codeToHtml).toHaveBeenCalledTimes(callCount);
+  });
+});
+
+describe('throttleHighlighting', () => {
+  test('bases next allowed time on execution time, not scheduling time', async () => {
+    vi.useFakeTimers();
+    vi.setSystemTime(new Date('2026-03-06T00:00:00.000Z'));
+
+    const performHighlight = vi.fn(async () => {});
+    const { result } = renderHook(() =>
+      useRef<TimeoutState>({
+        nextAllowedTime: Date.now() + 100,
+        timeoutId: undefined,
+      })
+    );
+
+    throttleHighlighting(performHighlight, result.current, 250);
+
+    vi.setSystemTime(new Date('2026-03-06T00:00:00.100Z'));
+    await vi.runOnlyPendingTimersAsync();
+
+    expect(performHighlight).toHaveBeenCalledTimes(1);
+    expect(result.current.current.nextAllowedTime).toBe(Date.now() + 250);
+
+    vi.useRealTimers();
   });
 });

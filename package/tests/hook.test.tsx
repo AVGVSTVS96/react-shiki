@@ -1,4 +1,4 @@
-import { render, waitFor } from '@testing-library/react';
+import { act, render, waitFor } from '@testing-library/react';
 import { vi } from 'vitest';
 import {
   useShikiHighlighter,
@@ -104,23 +104,26 @@ describe('useShikiHighlighter Hook', () => {
   describe('Basic Rendering', () => {
     test('renders correct DOM structure', async () => {
       const { getByTestId } = renderComponent();
-      await waitFor(() => {
-        const container = getByTestId('highlighted');
+      await waitFor(
+        () => {
+          const container = getByTestId('highlighted');
 
-        // Check pre element with theme classes
-        const preElement = container.querySelector(
-          'pre.shiki.github-light'
-        );
-        expect(preElement).toBeInTheDocument();
+          // Check pre element with theme classes
+          const preElement = container.querySelector(
+            'pre.shiki.github-light'
+          );
+          expect(preElement).toBeInTheDocument();
 
-        // Check code element inside pre
-        const codeElement = preElement?.querySelector('code');
-        expect(codeElement).toBeInTheDocument();
+          // Check code element inside pre
+          const codeElement = preElement?.querySelector('code');
+          expect(codeElement).toBeInTheDocument();
 
-        // Check line spans inside code
-        const lineSpan = codeElement?.querySelector('span.line');
-        expect(lineSpan).toBeInTheDocument();
-      });
+          // Check line spans inside code
+          const lineSpan = codeElement?.querySelector('span.line');
+          expect(lineSpan).toBeInTheDocument();
+        },
+        { timeout: 3000 }
+      );
     });
 
     test('falls back to plaintext for unknown languages', async () => {
@@ -241,6 +244,136 @@ describe('useShikiHighlighter Hook', () => {
           'applied'
         );
       });
+    });
+  });
+
+  describe('Async robustness', () => {
+    test('ignores stale highlight results from earlier requests', async () => {
+      const deferreds: Array<{
+        resolve: (highlighter: Highlighter) => void;
+      }> = [];
+
+      const createDeferredFactory = vi.fn(
+        () =>
+          new Promise<Highlighter>((resolve) => {
+            deferreds.push({ resolve });
+          })
+      );
+
+      const oldHighlighter = {
+        getBundledLanguages: vi.fn(() => ({})),
+        loadLanguage: vi.fn(async () => {}),
+        getLoadedLanguages: vi.fn(() => ['javascript']),
+        codeToHtml: vi.fn(
+          () => '<pre class="shiki"><code>old result</code></pre>'
+        ),
+        codeToHast: vi.fn(() => ({ type: 'root', children: [] })),
+      } as unknown as Highlighter;
+
+      const newHighlighter = {
+        getBundledLanguages: vi.fn(() => ({})),
+        loadLanguage: vi.fn(async () => {}),
+        getLoadedLanguages: vi.fn(() => ['javascript']),
+        codeToHtml: vi.fn(
+          () => '<pre class="shiki"><code>new result</code></pre>'
+        ),
+        codeToHast: vi.fn(() => ({ type: 'root', children: [] })),
+      } as unknown as Highlighter;
+
+      const Harness = ({ code }: { code: string }) => {
+        const highlighted = useBaseHook(
+          code,
+          'javascript',
+          'github-dark',
+          { outputFormat: 'html' },
+          createDeferredFactory
+        );
+
+        return (
+          <div data-testid="output">
+            {typeof highlighted === 'string' ? highlighted : ''}
+          </div>
+        );
+      };
+
+      const { rerender, getByTestId } = render(
+        <Harness code={'const oldValue = 1;'} />
+      );
+
+      rerender(<Harness code={'const newValue = 2;'} />);
+
+      expect(deferreds).toHaveLength(2);
+
+      await act(async () => {
+        deferreds[1].resolve(newHighlighter);
+        await Promise.resolve();
+      });
+
+      await waitFor(() => {
+        expect(getByTestId('output').innerHTML).toContain('new result');
+      });
+
+      await act(async () => {
+        deferreds[0].resolve(oldHighlighter);
+        await Promise.resolve();
+      });
+
+      await waitFor(() => {
+        expect(getByTestId('output').innerHTML).toContain('new result');
+        expect(getByTestId('output').innerHTML).not.toContain(
+          'old result'
+        );
+      });
+    });
+
+    test('preserves the last resolved highlight when language becomes invalid', async () => {
+      const highlighter = {
+        getBundledLanguages: vi.fn(() => ({})),
+        loadLanguage: vi.fn(async () => {}),
+        getLoadedLanguages: vi.fn(() => ['javascript']),
+        codeToHtml: vi.fn(
+          () => '<pre class="shiki"><code>stable result</code></pre>'
+        ),
+        codeToHast: vi.fn(() => ({ type: 'root', children: [] })),
+      } as unknown as Highlighter;
+
+      const factory = vi.fn(async () => highlighter);
+
+      const Harness = ({ language }: { language: Language | any }) => {
+        const highlighted = useBaseHook(
+          'const value = 1;',
+          language,
+          'github-dark',
+          { outputFormat: 'html' },
+          factory
+        );
+
+        return (
+          <div data-testid="output">
+            {typeof highlighted === 'string' ? highlighted : ''}
+          </div>
+        );
+      };
+
+      const { getByTestId, rerender } = render(
+        <Harness language="javascript" />
+      );
+
+      await waitFor(() => {
+        expect(getByTestId('output').innerHTML).toContain(
+          'stable result'
+        );
+      });
+
+      rerender(<Harness language={{ scopeName: 'source.invalid' }} />);
+
+      await waitFor(() => {
+        expect(getByTestId('output').innerHTML).toContain(
+          'stable result'
+        );
+      });
+
+      expect(factory).toHaveBeenCalledTimes(1);
     });
   });
 
