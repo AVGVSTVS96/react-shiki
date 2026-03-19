@@ -88,7 +88,7 @@ export interface ShikiHighlighterProps extends HighlighterOptions {
 
   /**
    * The HTML element that wraps the generated code block.
-   * @default 'pre'
+   * @default 'div'
    */
   as?: React.ElementType;
 }
@@ -118,7 +118,7 @@ export const createShikiHighlighterComponent = (
         showLineNumbers = false,
         startingLineNumber = 1,
         children: code,
-        as: Element = 'pre',
+        as: Element = 'div',
         customLanguages,
         preloadLanguages,
         ...shikiOptions
@@ -150,12 +150,11 @@ export const createShikiHighlighterComponent = (
         options
       );
 
-      const isHtmlOutput = typeof highlightedCode === 'string';
-
       return (
         <Element
           ref={ref}
           data-testid="shiki-container"
+          data-slot="container"
           className={clsx(
             'rs-root',
             'not-prose',
@@ -163,19 +162,24 @@ export const createShikiHighlighterComponent = (
             className
           )}
           style={style}
-          id="shiki-container"
         >
           {showLanguage && displayLanguageId ? (
             <span
-              className={clsx('rs-language-label', langClassName)}
+              data-slot="language-label"
+              className={clsx(
+                'rs-language-label',
+                langClassName
+              )}
               style={langStyle}
-              id="language-label"
             >
               {displayLanguageId}
             </span>
           ) : null}
-          {isHtmlOutput ? (
-            <div dangerouslySetInnerHTML={{ __html: highlightedCode }} />
+          {typeof highlightedCode === 'string' ? (
+            <div
+              data-slot="content"
+              dangerouslySetInnerHTML={{ __html: highlightedCode }}
+            />
           ) : (
             highlightedCode
           )}
