@@ -1,4 +1,5 @@
-import './styles.css';
+import '../styles/component.css';
+import '../styles/features.css';
 import { clsx } from 'clsx';
 
 import type {

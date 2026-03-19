@@ -1,27 +1,4 @@
 @layer base {
-  .rs-root {
-    position: relative;
-  }
-
-  .rs-default-styles pre {
-    overflow: auto;
-    border-radius: 0.5rem;
-    padding-left: 1.5rem;
-    padding-right: 1.5rem;
-    padding-top: 1.25rem;
-    padding-bottom: 1.25rem;
-  }
-
-  .rs-language-label {
-    position: absolute;
-    right: 0.75rem;
-    top: 0.5rem;
-    font-family: monospace;
-    font-size: 0.75rem;
-    letter-spacing: -0.05em;
-    color: rgba(107, 114, 128, 0.85);
-  }
-
   .line-numbers::before,
   .rs-line-number::before {
     counter-increment: line-number;
