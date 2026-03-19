@@ -11,17 +11,15 @@ const codeSample = 'console.log("Hello World");';
 // Test utilities
 const getContainer = (container: HTMLElement) =>
   container.querySelector(
-    '[data-slot="container"]'
+    '[data-testid="shiki-container"]'
   ) as HTMLElement | null;
 
 const getLanguageLabel = (container: HTMLElement | null) =>
-  container?.querySelector(
-    '[data-slot="language-label"]'
-  ) as HTMLElement | null;
+  container?.querySelector('#language-label') as HTMLElement | null;
 
 describe('ShikiHighlighter Component', () => {
   describe('Component-specific Props', () => {
-    test('renders with default div element', async () => {
+    test('renders with default pre element', async () => {
       const { container } = render(
         <ShikiHighlighter language="javascript" theme="github-light">
           {codeSample}
@@ -31,7 +29,7 @@ describe('ShikiHighlighter Component', () => {
       await waitFor(() => {
         const containerElement = getContainer(container);
         expect(containerElement).toBeInTheDocument();
-        expect(containerElement?.tagName.toLowerCase()).toBe('div');
+        expect(containerElement?.tagName.toLowerCase()).toBe('pre');
       });
     });
 
@@ -66,6 +64,7 @@ describe('ShikiHighlighter Component', () => {
 
         expect(langLabel).toBeInTheDocument();
         expect(langLabel?.textContent).toBe('javascript');
+        expect(langLabel?.id).toBe('language-label');
       });
     });
 
@@ -226,13 +225,13 @@ describe('ShikiHighlighter Component', () => {
       );
 
       await waitFor(() => {
-        const shikiContainer = getContainer(container);
+        const shikiContainer =
+          container.querySelector('#shiki-container');
         expect(shikiContainer).toBeInTheDocument();
 
         // Should have a div with dangerouslySetInnerHTML
         const innerDiv = shikiContainer?.querySelector(':scope > div');
         expect(innerDiv).toBeInTheDocument();
-        expect(innerDiv?.getAttribute('data-slot')).toBe('content');
 
         // Should still render highlighted code
         expect(container.querySelector('pre')).toBeInTheDocument();
@@ -267,7 +266,7 @@ describe('ShikiHighlighter Component', () => {
       );
     };
 
-    test('forwards ref to the default container element (div)', async () => {
+    test('forwards ref to the default container element (pre)', async () => {
       let refCurrent: HTMLElement | null = null;
 
       render(
@@ -280,8 +279,10 @@ describe('ShikiHighlighter Component', () => {
 
       await waitFor(() => {
         expect(refCurrent).not.toBeNull();
-        expect(refCurrent?.tagName.toLowerCase()).toBe('div');
-        expect(refCurrent?.getAttribute('data-slot')).toBe('container');
+        expect(refCurrent?.tagName.toLowerCase()).toBe('pre');
+        expect(refCurrent?.getAttribute('data-testid')).toBe(
+          'shiki-container'
+        );
       });
     });
 
@@ -300,7 +301,9 @@ describe('ShikiHighlighter Component', () => {
       await waitFor(() => {
         expect(refCurrent).not.toBeNull();
         expect(refCurrent?.tagName.toLowerCase()).toBe('div');
-        expect(refCurrent?.getAttribute('data-slot')).toBe('container');
+        expect(refCurrent?.getAttribute('data-testid')).toBe(
+          'shiki-container'
+        );
       });
     });
 
@@ -319,7 +322,7 @@ describe('ShikiHighlighter Component', () => {
         expect(refCurrent).not.toBeNull();
         expect(typeof refCurrent?.focus).toBe('function');
         expect(typeof refCurrent?.getBoundingClientRect).toBe('function');
-        expect(refCurrent?.tagName.toLowerCase()).toBe('div');
+        expect(refCurrent?.tagName.toLowerCase()).toBe('pre');
       });
     });
   });
