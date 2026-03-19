@@ -5,21 +5,22 @@ import type {
   CodeToHastOptions,
 } from 'shiki';
 
-import type { ShikiInputOptions } from './types';
+import type { HighlighterOptions } from './types';
 import type { ResolvedTheme } from './theme';
 import { lineNumbersTransformer } from './transformers';
 
 const buildThemeOptions = (
   resolvedTheme: ResolvedTheme,
-  options: ShikiInputOptions
+  defaultColor: HighlighterOptions['defaultColor'],
+  cssVariablePrefix: HighlighterOptions['cssVariablePrefix']
 ):
   | CodeOptionsMultipleThemes<BundledTheme>
   | CodeOptionsSingleTheme<BundledTheme> => {
   if (resolvedTheme.isMulti) {
     return {
       themes: resolvedTheme.themes,
-      defaultColor: options.defaultColor,
-      cssVariablePrefix: options.cssVariablePrefix,
+      defaultColor,
+      cssVariablePrefix,
     } as CodeOptionsMultipleThemes<BundledTheme>;
   }
 
@@ -31,9 +32,16 @@ const buildThemeOptions = (
 export const buildShikiOptions = (
   languageId: string,
   resolvedTheme: ResolvedTheme,
-  options: ShikiInputOptions
+  options: HighlighterOptions
 ): CodeToHastOptions => {
   const {
+    delay,
+    customLanguages,
+    preloadLanguages,
+    outputFormat,
+    highlighter,
+    langAlias,
+    engine,
     defaultColor,
     cssVariablePrefix,
     showLineNumbers,
@@ -49,7 +57,7 @@ export const buildShikiOptions = (
 
   return {
     lang: languageId,
-    ...buildThemeOptions(resolvedTheme, options),
+    ...buildThemeOptions(resolvedTheme, defaultColor, cssVariablePrefix),
     ...shikiPassthrough,
     transformers,
   };

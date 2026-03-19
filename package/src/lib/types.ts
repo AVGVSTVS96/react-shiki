@@ -1,21 +1,20 @@
 import type {
+  Awaitable,
+  BundledHighlighterOptions,
   BundledLanguage,
-  SpecialLanguage,
   BundledTheme,
   CodeOptionsMultipleThemes,
-  ThemeRegistrationAny,
-  StringLiteralUnion,
   CodeToHastOptions,
   Highlighter,
   HighlighterCore,
-  BundledHighlighterOptions,
+  LanguageRegistration,
+  RegexEngine,
+  SpecialLanguage,
+  StringLiteralUnion,
+  ThemeRegistrationAny,
 } from 'shiki';
 
 import type { ReactElement } from 'react';
-
-import type { Awaitable, RegexEngine } from 'shiki';
-
-import type { LanguageRegistration } from 'shiki';
 
 import type { Element as HastElement } from 'hast';
 
@@ -167,17 +166,6 @@ interface TimeoutState {
  */
 type HighlightedCode = ReactElement | string | null;
 
-type ReactShikiOptionKeys =
-  | 'delay'
-  | 'customLanguages'
-  | 'preloadLanguages'
-  | 'outputFormat'
-  | 'highlighter'
-  | 'langAlias'
-  | 'engine';
-
-type ShikiInputOptions = Omit<HighlighterOptions, ReactShikiOptionKeys>;
-
 type HighlighterFactory = (
   langsToLoad: Language[],
   themesToLoad: Theme[],
@@ -200,5 +188,4 @@ export type {
   HighlighterOptions,
   HighlightedCode,
   HighlighterFactory,
-  ShikiInputOptions,
 };

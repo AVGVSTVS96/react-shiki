@@ -35,7 +35,10 @@ export const throttleHighlighting = (
 ) => {
   clearTimeout(timeoutControl.current.timeoutId);
 
-  const delay = Math.max(0, timeoutControl.current.nextAllowedTime - Date.now());
+  const delay = Math.max(
+    0,
+    timeoutControl.current.nextAllowedTime - Date.now()
+  );
   timeoutControl.current.timeoutId = setTimeout(() => {
     performHighlight().catch(console.error);
     timeoutControl.current.nextAllowedTime = Date.now() + throttleMs;
