@@ -1,4 +1,5 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
+import type { CodeToHastOptions } from 'shiki';
 
 import type {
   HighlightedCode,
@@ -16,6 +17,45 @@ import { resolveLanguage } from './language';
 import { resolveTheme } from './theme';
 import { buildShikiOptions } from './options';
 
+export interface ResolvedHighlightInput {
+  languageId: string;
+  langsToLoad: Language[];
+  themesToLoad: Theme[];
+  shikiOptions: CodeToHastOptions;
+}
+
+export async function highlight(
+  code: string,
+  resolved: ResolvedHighlightInput,
+  opts: Pick<
+    HighlighterOptions,
+    'highlighter' | 'outputFormat' | 'engine'
+  >,
+  factory: HighlighterFactory
+) {
+  const { languageId, langsToLoad, themesToLoad, shikiOptions } =
+    resolved;
+
+  const hl =
+    opts.highlighter ??
+    (await factory(langsToLoad, themesToLoad, opts.engine));
+
+  if (!opts.highlighter) {
+    const embedded = getEmbeddedLanguages(code, languageId, hl);
+    if (embedded.length > 0) {
+      await hl.loadLanguage(...embedded);
+    }
+  }
+
+  return resolveHighlight(
+    code,
+    languageId,
+    opts.outputFormat,
+    shikiOptions,
+    hl
+  );
+}
+
 export const useShikiHighlighter = (
   code: string,
   lang: Language,
@@ -30,44 +70,27 @@ export const useShikiHighlighter = (
   const stableTheme = useStableValue(themeInput);
   const stableOpts = useStableValue(options);
 
-  const { languageId, langsToLoad } = useMemo(
-    () =>
-      resolveLanguage(
-        stableLang,
-        stableOpts.customLanguages,
-        stableOpts.langAlias,
-        stableOpts.preloadLanguages
-      ),
-    [
+  const resolved = useMemo(() => {
+    const { languageId, langsToLoad } = resolveLanguage(
       stableLang,
       stableOpts.customLanguages,
-      stableOpts.preloadLanguages,
       stableOpts.langAlias,
-    ]
-  );
+      stableOpts.preloadLanguages
+    );
 
-  const resolvedTheme = useMemo(
-    () => resolveTheme(stableTheme),
-    [stableTheme]
-  );
-  const { themesToLoad } = resolvedTheme;
+    const theme = resolveTheme(stableTheme);
 
-  const shikiOptions = useMemo(() => {
-    const {
-      delay,
-      customLanguages,
-      preloadLanguages,
-      outputFormat,
-      highlighter,
-      langAlias,
-      engine,
-      ...shikiOpts
-    } = stableOpts;
-
-    return buildShikiOptions(languageId, resolvedTheme, shikiOpts);
-  }, [languageId, resolvedTheme, stableOpts]);
+    const shikiOptions = buildShikiOptions(languageId, theme, stableOpts);
+    return {
+      languageId,
+      langsToLoad,
+      themesToLoad: theme.themesToLoad,
+      shikiOptions,
+    };
+  }, [stableLang, stableTheme, stableOpts]);
 
   const requestIdRef = useRef(0);
+
   const timeoutControl = useRef<TimeoutState>({
     nextAllowedTime: 0,
     timeoutId: undefined,
@@ -76,37 +99,17 @@ export const useShikiHighlighter = (
   useEffect(() => {
     const requestId = ++requestIdRef.current;
 
+    if (!resolved.languageId) return;
+
     const run = async () => {
-      if (!languageId) return;
-
       try {
-        const highlighter = stableOpts.highlighter
-          ? stableOpts.highlighter
-          : await highlighterFactory(
-              langsToLoad,
-              themesToLoad,
-              stableOpts.engine
-            );
-
-        if (!stableOpts.highlighter) {
-          const embedded = getEmbeddedLanguages(
-            code,
-            languageId,
-            highlighter
-          );
-          if (embedded.length > 0) {
-            await highlighter.loadLanguage(...embedded);
-          }
-        }
-
+        const result = await highlight(
+          code,
+          resolved,
+          stableOpts,
+          highlighterFactory
+        );
         if (requestId === requestIdRef.current) {
-          const result = resolveHighlight(
-            code,
-            languageId,
-            stableOpts.outputFormat,
-            shikiOptions,
-            highlighter
-          );
           setHighlightedCode(result);
         }
       } catch (error) {
@@ -117,21 +120,13 @@ export const useShikiHighlighter = (
     if (stableOpts.delay) {
       throttleHighlighting(run, timeoutControl, stableOpts.delay);
     } else {
-      run().catch(console.error);
+      run();
     }
 
     return () => {
       clearTimeout(timeoutControl.current.timeoutId);
     };
-  }, [
-    code,
-    languageId,
-    langsToLoad,
-    themesToLoad,
-    shikiOptions,
-    stableOpts,
-    highlighterFactory,
-  ]);
+  }, [code, resolved, stableOpts, highlighterFactory]);
 
   return highlightedCode;
 };
