@@ -28,10 +28,11 @@
   "types": "./dist/index.d.ts",
   "files": [
     "dist",
-    "src/lib/features.css"
+    "src/styles/features.css"
   ],
   "sideEffects": [
-    "src/lib/features.css"
+    "src/styles/component.css",
+    "src/styles/features.css"
   ],
   "publishConfig": {
     "access": "public",
@@ -50,7 +51,7 @@
       "types": "./dist/core.d.ts",
       "default": "./dist/core.js"
     },
-    "./css": "./src/lib/features.css"
+    "./css": "./src/styles/features.css"
   },
   "scripts": {
     "dev": "tsup --watch",
