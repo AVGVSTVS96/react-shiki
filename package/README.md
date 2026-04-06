@@ -457,19 +457,19 @@ const highlightedCode = useShikiHighlighter(code, "javascript", "github-dark", {
 > import 'react-shiki/css';
 > ```
 > Or provide your own CSS counter implementation and styles for `.rs-line-number` (line `span`) and `.rs-has-line-numbers` (container `code` element).
-> Legacy selectors `.line-numbers` and `.has-line-numbers` are still supported for this release cycle, but are deprecated and will be removed in the next major.
+> Legacy `.line-numbers` / `.has-line-numbers` selectors and unprefixed line-number CSS variables are still supported for this release cycle, but are deprecated and will be removed in the next major.
 
 Component-internal default classes are namespaced under `rs-*` and shipped inside `@layer base` so app-level utilities can override them more predictably.
 
 Available CSS variables for customization:
 ```css
---line-numbers-foreground: rgba(107, 114, 128, 0.5);
---line-numbers-width: 2ch;
---line-numbers-padding-left: 0ch;
---line-numbers-padding-right: 2ch;
---line-numbers-font-size: inherit;
---line-numbers-font-weight: inherit;
---line-numbers-opacity: 1;
+--rs-line-numbers-foreground: rgba(107, 114, 128, 0.5);
+--rs-line-numbers-width: 2ch;
+--rs-line-numbers-padding-left: 0ch;
+--rs-line-numbers-padding-right: 2ch;
+--rs-line-numbers-font-size: inherit;
+--rs-line-numbers-font-weight: inherit;
+--rs-line-numbers-opacity: 1;
 ```
 
 You can customize them in your own CSS or by using the style prop on the component:
@@ -479,8 +479,8 @@ You can customize them in your own CSS or by using the style prop on the compone
   theme="github-dark"
   showLineNumbers
   style={{
-    '--line-numbers-foreground': '#60a5fa',
-    '--line-numbers-width': '3ch'
+    '--rs-line-numbers-foreground': '#60a5fa',
+    '--rs-line-numbers-width': '3ch'
   }}
 >
   {code}
