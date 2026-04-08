@@ -1,0 +1,36 @@
+@layer base {
+  .line-numbers::before,
+  .rs-line-number::before {
+    counter-increment: line-number;
+    content: counter(line-number);
+    display: inline-flex;
+    justify-content: flex-end;
+    align-items: flex-start;
+    box-sizing: content-box;
+    min-width: var(--rs-line-numbers-width, 2ch);
+    padding-left: var(--rs-line-numbers-padding-left, 2ch);
+    padding-right: var(--rs-line-numbers-padding-right, 2ch);
+    color: var(--rs-line-numbers-foreground, rgba(107, 114, 128, 0.6));
+    font-size: var(--rs-line-numbers-font-size, inherit);
+    font-weight: var(--rs-line-numbers-font-weight, inherit);
+    line-height: var(--rs-line-numbers-line-height, inherit);
+    font-family: var(--rs-line-numbers-font-family, inherit);
+    opacity: var(--rs-line-numbers-opacity, 1);
+    user-select: none;
+    pointer-events: none;
+  }
+
+  .has-line-numbers,
+  .rs-has-line-numbers {
+    counter-reset: line-number calc(var(--line-start, 1) - 1);
+    --rs-line-numbers-foreground: var(--line-numbers-foreground, rgba(107, 114, 128, 0.5));
+    --rs-line-numbers-width: var(--line-numbers-width, 2ch);
+    --rs-line-numbers-padding-left: var(--line-numbers-padding-left, 0ch);
+    --rs-line-numbers-padding-right: var(--line-numbers-padding-right, 2ch);
+    --rs-line-numbers-font-size: var(--line-numbers-font-size, inherit);
+    --rs-line-numbers-font-weight: var(--line-numbers-font-weight, inherit);
+    --rs-line-numbers-line-height: var(--line-numbers-line-height, inherit);
+    --rs-line-numbers-font-family: var(--line-numbers-font-family, inherit);
+    --rs-line-numbers-opacity: var(--line-numbers-opacity, 1);
+  }
+}

@@ -9,6 +9,7 @@ export function lineNumbersTransformer(startLine = 1): ShikiTransformer {
     name: 'react-shiki:line-numbers',
     code(node) {
       this.addClassToHast(node, 'has-line-numbers');
+      this.addClassToHast(node, 'rs-has-line-numbers');
       if (startLine !== 1) {
         const existingStyle = (node.properties?.style as string) || '';
         const newStyle = existingStyle
@@ -22,6 +23,7 @@ export function lineNumbersTransformer(startLine = 1): ShikiTransformer {
     },
     line(node) {
       this.addClassToHast(node, 'line-numbers');
+      this.addClassToHast(node, 'rs-line-number');
       return node;
     },
   };

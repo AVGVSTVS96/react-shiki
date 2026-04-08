@@ -1,4 +1,5 @@
-import './styles.css';
+import '../styles/component.css';
+import '../styles/features.css';
 import { clsx } from 'clsx';
 
 import type {
@@ -156,9 +157,9 @@ export const createShikiHighlighterComponent = (
           ref={ref}
           data-testid="shiki-container"
           className={clsx(
-            'relative',
+            'rs-root',
             'not-prose',
-            addDefaultStyles && 'defaultStyles',
+            addDefaultStyles && 'rs-default-styles',
             className
           )}
           style={style}
@@ -166,7 +167,10 @@ export const createShikiHighlighterComponent = (
         >
           {showLanguage && displayLanguageId ? (
             <span
-              className={clsx('languageLabel', langClassName)}
+              className={clsx(
+                'rs-language-label',
+                langClassName
+              )}
               style={langStyle}
               id="language-label"
             >
