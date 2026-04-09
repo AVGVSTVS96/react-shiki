@@ -211,7 +211,7 @@ describe('ShikiHighlighter Component', () => {
 
         expect(langLabel).toHaveStyle('color: rgb(0, 0, 255)');
         expect(langLabel?.className).toContain('custom-lang-label');
-        expect(langLabel).toHaveClass('languageLabel');
+        expect(langLabel).toHaveClass('rs-language-label');
       });
     });
 
