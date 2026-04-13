@@ -28,7 +28,8 @@
   "types": "./dist/index.d.ts",
   "files": [
     "dist",
-    "src/styles/features.css"
+    "src/styles/features.css",
+    "src/styles/css.d.ts"
   ],
   "sideEffects": [
     "src/styles/component.css",
@@ -51,7 +52,10 @@
       "types": "./dist/core.d.ts",
       "default": "./dist/core.js"
     },
-    "./css": "./src/styles/features.css"
+    "./css": {
+      "types": "./src/styles/css.d.ts",
+      "default": "./src/styles/features.css"
+    }
   },
   "scripts": {
     "dev": "tsup --watch",
