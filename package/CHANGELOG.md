@@ -1,5 +1,12 @@
 # react-shiki
 
+## 0.9.3
+
+### Patch Changes
+
+- Fix: CSS specificity by utilizing CSS `@layer base` and rename classnames and line-number CSS variables to `rs-` prefixed names, with legacy selector and variable aliases kept for backwards compatibility until the next release. _[`#141`](https://github.com/AVGVSTVS96/react-shiki/pull/141) [`aa59bd5`](https://github.com/avgvstvs96/react-shiki/commit/aa59bd5ec48fa22c87e3a7c85288f4bdad19c03b) [@AVGVSTVS96](https://github.com/AVGVSTVS96)_
+- Fix: missing type definition for css _[`#144`](https://github.com/AVGVSTVS96/react-shiki/pull/144) [`6bbd930`](https://github.com/avgvstvs96/react-shiki/commit/6bbd93089a08353643a7b52c249f27272e09f55f) [@AVGVSTVS96](https://github.com/AVGVSTVS96)_
+
 ## 0.9.2
 
 ### Patch Changes
