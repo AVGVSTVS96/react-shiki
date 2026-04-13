@@ -40,7 +40,7 @@ export const throttleHighlighting = (
     timeoutControl.current.nextAllowedTime - Date.now()
   );
   timeoutControl.current.timeoutId = setTimeout(() => {
-    performHighlight().catch(console.error);
+    performHighlight();
     timeoutControl.current.nextAllowedTime = Date.now() + throttleMs;
   }, delay);
 };

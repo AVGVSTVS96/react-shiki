@@ -1,4 +1,6 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
+import { jsx, jsxs, Fragment } from 'react/jsx-runtime';
+import { toJsxRuntime } from 'hast-util-to-jsx-runtime';
 import type { CodeToHastOptions } from 'shiki';
 
 import type {
@@ -11,22 +13,23 @@ import type {
   TimeoutState,
 } from './types';
 
-import { getEmbeddedLanguages, resolveHighlight } from './highlight';
 import { throttleHighlighting, useStableValue } from './utils';
-import { resolveLanguage } from './language';
+import {
+  getEmbeddedLanguages,
+  resolveLanguage,
+  resolveLoadedLanguage,
+} from './language';
 import { resolveTheme } from './theme';
 import { buildShikiOptions } from './options';
 
-export interface ResolvedHighlightInput {
-  languageId: string;
-  langsToLoad: Language[];
-  themesToLoad: Theme[];
-  shikiOptions: CodeToHastOptions;
-}
-
 export async function highlight(
   code: string,
-  resolved: ResolvedHighlightInput,
+  resolved: {
+    languageId: string;
+    langsToLoad: Language[];
+    themesToLoad: Theme[];
+    shikiOptions: CodeToHastOptions;
+  },
   opts: Pick<
     HighlighterOptions,
     'highlighter' | 'outputFormat' | 'engine'
@@ -36,24 +39,27 @@ export async function highlight(
   const { languageId, langsToLoad, themesToLoad, shikiOptions } =
     resolved;
 
-  const hl =
+  const highlighter =
     opts.highlighter ??
-    (await factory(langsToLoad, themesToLoad, opts.engine));
+    (await (async () => {
+      const hl = await factory(langsToLoad, themesToLoad, opts.engine);
+      await hl.loadLanguage(...getEmbeddedLanguages(code, languageId, hl));
+      return hl;
+    })());
 
-  if (!opts.highlighter) {
-    const embedded = getEmbeddedLanguages(code, languageId, hl);
-    if (embedded.length > 0) {
-      await hl.loadLanguage(...embedded);
-    }
-  }
-
-  return resolveHighlight(
-    code,
+  const language = resolveLoadedLanguage(
     languageId,
-    opts.outputFormat,
-    shikiOptions,
-    hl
+    highlighter.getLoadedLanguages()
   );
+  const options = { ...shikiOptions, lang: language };
+
+  return opts.outputFormat === 'html'
+    ? highlighter.codeToHtml(code, options)
+    : toJsxRuntime(highlighter.codeToHast(code, options), {
+        jsx,
+        jsxs,
+        Fragment,
+      });
 }
 
 export const useShikiHighlighter = (
