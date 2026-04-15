@@ -1,11 +1,26 @@
 import type { Language } from './types';
-import { isSpecialLang } from 'shiki/core';
+import { guessEmbeddedLanguages, isSpecialLang } from 'shiki/core';
 import type {
   DynamicImportLanguageRegistration,
+  Highlighter,
+  HighlighterCore,
+  LanguageInput,
   LanguageRegistration,
 } from 'shiki';
 
 export const FALLBACK_LANGUAGE = 'plaintext';
+
+export const getEmbeddedLanguages = (
+  code: string,
+  languageId: string,
+  highlighter: Highlighter | HighlighterCore
+): LanguageInput[] => {
+  const bundled: Record<string, LanguageInput> =
+    highlighter.getBundledLanguages();
+  return guessEmbeddedLanguages(code, languageId).flatMap(
+    (language) => bundled[language] ?? []
+  );
+};
 
 /**
  * Resolved languages and metadata
