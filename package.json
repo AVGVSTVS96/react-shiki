@@ -19,8 +19,8 @@
     "ci:publish": "pnpm package:build && changeset publish"
   },
   "devDependencies": {
-    "@biomejs/biome": "^2.4.4",
-    "@changesets/cli": "^2.29.8",
+    "@biomejs/biome": "^2.4.13",
+    "@changesets/cli": "^2.31.0",
     "changesets-changelog-clean": "^1.3.0",
     "typescript": "^5.9.3"
   },
