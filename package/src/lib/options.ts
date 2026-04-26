@@ -21,12 +21,12 @@ const buildThemeOptions = (
       themes: resolvedTheme.themes,
       defaultColor,
       cssVariablePrefix,
-    } as CodeOptionsMultipleThemes<BundledTheme>;
+    };
   }
 
   return {
     theme: resolvedTheme.theme,
-  } as CodeOptionsSingleTheme<BundledTheme>;
+  };
 };
 
 export const buildShikiOptions = (
