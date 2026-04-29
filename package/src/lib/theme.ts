@@ -38,7 +38,7 @@ export function resolveTheme(themeInput: Theme | Themes): ResolvedTheme {
 
   if (!hasValidEntry) {
     console.warn(
-      'react-shiki: invalid multi-theme config, falling back to defaults'
+      '[react-shiki] invalid multi-theme config, falling back to defaults'
     );
     return {
       isMulti: true,

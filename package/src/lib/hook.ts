@@ -43,7 +43,9 @@ export async function highlight(
     opts.highlighter ??
     (await (async () => {
       const hl = await factory(langsToLoad, themesToLoad, opts.engine);
-      await hl.loadLanguage(...getEmbeddedLanguages(code, languageId, hl));
+      await hl.loadLanguage(
+        ...getEmbeddedLanguages(code, languageId, hl)
+      );
       return hl;
     })());
 
@@ -119,7 +121,7 @@ export const useShikiHighlighter = (
           setHighlightedCode(result);
         }
       } catch (error) {
-        console.error(error);
+        console.error('[react-shiki] highlight failed', error);
       }
     };
 
