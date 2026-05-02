@@ -1,5 +1,5 @@
-import { describe, expect, test } from 'vitest';
-import { resolveTheme } from '../src/lib/theme';
+import { describe, expect, test, vi } from 'vitest';
+import { resolveTheme, DEFAULT_THEMES } from '../src/lib/theme';
 
 const customTheme = {
   name: 'custom-theme',
@@ -18,9 +18,8 @@ describe('resolveTheme', () => {
     const result = resolveTheme('github-dark');
 
     expect(result).toEqual({
-      isMultiTheme: false,
-      themeId: 'github-dark',
-      singleTheme: 'github-dark',
+      isMulti: false,
+      theme: 'github-dark',
       themesToLoad: ['github-dark'],
     });
   });
@@ -29,9 +28,8 @@ describe('resolveTheme', () => {
     const result = resolveTheme(customTheme);
 
     expect(result).toEqual({
-      isMultiTheme: false,
-      themeId: 'custom-theme',
-      singleTheme: customTheme,
+      isMulti: false,
+      theme: customTheme,
       themesToLoad: [customTheme],
     });
   });
@@ -42,27 +40,32 @@ describe('resolveTheme', () => {
       dark: customTheme,
     });
 
-    expect(result.isMultiTheme).toBe(true);
-    expect(result.themeId).toEqual(expect.stringMatching(/^multi-/));
-    expect(result.themeId).not.toBe('multi-default');
-    expect(result.multiTheme).toEqual({
-      light: 'github-light',
-      dark: customTheme,
+    expect(result).toEqual({
+      isMulti: true,
+      themes: { light: 'github-light', dark: customTheme },
+      themesToLoad: ['github-light', customTheme],
     });
-    expect(result.themesToLoad).toEqual(['github-light', customTheme]);
   });
 
-  test('returns fallback multi-theme metadata for invalid config shape', () => {
+  test('warns and falls back to defaults for invalid config shape', () => {
+    const warnSpy = vi
+      .spyOn(console, 'warn')
+      .mockImplementation(() => {});
+
     const result = resolveTheme({
       light: '',
       dark: 123,
     } as any);
 
     expect(result).toEqual({
-      isMultiTheme: true,
-      themeId: 'multi-default',
-      multiTheme: null,
-      themesToLoad: [],
+      isMulti: true,
+      themes: DEFAULT_THEMES,
+      themesToLoad: Object.values(DEFAULT_THEMES),
     });
+    expect(warnSpy).toHaveBeenCalledWith(
+      expect.stringContaining('invalid multi-theme config')
+    );
+
+    warnSpy.mockRestore();
   });
 });

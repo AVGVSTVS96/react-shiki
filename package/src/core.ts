@@ -1,4 +1,4 @@
-import { useShikiHighlighter as useBaseHook } from './lib/hook';
+import { useHighlight } from './lib/hook';
 import { validateCoreHighlighter } from './bundles/core';
 import type { UseShikiHighlighter } from './lib/types';
 
@@ -71,7 +71,7 @@ export const useShikiHighlighter: UseShikiHighlighter = (
   // Validate that highlighter is provided
   const highlighter = validateCoreHighlighter(options.highlighter);
 
-  return useBaseHook(
+  return useHighlight(
     code,
     lang,
     themeInput,

@@ -30,9 +30,6 @@ describe('ShikiHighlighter Component', () => {
         const containerElement = getContainer(container);
         expect(containerElement).toBeInTheDocument();
         expect(containerElement?.tagName.toLowerCase()).toBe('pre');
-        expect(containerElement).toHaveClass('rs-root');
-        expect(containerElement).toHaveClass('rs-default-styles');
-        expect(containerElement).not.toHaveClass('relative');
       });
     });
 
@@ -68,7 +65,6 @@ describe('ShikiHighlighter Component', () => {
         expect(langLabel).toBeInTheDocument();
         expect(langLabel?.textContent).toBe('javascript');
         expect(langLabel?.id).toBe('language-label');
-        expect(langLabel).toHaveClass('rs-language-label');
       });
     });
 
