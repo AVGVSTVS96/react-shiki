@@ -1,5 +1,12 @@
 # react-shiki
 
+## 0.9.4
+
+### Patch Changes
+
+- Change default `ShikiHighlighter` container element from `pre` to `div` _[`#135`](https://github.com/AVGVSTVS96/react-shiki/pull/135) [`2cd48c1`](https://github.com/avgvstvs96/react-shiki/commit/2cd48c1e97bc6632e371567ffa4fbd711d347ac5) [@AVGVSTVS96](https://github.com/AVGVSTVS96)_
+- Refactor: improve highlighting stability _[`#134`](https://github.com/AVGVSTVS96/react-shiki/pull/134) [`9eeecf6`](https://github.com/avgvstvs96/react-shiki/commit/9eeecf6e4adce6a41540d0b6f61750fa9eac68f0) [@AVGVSTVS96](https://github.com/AVGVSTVS96)_
+
 ## 0.9.3
 
 ### Patch Changes
