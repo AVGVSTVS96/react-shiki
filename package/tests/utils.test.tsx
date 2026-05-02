@@ -2,7 +2,7 @@ import { useMemo, useRef } from 'react';
 import { renderHook, render, waitFor } from '@testing-library/react';
 import { vi } from 'vitest';
 import { throttleHighlighting, useStableValue } from '../src/lib/utils';
-import { useShikiHighlighter as useBaseHook } from '../src/lib/hook';
+import { useHighlight as useBaseHook } from '../src/lib/hook';
 import type { Highlighter } from 'shiki';
 import type { TimeoutState } from '../src/lib/types';
 

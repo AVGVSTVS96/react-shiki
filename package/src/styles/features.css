@@ -23,14 +23,29 @@
   .has-line-numbers,
   .rs-has-line-numbers {
     counter-reset: line-number calc(var(--line-start, 1) - 1);
-    --rs-line-numbers-foreground: var(--line-numbers-foreground, rgba(107, 114, 128, 0.5));
+    --rs-line-numbers-foreground: var(
+      --line-numbers-foreground,
+      rgba(107, 114, 128, 0.5)
+    );
     --rs-line-numbers-width: var(--line-numbers-width, 2ch);
     --rs-line-numbers-padding-left: var(--line-numbers-padding-left, 0ch);
-    --rs-line-numbers-padding-right: var(--line-numbers-padding-right, 2ch);
+    --rs-line-numbers-padding-right: var(
+      --line-numbers-padding-right,
+      2ch
+    );
     --rs-line-numbers-font-size: var(--line-numbers-font-size, inherit);
-    --rs-line-numbers-font-weight: var(--line-numbers-font-weight, inherit);
-    --rs-line-numbers-line-height: var(--line-numbers-line-height, inherit);
-    --rs-line-numbers-font-family: var(--line-numbers-font-family, inherit);
+    --rs-line-numbers-font-weight: var(
+      --line-numbers-font-weight,
+      inherit
+    );
+    --rs-line-numbers-line-height: var(
+      --line-numbers-line-height,
+      inherit
+    );
+    --rs-line-numbers-font-family: var(
+      --line-numbers-font-family,
+      inherit
+    );
     --rs-line-numbers-opacity: var(--line-numbers-opacity, 1);
   }
 }

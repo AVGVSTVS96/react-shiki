@@ -7,7 +7,7 @@ import {
 import type { Language, Theme, Themes } from '../src/lib/types';
 import type { ShikiTransformer, Highlighter, LanguageInput } from 'shiki';
 import { throttleHighlighting } from '../src/lib/utils';
-import { useShikiHighlighter as useBaseHook } from '../src/lib/hook';
+import { useHighlight as useBaseHook } from '../src/lib/hook';
 
 interface TestComponentProps {
   code: string;
