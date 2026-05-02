@@ -346,7 +346,6 @@ const highlightedCode = useShikiHighlighter(code, "tsx", tokyoNight);
 ### Custom Languages
 
 Custom languages should be passed as a TextMate grammar in JavaScript object. For example, [it should look like this](https://github.com/shikijs/textmate-grammars-themes/blob/main/packages/tm-grammars/grammars/typescript.json)
-
 ```tsx
 import mcfunction from "../langs/mcfunction.tmLanguage.json";
 
@@ -361,8 +360,7 @@ const highlightedCode = useShikiHighlighter(code, mcfunction, "github-dark");
 
 #### Preloading Languages
 
-For dynamic highlighting scenarios where language selection happens at runtime:
-`preloadLanguages` can also preload bundled language IDs, not just custom grammars.
+If highlighting is dynamic at runtime, preload custom languages. 
 
 ```tsx
 import mcfunction from "../langs/mcfunction.tmLanguage.json";
@@ -383,9 +381,12 @@ const highlightedCode = useShikiHighlighter(code, "typescript", "github-dark", {
 });
 ```
 
+> [!NOTE] 
+> Bundled language are dynamically loaded as needed, and do not need to be preloaded as long as they exist in your bundle.
+
 ### Language Aliases
 
-You can define custom aliases for languages using the `langAlias` option. This is useful when you want to use alternative names for languages:
+You can define custom aliases for languages using the `langAlias` option. This is useful when you need to support alternative names for languages:
 
 ```tsx
 // Component
@@ -452,11 +453,13 @@ const highlightedCode = useShikiHighlighter(code, "javascript", "github-dark", {
 ```
 
 > [!NOTE]
-> When using the hook with line numbers, import the CSS file for the line numbers to work:
+> When using the hook with line numbers, import the CSS file or provide your own CSS 
+> for `.rs-line-number` (line `span`) and `.rs-has-line-numbers` (container `code` element). <!-- TODO: The CSS vars/classes/selectors are poorly documented -->
 > ```tsx
 > import 'react-shiki/css';
 > ```
-> Or provide your own CSS counter implementation and styles for `.rs-line-number` (line `span`) and `.rs-has-line-numbers` (container `code` element).
+
+> [!WARNING]
 > Legacy `.line-numbers` / `.has-line-numbers` selectors and unprefixed line-number CSS variables are still supported for this release cycle, but are deprecated and will be removed in the next major.
 
 Component-internal default classes are namespaced under `rs-*` and shipped inside `@layer base` so app-level utilities can override them more predictably.
