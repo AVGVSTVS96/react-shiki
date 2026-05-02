@@ -33,6 +33,8 @@ type Language =
   | SpecialLanguage
   | undefined;
 
+type MultiThemeKey = 'dark' | 'light' | (string & {});
+
 /**
  * A Shiki BundledTheme or a custom textmate theme object
  * @see https://shiki.style/themes
@@ -56,7 +58,7 @@ type Theme = ThemeRegistrationAny | StringLiteralUnion<BundledTheme>;
  * @see https://shiki.style/guide/dual-themes
  */
 type Themes = {
-  [key: string]: ThemeRegistrationAny | StringLiteralUnion<BundledTheme>;
+  [Key in MultiThemeKey]: Theme;
 };
 
 /**
