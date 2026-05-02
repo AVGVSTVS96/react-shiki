@@ -1,4 +1,4 @@
-import { useShikiHighlighter as useBaseHook } from './lib/hook';
+import { useHighlight } from './lib/hook';
 import { createWebHighlighter } from './bundles/web';
 import type { UseShikiHighlighter } from './lib/types';
 
@@ -56,7 +56,7 @@ export const useShikiHighlighter: UseShikiHighlighter = (
   themeInput,
   options = {}
 ) => {
-  return useBaseHook(
+  return useHighlight(
     code,
     lang,
     themeInput,

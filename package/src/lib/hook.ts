@@ -64,7 +64,7 @@ export async function highlight(
       });
 }
 
-export const useShikiHighlighter = (
+export const useHighlight = (
   code: string,
   lang: Language,
   themeInput: Theme | Themes,
