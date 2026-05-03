@@ -4,7 +4,12 @@ import {
   useShikiHighlighter,
   createJavaScriptRegexEngine,
 } from '../src/index';
-import type { Language, Theme, Themes } from '../src/lib/types';
+import type {
+  HighlightResult,
+  Language,
+  Theme,
+  Themes,
+} from '../src/lib/types';
 import type { ShikiTransformer, Highlighter, LanguageInput } from 'shiki';
 import { throttleHighlighting } from '../src/lib/utils';
 import { useHighlight as useBaseHook } from '../src/lib/hook';
@@ -60,6 +65,9 @@ describe('useShikiHighlighter Hook', () => {
       getLoadedLanguages: vi.fn(() => ['markdown']),
       codeToHtml: vi.fn(() => '<pre class="shiki"><code>ok</code></pre>'),
       codeToHast: vi.fn(() => ({ type: 'root', children: [] })),
+      codeToTokens: vi.fn(() => ({
+        tokens: [[{ content: 'ok', offset: 0 }]],
+      })),
     } as unknown as Highlighter;
 
     return highlighter;
@@ -759,6 +767,38 @@ describe('useShikiHighlighter Hook', () => {
 
         // Verify the code content is preserved
         expect(container.textContent).toContain('const x = 1;');
+      });
+    });
+
+    test('returns Shiki tokens when outputFormat is tokens', async () => {
+      let capturedOutput: HighlightResult<'tokens'> = null;
+
+      const TestCapture = () => {
+        const highlighted = useShikiHighlighter(
+          'const x = 1;',
+          'javascript',
+          'github-dark',
+          { outputFormat: 'tokens' }
+        );
+        capturedOutput = highlighted;
+
+        return <div data-testid="output">ready</div>;
+      };
+
+      render(<TestCapture />);
+
+      await waitFor(() => {
+        expect(capturedOutput).toMatchObject({
+          tokens: [
+            expect.arrayContaining([
+              expect.objectContaining({
+                content: 'const',
+                offset: 0,
+              }),
+            ]),
+          ],
+        });
+        expect(capturedOutput!.tokens[0].length).toBeGreaterThan(1);
       });
     });
   });

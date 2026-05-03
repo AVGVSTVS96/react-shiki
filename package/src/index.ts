@@ -1,4 +1,4 @@
-import { useHighlight } from './lib/hook';
+import { createUseShikiHighlighter } from './lib/hook';
 import { createFullHighlighter } from './bundles/full';
 import type { UseShikiHighlighter } from './lib/types';
 
@@ -50,20 +50,8 @@ export type { LanguageRegistration } from 'shiki';
  *
  * Full bundle (~6.4MB minified, 1.2MB gzipped). For smaller bundles: `react-shiki/web` or `react-shiki/core`
  */
-export const useShikiHighlighter: UseShikiHighlighter = (
-  code,
-  lang,
-  themeInput,
-  options = {}
-) => {
-  return useHighlight(
-    code,
-    lang,
-    themeInput,
-    options,
-    createFullHighlighter
-  );
-};
+export const useShikiHighlighter: UseShikiHighlighter =
+  createUseShikiHighlighter(createFullHighlighter);
 
 /**
  * ShikiHighlighter component using the full bundle.
