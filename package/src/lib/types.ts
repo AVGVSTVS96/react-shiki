@@ -12,6 +12,7 @@ import type {
   SpecialLanguage,
   StringLiteralUnion,
   ThemeRegistrationAny,
+  TokensResult,
 } from 'shiki';
 
 import type { ReactElement } from 'react';
@@ -87,9 +88,10 @@ interface ReactShikiOptions {
    * Output format for the highlighted code.
    * - 'react': Returns React nodes (default, safer)
    * - 'html': Returns HTML string (~15-45% faster, requires dangerouslySetInnerHTML)
+   * - 'tokens': Returns Shiki tokens for custom rendering (hook only)
    * @default 'react'
    */
-  outputFormat?: 'react' | 'html';
+  outputFormat?: OutputFormat;
 
   /**
    * Custom Shiki highlighter instance to use instead of the default one.
@@ -164,9 +166,28 @@ interface TimeoutState {
 }
 
 /**
- * Public API signature for the useShikiHighlighter hook.
+ * Supported output formats and their corresponding result shapes.
  */
-type HighlightedCode = ReactElement | string | null;
+type OutputFormat = 'react' | 'html' | 'tokens';
+type ComponentOutputFormat = Exclude<OutputFormat, 'tokens'>;
+
+interface HighlightResultMap {
+  react: ReactElement;
+  html: string;
+  tokens: TokensResult;
+}
+
+type HighlightResult<F extends OutputFormat = 'react'> =
+  HighlightResultMap[F] | null;
+
+type HighlightedCode = HighlightResult<OutputFormat>;
+type ComponentHighlightedCode = HighlightResult<ComponentOutputFormat>;
+
+type BaseHighlighterOptions = Omit<HighlighterOptions, 'outputFormat'>;
+
+type ComponentHighlighterOptions = BaseHighlighterOptions & {
+  outputFormat?: ComponentOutputFormat;
+};
 
 type HighlighterFactory = (
   langsToLoad: Language[],
@@ -174,12 +195,12 @@ type HighlighterFactory = (
   engine?: Awaitable<RegexEngine>
 ) => Promise<Highlighter | HighlighterCore>;
 
-export type UseShikiHighlighter = (
+export type UseShikiHighlighter = <F extends OutputFormat = 'react'>(
   code: string,
   lang: Language,
   themeInput: Theme | Themes,
-  options?: HighlighterOptions
-) => HighlightedCode;
+  options?: BaseHighlighterOptions & { outputFormat?: F }
+) => HighlightResult<F>;
 
 export type {
   Language,
@@ -188,6 +209,13 @@ export type {
   Element,
   TimeoutState,
   HighlighterOptions,
+  BaseHighlighterOptions,
+  ComponentHighlighterOptions,
+  ComponentHighlightedCode,
   HighlightedCode,
+  HighlightResult,
+  HighlightResultMap,
+  OutputFormat,
+  ComponentOutputFormat,
   HighlighterFactory,
 };
