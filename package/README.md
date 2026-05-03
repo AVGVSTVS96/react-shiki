@@ -220,7 +220,7 @@ See [Shiki - RegExp Engines](https://shiki.style/guide/regex-engines) for more i
 | `transformers`      | `array`            | `[]`            | Custom Shiki transformers for modifying the highlighting output               |
 | `cssVariablePrefix` | `string`           | `'--shiki'`     | Prefix for CSS variables storing theme colors                                 |
 | `defaultColor`      | `string \| false`  | `'light'`       | Default theme mode when using multiple themes, can also disable default theme |
-| `outputFormat`      | `string`           | `'react'`       | Output format: 'react' for React nodes, 'html' for HTML string                 |
+| `outputFormat`      | `string`           | `'react'`       | Output format: 'react' for React nodes, 'html' for HTML string, or 'tokens' for Shiki tokens in the hook |
 | `tabindex`          | `number`           | `0`             | Tab index for the code block                                                  |
 | `decorations`       | `array`            | `[]`            | Custom decorations to wrap the highlighted tokens with                        |
 | `structure`        | `string`           | `classic`  | The structure of the generated HAST and HTML - `classic` or `inline`               |
@@ -631,7 +631,7 @@ const highlightedCode = useShikiHighlighter(code, "tsx", "github-dark", {
 
 ### Output Format Optimization
 
-`react-shiki` provides two output formats to balance safety and performance:
+`react-shiki` provides output formats to balance safety, performance, and custom rendering:
 
 **React Nodes (Default)** - Safer, no `dangerouslySetInnerHTML` required
 ```tsx
@@ -657,7 +657,24 @@ const highlightedCode = useShikiHighlighter(code, "tsx", "github-dark", {
 </ShikiHighlighter>
 ```
 
-Choose HTML output when performance is critical and you trust the code source. Use the default React output when handling untrusted content or when security is the primary concern.
+**Shiki Tokens** - hook-only output for custom renderers
+```tsx
+const highlighted = useShikiHighlighter(code, "tsx", "github-dark", {
+  outputFormat: "tokens",
+});
+
+const rendered = highlighted?.tokens.map((line, i) => (
+  <div key={i}>
+    {line.map((token, j) => (
+      <span key={j} style={{ color: token.color }}>
+        {token.content}
+      </span>
+    ))}
+  </div>
+));
+```
+
+Choose HTML output when performance is critical and you trust the code source. Use the default React output when handling untrusted content or when security is the primary concern. Use token output when you need to own rendering yourself; it is intentionally available on the hook, not the `ShikiHighlighter` component.
 
 ---
 
