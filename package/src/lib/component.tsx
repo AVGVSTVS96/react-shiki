@@ -3,7 +3,8 @@ import '../styles/features.css';
 import { clsx } from 'clsx';
 
 import type {
-  HighlighterOptions,
+  ComponentHighlighterOptions,
+  ComponentOutputFormat,
   Language,
   Theme,
   Themes,
@@ -14,7 +15,8 @@ import { forwardRef } from 'react';
 /**
  * Props for the ShikiHighlighter component
  */
-export interface ShikiHighlighterProps extends HighlighterOptions {
+export interface ShikiHighlighterProps
+  extends ComponentHighlighterOptions {
   /**
    * The programming language for syntax highlighting
    * Supports custom textmate grammar objects in addition to Shiki's bundled languages
@@ -132,7 +134,7 @@ export const createShikiHighlighterComponent = (
       ref
     ) => {
       // Destructure some options for use in hook
-      const options: HighlighterOptions = {
+      const options: ComponentHighlighterOptions = {
         delay,
         transformers,
         customLanguages,
@@ -145,12 +147,21 @@ export const createShikiHighlighterComponent = (
         ...shikiOptions,
       };
 
+      if (
+        (options as { outputFormat?: string }).outputFormat === 'tokens'
+      ) {
+        throw new Error(
+          '[react-shiki] outputFormat: "tokens" is hook-only. ' +
+            'Use useShikiHighlighter directly to render tokens.'
+        );
+      }
+
       const displayLanguageId =
         typeof language === 'object'
           ? language.name || null
           : language?.trim() || null;
 
-      const highlightedCode = useShikiHighlighterImpl(
+      const highlightedCode = useShikiHighlighterImpl<ComponentOutputFormat>(
         code,
         language,
         theme,
