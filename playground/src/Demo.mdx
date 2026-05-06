@@ -13,6 +13,7 @@ for React, powered by  [Shiki](https://shiki.matsu.io/)
 - 🔐 Shiki output is processed from HAST directly into React elements, no `dangerouslySetInnerHTML` required
 - 📦 Multiple bundle options: Full bundle (~1.2MB gz), web bundle (~695KB gz), or minimal core bundle for fine-grained bundle control
 - 🖌️ Full support for custom TextMate themes and languages
+- 🧬 Automatic highlighting of embedded languages (e.g. TypeScript fenced inside Markdown) via Shiki's `guessEmbeddedLanguages`
 - 🔧 Supports passing custom Shiki transformers to the highlighter, in addition to all other options supported by `codeToHast`
 - 🚰 Performant highlighting of streamed code, with optional throttling
 - 📚 Includes minimal default styles for code blocks
@@ -29,7 +30,7 @@ Below are examples showcasing different themes and options available in react-sh
 ### Basic Usage
 [View docs →](https://github.com/avgvstvs96/react-shiki#usage)
 
-<ShikiHighlighter language="tsx" theme="github-dark">
+<ShikiHighlighter language="tsx" theme="houston">
 {`
 import ShikiHighlighter from "react-shiki";
 
@@ -46,7 +47,7 @@ function CodeBlock() {
 ### Using the Hook
 [View docs →](https://github.com/avgvstvs96/react-shiki#usage)
 
-<ShikiHighlighter language="tsx" theme="dracula">
+<ShikiHighlighter language="tsx" theme="tokyo-night">
 {`
 import { useShikiHighlighter } from "react-shiki";
 
@@ -55,6 +56,44 @@ function CodeBlock({ code, language }) {
 
     return <div className="code-block">{highlightedCode}</div>;
 }
+`.trim()}
+</ShikiHighlighter>
+
+### Embedded Language Highlighting
+[View docs →](https://github.com/avgvstvs96/react-shiki#embedded-language-highlighting)
+
+<ShikiHighlighter language="markdown" theme="vitesse-dark">
+{`
+# Embedded language highlighting
+
+> react-shiki uses Shiki's \`guessEmbeddedLanguages\` to automatically load
+> and highlight languages nested inside other languages.
+
+## How it works
+
+- The outer block is **Markdown**
+- The inner fenced block is _TypeScript_
+- Both get highlighted, no extra config needed
+- Inner block is fenced with tildes (or with three backticks when the outer block uses four)
+
+~~~typescript
+const greet = (name: string): string => \`Hello, \${name}!\`;
+console.log(greet("Alice"));
+~~~
+
+And a little **Rust** too:
+
+~~~rust
+fn greet(name: &str) -> String {
+    format!("Hello, {}!", name)
+}
+
+fn main() {
+    println!("{}", greet("Alice"));
+}
+~~~
+
+See the [Shiki docs](https://shiki.style) for more.
 `.trim()}
 </ShikiHighlighter>
 
