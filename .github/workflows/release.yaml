@@ -28,7 +28,7 @@ jobs:
         with:
           # npm trusted publishing requires npm >= 11.5.1 and Node >= 22.14.0.
           # Node 24 ships with npm 11+.
-          node-version: 24
+          node-version: 24.15.0
           cache: "pnpm"
 
       - name: Install dependencies
