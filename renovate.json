@@ -5,9 +5,6 @@
     ":ignoreModulesAndTests",
     ":rebaseStalePrs",
     ":semanticCommitType(chore)",
-    "group:definitelyTyped",
-    "group:monorepos",
-    "group:recommended",
     "schedule:monthly",
     "replacements:all",
     "workarounds:all"
@@ -27,28 +24,10 @@
       "enabled": false
     },
     {
-      "groupName": "react dependencies",
-      "matchPackageNames": [
-        "react",
-        "react-dom",
-        "@types/react",
-        "@types/react-dom"
-      ]
-    },
-    {
-      "groupName": "playground dependencies",
-      "matchFileNames": ["playground/**"],
-      "matchUpdateTypes": ["minor", "patch", "major"]
-    },
-    {
-      "groupName": "library runtime dependencies",
-      "matchDepTypes": ["dependencies"],
-      "matchFileNames": ["package/**"]
-    },
-    {
-      "groupName": "dev dependencies",
-      "semanticCommitScope": "dev-deps",
-      "matchDepTypes": ["devDependencies"]
+      "groupName": "all non-major dependencies",
+      "groupSlug": "all-non-major",
+      "matchUpdateTypes": ["minor", "patch", "pin", "digest"],
+      "matchPackageNames": ["*"]
     }
   ]
 }
