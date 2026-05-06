@@ -1,4 +1,4 @@
-# 🎨 [react-shiki](https://npmjs.com/react-shiki)
+# 🎨 react-shiki
 
 
 A performant client-side syntax highlighting component and hook for React, built with [Shiki](https://shiki.matsu.io/).
@@ -6,7 +6,7 @@ A performant client-side syntax highlighting component and hook for React, built
 [See the demo page with highlighted code blocks showcasing several Shiki themes!](https://react-shiki.vercel.app/)
 
 <!--toc:start-->
-- 🎨 [react-shiki](https://npmjs.com/react-shiki)
+- [🎨 react-shiki](#🎨-react-shiki)
   - [Features](#features)
   - [Installation](#installation)
   - [Usage](#usage)
@@ -15,9 +15,13 @@ A performant client-side syntax highlighting component and hook for React, built
     - [`react-shiki/web` (Web Bundle)](#react-shikiweb-web-bundle)
     - [`react-shiki/core` (Minimal Bundle)](#react-shikicore-minimal-bundle)
     - [RegExp Engines](#regexp-engines)
+      - [Using Engines with Full and Web Bundles](#using-engines-with-full-and-web-bundles)
+      - [Using Engines with Core Bundle](#using-engines-with-core-bundle)
+      - [Engine Options](#engine-options)
   - [Configuration](#configuration)
     - [Common Configuration Options](#common-configuration-options)
     - [Component-specific Props](#component-specific-props)
+    - [Embedded Language Highlighting](#embedded-language-highlighting)
     - [Multi-theme Support](#multi-theme-support)
       - [Making Themes Reactive](#making-themes-reactive)
         - [Option 1: Using `light-dark()` Function (Recommended)](#option-1-using-light-dark-function-recommended)
@@ -34,7 +38,6 @@ A performant client-side syntax highlighting component and hook for React, built
   - [Performance](#performance)
     - [Throttling Real-time Highlighting](#throttling-real-time-highlighting)
     - [Output Format Optimization](#output-format-optimization)
-    - [Streaming and LLM Chat UI](#streaming-and-llm-chat-ui)
 <!--toc:end-->
 
 ## Features
@@ -43,6 +46,7 @@ A performant client-side syntax highlighting component and hook for React, built
 - 🔐 Flexible output: Choose between React elements (no `dangerouslySetInnerHTML`) or HTML strings for better performance
 - 📦 Multiple bundle options: Full bundle (~1.2MB gz), web bundle (~695KB gz), or minimal core bundle for fine-grained bundle control
 - 🖌️ Full support for custom TextMate themes and languages
+- 🧬 Automatic highlighting of embedded languages (e.g. TypeScript fenced inside Markdown) via Shiki's `guessEmbeddedLanguages`
 - 🔧 Supports passing custom Shiki transformers to the highlighter, in addition to all other options supported by `codeToHast`
 - 🚰 Performant highlighting of streamed code, with optional throttling
 - 📚 Includes minimal default styles for code blocks
@@ -239,6 +243,10 @@ The `ShikiHighlighter` component offers minimal built-in styling and customizati
 | `langClassName`    | `string`  | -       | Class name for styling the language label                  |
 | `style`            | `object`  | -       | Inline style object for the code block                     |
 | `langStyle`        | `object`  | -       | Inline style object for the language label                 |
+
+### Embedded Language Highlighting
+
+react-shiki uses Shiki's [`guessEmbeddedLanguages`](https://shiki.style) to automatically detect, load, and highlight languages nested inside other languages — for example, a TypeScript fenced code block inside a Markdown document will be highlighted as TypeScript without any extra configuration. Embedded languages are dynamically loaded on demand, as long as they exist in your bundle.
 
 ### Multi-theme Support
 
