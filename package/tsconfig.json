@@ -12,11 +12,8 @@
     "strict": true,
     "noUncheckedIndexedAccess": true,
     "noImplicitOverride": true,
+    "ignoreDeprecations": "5.0",
     "lib": ["es2022", "dom", "dom.iterable"],
-    "baseUrl": ".",
-    "paths": {
-      "@/*": ["./src/*"]
-    },
     "types": ["vitest", "node"]
   },
   "include": ["src/**/*.ts", "src/**/*.tsx"],

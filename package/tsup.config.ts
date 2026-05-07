@@ -11,7 +11,11 @@ export default defineConfig((options) => {
     },
     format: ['esm'],
     target: 'es2022',
-    dts: true,
+    dts: {
+      compilerOptions: {
+        ignoreDeprecations: '6.0',
+      },
+    },
     sourcemap: true,
     clean: !dev,
     injectStyle: true,
