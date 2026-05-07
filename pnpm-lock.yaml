@@ -39,7 +39,7 @@ importers:
   package:
     dependencies:
       '@types/react-dom':
-        specifier: '>=16.8.0'
+        specifier: '>=16.14.0'
         version: 19.1.7(@types/react@19.1.10)
       clsx:
         specifier: ^2.1.1
@@ -51,10 +51,10 @@ importers:
         specifier: ^2.3.6
         version: 2.3.6
       react:
-        specifier: '>= 16.8.0'
+        specifier: '>=16.14.0'
         version: 19.1.1
       react-dom:
-        specifier: '>= 16.8.0'
+        specifier: '>=16.14.0'
         version: 19.1.1(react@19.1.1)
       shiki:
         specifier: ^4.0.0
