@@ -167,10 +167,7 @@ export const createShikiHighlighterComponent = (
             <span
               id="language-label"
               data-slot="language-label"
-              className={clsx(
-                'rs-language-label',
-                langClassName
-              )}
+              className={clsx('rs-language-label', langClassName)}
               style={langStyle}
             >
               {displayLanguageId}

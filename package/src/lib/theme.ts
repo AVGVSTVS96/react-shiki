@@ -10,7 +10,9 @@ export type ResolvedTheme =
   | { isMulti: true; themes: Themes; themesToLoad: Theme[] }
   | { isMulti: false; theme: Theme; themesToLoad: Theme[] };
 
-const isTextmateTheme = (value: unknown): value is ThemeRegistrationAny => {
+const isTextmateTheme = (
+  value: unknown
+): value is ThemeRegistrationAny => {
   if (typeof value !== 'object' || value === null) return false;
   const v = value as Partial<ThemeRegistrationAny> & {
     settings?: unknown;
