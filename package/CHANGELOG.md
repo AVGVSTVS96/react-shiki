@@ -1,5 +1,29 @@
 # react-shiki
 
+## 0.10.0
+
+### Minor Changes
+
+- Change default `ShikiHighlighter` container element from `pre` to `div` _[`#135`](https://github.com/AVGVSTVS96/react-shiki/pull/135) [`2cd48c1`](https://github.com/avgvstvs96/react-shiki/commit/2cd48c1e97bc6632e371567ffa4fbd711d347ac5) [@AVGVSTVS96](https://github.com/AVGVSTVS96)_
+
+### Patch Changes
+
+- Migrate package build from tsup to tsdown and publish ESM output with `.mjs` and `.d.mts` entrypoints. _[`#157`](https://github.com/AVGVSTVS96/react-shiki/pull/157) [`30da8e9`](https://github.com/avgvstvs96/react-shiki/commit/30da8e938fcc0b95fd6062bb85e77f15ba2fee43) [@AVGVSTVS96](https://github.com/AVGVSTVS96)_
+- Refactor: improve highlighting stability _[`#134`](https://github.com/AVGVSTVS96/react-shiki/pull/134) [`9eeecf6`](https://github.com/avgvstvs96/react-shiki/commit/9eeecf6e4adce6a41540d0b6f61750fa9eac68f0) [@AVGVSTVS96](https://github.com/AVGVSTVS96)_
+- Updated dependency `jsdom` to `^29.1.1`. _[`#153`](https://github.com/AVGVSTVS96/react-shiki/pull/153) [`75fc5b9`](https://github.com/avgvstvs96/react-shiki/commit/75fc5b9209592192466254558c3269332db6f4cd) [@renovate](https://github.com/apps/renovate)_
+- Updated dependency `@vitejs/plugin-react` to `^6.0.1`. _[`#151`](https://github.com/AVGVSTVS96/react-shiki/pull/151) [`653d1a6`](https://github.com/avgvstvs96/react-shiki/commit/653d1a6b55369a68c29e1f1e19675450c4676043) [@renovate](https://github.com/apps/renovate)_
+- Updated dependency `html-react-parser` to `^6.1.0`. _[`#152`](https://github.com/AVGVSTVS96/react-shiki/pull/152) [`5569114`](https://github.com/avgvstvs96/react-shiki/commit/55691144dedab5fe91ccf9c525533c7955a3cf80) [@renovate](https://github.com/apps/renovate)_
+- Updated dependency `actions/node-versions` to `24.15.0`. _[`dd06826`](https://github.com/avgvstvs96/react-shiki/commit/dd068265a37b63f8c2e0ce7c21d15a7c4b857d7b) [@AVGVSTVS96](https://github.com/AVGVSTVS96)_
+- Updated dependency `@biomejs/biome` to `^2.4.14`. _[`dd06826`](https://github.com/avgvstvs96/react-shiki/commit/dd068265a37b63f8c2e0ce7c21d15a7c4b857d7b) [@AVGVSTVS96](https://github.com/AVGVSTVS96)_
+- Updated dependency `@changesets/cli` to `^2.31.0`. _[`dd06826`](https://github.com/avgvstvs96/react-shiki/commit/dd068265a37b63f8c2e0ce7c21d15a7c4b857d7b) [@AVGVSTVS96](https://github.com/AVGVSTVS96)_
+- Updated dependency `pnpm` to `10.33.4`. _[`dd06826`](https://github.com/avgvstvs96/react-shiki/commit/dd068265a37b63f8c2e0ce7c21d15a7c4b857d7b) [@AVGVSTVS96](https://github.com/AVGVSTVS96)_
+- Updated dependency `react-dom` to `^19.2.6`. _[`dd06826`](https://github.com/avgvstvs96/react-shiki/commit/dd068265a37b63f8c2e0ce7c21d15a7c4b857d7b) [@AVGVSTVS96](https://github.com/AVGVSTVS96)_
+- Updated dependency `react` to `^19.2.6`. _[`dd06826`](https://github.com/avgvstvs96/react-shiki/commit/dd068265a37b63f8c2e0ce7c21d15a7c4b857d7b) [@AVGVSTVS96](https://github.com/AVGVSTVS96)_
+- Updated dependency `shiki` to `^4.0.2`. _[`dd06826`](https://github.com/avgvstvs96/react-shiki/commit/dd068265a37b63f8c2e0ce7c21d15a7c4b857d7b) [@AVGVSTVS96](https://github.com/AVGVSTVS96)_
+- Updated dependency `@types/node` to `25.6.0`. _[`dd06826`](https://github.com/avgvstvs96/react-shiki/commit/dd068265a37b63f8c2e0ce7c21d15a7c4b857d7b) [@AVGVSTVS96](https://github.com/AVGVSTVS96)_
+- Updated dependency `@types/react-dom` to `^19.2.3`. _[`dd06826`](https://github.com/avgvstvs96/react-shiki/commit/dd068265a37b63f8c2e0ce7c21d15a7c4b857d7b) [@AVGVSTVS96](https://github.com/AVGVSTVS96)_
+- Updated dependency `@types/react` to `^19.2.14`. _[`dd06826`](https://github.com/avgvstvs96/react-shiki/commit/dd068265a37b63f8c2e0ce7c21d15a7c4b857d7b) [@AVGVSTVS96](https://github.com/AVGVSTVS96)_
+
 ## 0.9.3
 
 ### Patch Changes
