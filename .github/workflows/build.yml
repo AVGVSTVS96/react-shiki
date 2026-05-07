@@ -7,7 +7,7 @@ jobs:
     runs-on: ubuntu-latest
     strategy:
       matrix:
-        node-version: [18, 20, 22]
+        node-version: [20, 22, 24]
     steps:
       - name: Checkout
         uses: actions/checkout@v6
@@ -24,7 +24,5 @@ jobs:
       - name: Install dependencies
         run: pnpm --filter react-shiki install --frozen-lockfile
 
-
       - name: Build
         run: pnpm --filter react-shiki build
-
