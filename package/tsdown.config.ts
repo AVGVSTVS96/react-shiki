@@ -17,5 +17,9 @@ export default defineConfig((options) => {
     deps: {
       onlyBundle: ['@types/hast', '@types/unist'],
     },
+    publint: true,
+    attw: {
+      profile: 'esm-only',
+    },
   };
 });

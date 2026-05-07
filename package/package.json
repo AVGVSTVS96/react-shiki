@@ -89,6 +89,7 @@
     "unist-util-visit": "^5.1.0"
   },
   "devDependencies": {
+    "@arethetypeswrong/core": "^0.18.2",
     "@testing-library/jest-dom": "^6.9.1",
     "@testing-library/react": "^16.3.2",
     "@tsdown/css": "0.21.10",
@@ -99,6 +100,7 @@
     "@vitejs/plugin-react": "^6.0.1",
     "html-react-parser": "^6.1.0",
     "jsdom": "^29.1.1",
+    "publint": "^0.3.19",
     "tsdown": "^0.21.10",
     "vitest": "^4.0.18"
   }
