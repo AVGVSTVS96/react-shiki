@@ -4,7 +4,7 @@
     "skipLibCheck": true,
     "module": "Preserve",
     "moduleResolution": "Bundler",
-    "jsx": "preserve",
+    "jsx": "react-jsx",
     "noEmit": true,
     "resolveJsonModule": true,
     "isolatedModules": true,
@@ -12,7 +12,6 @@
     "strict": true,
     "noUncheckedIndexedAccess": true,
     "noImplicitOverride": true,
-    "ignoreDeprecations": "5.0",
     "lib": ["es2022", "dom", "dom.iterable"],
     "types": ["vitest", "node"]
   },

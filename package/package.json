@@ -11,7 +11,7 @@
   "repository": {
     "type": "git",
     "directory": "package",
-    "url": "https://github.com/AVGVSTVS96/react-shiki"
+    "url": "git+https://github.com/AVGVSTVS96/react-shiki.git"
   },
   "homepage": "https://react-shiki.vercel.app/",
   "keywords": [
@@ -24,8 +24,8 @@
     "react-syntax-highlighter"
   ],
   "type": "module",
-  "main": "./dist/index.js",
-  "types": "./dist/index.d.ts",
+  "main": "./dist/index.mjs",
+  "types": "./dist/index.d.mts",
   "files": [
     "dist",
     "src/styles/features.css",
@@ -41,16 +41,16 @@
   },
   "exports": {
     ".": {
-      "types": "./dist/index.d.ts",
-      "default": "./dist/index.js"
+      "types": "./dist/index.d.mts",
+      "default": "./dist/index.mjs"
     },
     "./web": {
-      "types": "./dist/web.d.ts",
-      "default": "./dist/web.js"
+      "types": "./dist/web.d.mts",
+      "default": "./dist/web.mjs"
     },
     "./core": {
-      "types": "./dist/core.d.ts",
-      "default": "./dist/core.js"
+      "types": "./dist/core.d.mts",
+      "default": "./dist/core.mjs"
     },
     "./css": {
       "types": "./src/styles/css.d.ts",
@@ -58,8 +58,8 @@
     }
   },
   "scripts": {
-    "dev": "tsup --watch",
-    "build": "tsup",
+    "dev": "tsdown --watch",
+    "build": "tsdown",
     "test": "vitest",
     "bench": "vitest bench",
     "lint": "biome lint .",
@@ -68,10 +68,10 @@
     "check": "tsc && biome check ."
   },
   "peerDependencies": {
-    "@types/react": ">=16.8.0",
-    "@types/react-dom": ">=16.8.0",
-    "react": ">= 16.8.0",
-    "react-dom": ">= 16.8.0"
+    "@types/react": ">=16.14.0",
+    "@types/react-dom": ">=16.14.0",
+    "react": ">=16.14.0",
+    "react-dom": ">=16.14.0"
   },
   "peerDependenciesMeta": {
     "@types/react": {
@@ -89,8 +89,10 @@
     "unist-util-visit": "^5.1.0"
   },
   "devDependencies": {
+    "@arethetypeswrong/core": "^0.18.2",
     "@testing-library/jest-dom": "^6.9.1",
     "@testing-library/react": "^16.3.2",
+    "@tsdown/css": "0.21.10",
     "@types/hast": "^3.0.4",
     "@types/jest": "^30.0.0",
     "@types/node": "25.3.3",
@@ -98,7 +100,8 @@
     "@vitejs/plugin-react": "^6.0.1",
     "html-react-parser": "^6.1.0",
     "jsdom": "^29.1.1",
-    "tsup": "^8.5.1",
-    "vitest": "^4.0.18"
+    "publint": "^0.3.19",
+    "tsdown": "^0.21.10",
+    "vitest": "^4.1.5"
   }
 }
