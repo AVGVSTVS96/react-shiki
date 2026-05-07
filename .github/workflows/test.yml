@@ -1,0 +1,32 @@
+name: Test
+
+on: [pull_request]
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        react-version: [18.3.1, 19.2.6]
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v6
+
+      - name: Install pnpm
+        uses: pnpm/action-setup@v6
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v6
+        with:
+          node-version: 24
+          cache: pnpm
+
+      - name: Install dependencies
+        run: pnpm --filter react-shiki install --frozen-lockfile
+
+      - name: Use React ${{ matrix.react-version }}
+        run: pnpm --filter react-shiki add --save-dev react@${{ matrix.react-version }} react-dom@${{ matrix.react-version }}
+
+      - name: Test
+        run: pnpm --filter react-shiki test
