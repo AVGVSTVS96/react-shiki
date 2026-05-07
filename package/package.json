@@ -97,7 +97,7 @@
     "@types/react": "catalog:",
     "@vitejs/plugin-react": "^6.0.1",
     "html-react-parser": "^6.1.0",
-    "jsdom": "^28.1.0",
+    "jsdom": "^29.1.1",
     "tsup": "^8.5.1",
     "vitest": "^4.0.18"
   }
