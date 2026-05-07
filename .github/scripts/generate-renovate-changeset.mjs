@@ -60,27 +60,36 @@ const shortSha = execFileSync("git", ["rev-parse", "--short", "HEAD"], {
   encoding: "utf8",
 }).trim();
 const packageName = JSON.parse(readFileSync("package/package.json", "utf8")).name;
-const fileName = `.changeset/renovate-${shortSha}.md`;
-const message = [
-  "---",
-  `'${packageName}': patch`,
-  "---",
-  "",
-  ...updates.map(({ packageName, to }) => {
-    const specifier = specifiers.get(packageName) ?? to;
-    return `Updated dependency \`${packageName}\` to \`${specifier}\`.`;
-  }),
-  "",
-].join("\n");
+const changesetFiles = updates.map(({ packageName: dependencyName, to }) => {
+  const specifier = specifiers.get(dependencyName) ?? to;
+  const slug = dependencyName
+    .toLowerCase()
+    .replace(/^@/, "")
+    .replace(/[^a-z0-9]+/g, "-")
+    .replace(/^-|-$/g, "");
+  const fileName = `.changeset/renovate-${shortSha}-${slug}.md`;
+  const message = [
+    "---",
+    `'${packageName}': patch`,
+    "---",
+    "",
+    `Updated dependency \`${dependencyName}\` to \`${specifier}\`.`,
+    "",
+  ].join("\n");
+
+  return { fileName, message };
+});
 
 mkdirSync(".changeset", { recursive: true });
-writeFileSync(fileName, message);
+for (const { fileName, message } of changesetFiles) {
+  writeFileSync(fileName, message);
+}
 
 if (skipCommit) {
-  console.log(`Created ${fileName}`);
+  console.log(`Created ${changesetFiles.length} changesets`);
   process.exit(0);
 }
 
-execFileSync("git", ["add", fileName], { stdio: "inherit" });
-execFileSync("git", ["commit", "-m", `chore: add ${fileName}`], { stdio: "inherit" });
+execFileSync("git", ["add", ...changesetFiles.map(({ fileName }) => fileName)], { stdio: "inherit" });
+execFileSync("git", ["commit", "-m", "chore: add renovate changesets"], { stdio: "inherit" });
 execFileSync("git", ["push"], { stdio: "inherit" });
