@@ -4,10 +4,13 @@ import { toJsxRuntime } from 'hast-util-to-jsx-runtime';
 import type { CodeToHastOptions } from 'shiki';
 
 import type {
-  HighlightedCode,
   HighlighterFactory,
   HighlighterOptions,
+  HighlighterOptionsFor,
+  HighlightResult,
+  HighlightResultMap,
   Language,
+  OutputFormat,
   Theme,
   Themes,
   TimeoutState,
@@ -22,7 +25,7 @@ import {
 import { resolveTheme } from './theme';
 import { buildShikiOptions } from './options';
 
-export async function highlight(
+export async function highlight<F extends OutputFormat = 'react'>(
   code: string,
   resolved: {
     languageId: string;
@@ -30,14 +33,14 @@ export async function highlight(
     themesToLoad: Theme[];
     shikiOptions: CodeToHastOptions;
   },
-  opts: Pick<
-    HighlighterOptions,
-    'highlighter' | 'outputFormat' | 'engine'
-  >,
+  opts: Pick<HighlighterOptions, 'highlighter' | 'engine'> & {
+    outputFormat?: F;
+  },
   factory: HighlighterFactory
-) {
+): Promise<HighlightResultMap[F]> {
   const { languageId, langsToLoad, themesToLoad, shikiOptions } =
     resolved;
+  const format: OutputFormat = opts.outputFormat ?? 'react';
 
   const highlighter =
     opts.highlighter ??
@@ -55,24 +58,29 @@ export async function highlight(
   );
   const options = { ...shikiOptions, lang: language };
 
-  return opts.outputFormat === 'html'
-    ? highlighter.codeToHtml(code, options)
-    : toJsxRuntime(highlighter.codeToHast(code, options), {
+  const outputs: { [K in OutputFormat]: () => HighlightResultMap[K] } = {
+    react: () =>
+      toJsxRuntime(highlighter.codeToHast(code, options), {
         jsx,
         jsxs,
         Fragment,
-      });
+      }),
+    html: () => highlighter.codeToHtml(code, options),
+    tokens: () => highlighter.codeToTokens(code, options),
+  };
+
+  return outputs[format]() as HighlightResultMap[F];
 }
 
-export const useHighlight = (
+export const useHighlight = <F extends OutputFormat = 'react'>(
   code: string,
   lang: Language,
   themeInput: Theme | Themes,
-  options: HighlighterOptions = {},
+  options: HighlighterOptionsFor<F> = {},
   highlighterFactory: HighlighterFactory
-) => {
+): HighlightResult<F> => {
   const [highlightedCode, setHighlightedCode] =
-    useState<HighlightedCode>(null);
+    useState<HighlightResult<F>>(null);
 
   const stableLang = useStableValue(lang);
   const stableTheme = useStableValue(themeInput);
@@ -111,7 +119,7 @@ export const useHighlight = (
 
     const run = async () => {
       try {
-        const result = await highlight(
+        const result = await highlight<F>(
           code,
           resolved,
           stableOpts,

@@ -12,6 +12,7 @@ import type {
   SpecialLanguage,
   StringLiteralUnion,
   ThemeRegistrationAny,
+  TokensResult,
 } from 'shiki';
 
 import type { ReactElement } from 'react';
@@ -87,9 +88,10 @@ interface ReactShikiOptions {
    * Output format for the highlighted code.
    * - 'react': Returns React nodes (default, safer)
    * - 'html': Returns HTML string (~15-45% faster, requires dangerouslySetInnerHTML)
+   * - 'tokens': Returns Shiki tokens for custom rendering (hook only)
    * @default 'react'
    */
-  outputFormat?: 'react' | 'html';
+  outputFormat?: OutputFormat;
 
   /**
    * Custom Shiki highlighter instance to use instead of the default one.
@@ -164,9 +166,33 @@ interface TimeoutState {
 }
 
 /**
- * Public API signature for the useShikiHighlighter hook.
+ * Supported output formats and their corresponding result shapes.
  */
-type HighlightedCode = ReactElement | string | null;
+type OutputFormat = 'react' | 'html' | 'tokens';
+type ComponentOutputFormat = Exclude<OutputFormat, 'tokens'>;
+
+interface HighlightResultMap {
+  react: ReactElement;
+  html: string;
+  tokens: TokensResult;
+}
+
+type HighlightResult<F extends OutputFormat = 'react'> =
+  | HighlightResultMap[F]
+  | null;
+
+/**
+ * Per-call options shape: every highlighter option except `outputFormat`,
+ * plus a narrowed `outputFormat?: F` so the return type can be inferred
+ * from the format the caller actually passes.
+ */
+type HighlighterOptionsFor<F extends OutputFormat> = Omit<
+  HighlighterOptions,
+  'outputFormat'
+> & { outputFormat?: F };
+
+type ComponentHighlighterOptions =
+  HighlighterOptionsFor<ComponentOutputFormat>;
 
 type HighlighterFactory = (
   langsToLoad: Language[],
@@ -174,12 +200,12 @@ type HighlighterFactory = (
   engine?: Awaitable<RegexEngine>
 ) => Promise<Highlighter | HighlighterCore>;
 
-export type UseShikiHighlighter = (
+export type UseShikiHighlighter = <F extends OutputFormat = 'react'>(
   code: string,
   lang: Language,
   themeInput: Theme | Themes,
-  options?: HighlighterOptions
-) => HighlightedCode;
+  options?: HighlighterOptionsFor<F>
+) => HighlightResult<F>;
 
 export type {
   Language,
@@ -188,6 +214,11 @@ export type {
   Element,
   TimeoutState,
   HighlighterOptions,
-  HighlightedCode,
+  HighlighterOptionsFor,
+  ComponentHighlighterOptions,
+  HighlightResult,
+  HighlightResultMap,
+  OutputFormat,
+  ComponentOutputFormat,
   HighlighterFactory,
 };

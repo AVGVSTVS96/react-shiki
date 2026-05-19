@@ -3,7 +3,8 @@ import '../styles/features.css';
 import { clsx } from 'clsx';
 
 import type {
-  HighlighterOptions,
+  ComponentHighlighterOptions,
+  ComponentOutputFormat,
   Language,
   Theme,
   Themes,
@@ -14,7 +15,8 @@ import { forwardRef } from 'react';
 /**
  * Props for the ShikiHighlighter component
  */
-export interface ShikiHighlighterProps extends HighlighterOptions {
+export interface ShikiHighlighterProps
+  extends ComponentHighlighterOptions {
   /**
    * The programming language for syntax highlighting
    * Supports custom textmate grammar objects in addition to Shiki's bundled languages
@@ -121,12 +123,13 @@ export const createShikiHighlighterComponent = (
         as: Element = 'div',
         customLanguages,
         preloadLanguages,
+        outputFormat,
         ...shikiOptions
       },
       ref
     ) => {
-      // Destructure some options for use in hook
-      const options: HighlighterOptions = {
+
+      const options: ComponentHighlighterOptions = {
         delay,
         transformers,
         customLanguages,
@@ -135,6 +138,7 @@ export const createShikiHighlighterComponent = (
         defaultColor,
         cssVariablePrefix,
         startingLineNumber,
+        outputFormat,
         ...shikiOptions,
       };
 
@@ -143,12 +147,13 @@ export const createShikiHighlighterComponent = (
           ? language.name || null
           : language?.trim() || null;
 
-      const highlightedCode = useShikiHighlighterImpl(
-        code,
-        language,
-        theme,
-        options
-      );
+      const highlightedCode =
+        useShikiHighlighterImpl<ComponentOutputFormat>(
+          code,
+          language,
+          theme,
+          options
+        );
 
       return (
         <Element
