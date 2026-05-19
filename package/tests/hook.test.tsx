@@ -6,6 +6,7 @@ import {
 } from '../src/index';
 import { useShikiHighlighter as useShikiHighlighterCore } from '../src/core';
 import type {
+  ComponentOutputFormat,
   HighlightResult,
   Language,
   Theme,
@@ -24,7 +25,7 @@ interface TestComponentProps {
   showLineNumbers?: boolean;
   startingLineNumber?: number;
   highlightLineNumbers?: number[];
-  outputFormat?: 'react' | 'html';
+  outputFormat?: ComponentOutputFormat;
   defaultColor?: string;
   cssVariablePrefix?: string;
   mergeWhitespaces?: boolean;
