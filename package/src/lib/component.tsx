@@ -123,11 +123,12 @@ export const createShikiHighlighterComponent = (
         as: Element = 'div',
         customLanguages,
         preloadLanguages,
+        outputFormat,
         ...shikiOptions
       },
       ref
     ) => {
-      // Destructure some options for use in hook
+
       const options: ComponentHighlighterOptions = {
         delay,
         transformers,
@@ -137,29 +138,22 @@ export const createShikiHighlighterComponent = (
         defaultColor,
         cssVariablePrefix,
         startingLineNumber,
+        outputFormat,
         ...shikiOptions,
       };
-
-      if (
-        (options as { outputFormat?: string }).outputFormat === 'tokens'
-      ) {
-        throw new Error(
-          '[react-shiki] outputFormat: "tokens" is hook-only. ' +
-            'Use useShikiHighlighter directly to render tokens.'
-        );
-      }
 
       const displayLanguageId =
         typeof language === 'object'
           ? language.name || null
           : language?.trim() || null;
 
-      const highlightedCode = useShikiHighlighterImpl<ComponentOutputFormat>(
-        code,
-        language,
-        theme,
-        options
-      );
+      const highlightedCode =
+        useShikiHighlighterImpl<ComponentOutputFormat>(
+          code,
+          language,
+          theme,
+          options
+        );
 
       return (
         <Element

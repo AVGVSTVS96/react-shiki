@@ -1,7 +1,7 @@
 import { useHighlight } from './lib/hook';
 import { validateCoreHighlighter } from './bundles/core';
 import type {
-  BaseHighlighterOptions,
+  HighlighterOptionsFor,
   Language,
   OutputFormat,
   Theme,
@@ -75,7 +75,7 @@ export const useShikiHighlighter: UseShikiHighlighter = <
   code: string,
   lang: Language,
   themeInput: Theme | Themes,
-  options: BaseHighlighterOptions & { outputFormat?: F } = {}
+  options: HighlighterOptionsFor<F> = {}
 ) => {
   // Validate that highlighter is provided
   const highlighter = validateCoreHighlighter(options.highlighter);

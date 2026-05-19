@@ -5,6 +5,7 @@ import {
   createJavaScriptRegexEngine,
 } from '../src/index';
 import type {
+  ComponentOutputFormat,
   HighlightResult,
   Language,
   Theme,
@@ -22,7 +23,7 @@ interface TestComponentProps {
   langAlias?: Record<string, string>;
   showLineNumbers?: boolean;
   startingLineNumber?: number;
-  outputFormat?: 'react' | 'html';
+  outputFormat?: ComponentOutputFormat;
   defaultColor?: string;
   cssVariablePrefix?: string;
   mergeWhitespaces?: boolean;

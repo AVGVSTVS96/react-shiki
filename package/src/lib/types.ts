@@ -178,16 +178,21 @@ interface HighlightResultMap {
 }
 
 type HighlightResult<F extends OutputFormat = 'react'> =
-  HighlightResultMap[F] | null;
+  | HighlightResultMap[F]
+  | null;
 
-type HighlightedCode = HighlightResult<OutputFormat>;
-type ComponentHighlightedCode = HighlightResult<ComponentOutputFormat>;
+/**
+ * Per-call options shape: every highlighter option except `outputFormat`,
+ * plus a narrowed `outputFormat?: F` so the return type can be inferred
+ * from the format the caller actually passes.
+ */
+type HighlighterOptionsFor<F extends OutputFormat> = Omit<
+  HighlighterOptions,
+  'outputFormat'
+> & { outputFormat?: F };
 
-type BaseHighlighterOptions = Omit<HighlighterOptions, 'outputFormat'>;
-
-type ComponentHighlighterOptions = BaseHighlighterOptions & {
-  outputFormat?: ComponentOutputFormat;
-};
+type ComponentHighlighterOptions =
+  HighlighterOptionsFor<ComponentOutputFormat>;
 
 type HighlighterFactory = (
   langsToLoad: Language[],
@@ -199,7 +204,7 @@ export type UseShikiHighlighter = <F extends OutputFormat = 'react'>(
   code: string,
   lang: Language,
   themeInput: Theme | Themes,
-  options?: BaseHighlighterOptions & { outputFormat?: F }
+  options?: HighlighterOptionsFor<F>
 ) => HighlightResult<F>;
 
 export type {
@@ -209,10 +214,8 @@ export type {
   Element,
   TimeoutState,
   HighlighterOptions,
-  BaseHighlighterOptions,
+  HighlighterOptionsFor,
   ComponentHighlighterOptions,
-  ComponentHighlightedCode,
-  HighlightedCode,
   HighlightResult,
   HighlightResultMap,
   OutputFormat,
