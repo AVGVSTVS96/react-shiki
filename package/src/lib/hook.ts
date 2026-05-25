@@ -104,6 +104,11 @@ export const useHighlight = (
     timeoutId: undefined,
   });
 
+  // Factory is invoked imperatively; its identity is not semantic, so it must
+  // not invalidate the effect on every render. See issue #161.
+  const highlighterFactoryRef = useRef(highlighterFactory);
+  highlighterFactoryRef.current = highlighterFactory;
+
   useEffect(() => {
     const requestId = ++requestIdRef.current;
 
@@ -115,7 +120,7 @@ export const useHighlight = (
           code,
           resolved,
           stableOpts,
-          highlighterFactory
+          highlighterFactoryRef.current
         );
         if (requestId === requestIdRef.current) {
           setHighlightedCode(result);
@@ -134,7 +139,7 @@ export const useHighlight = (
     return () => {
       clearTimeout(timeoutControl.current.timeoutId);
     };
-  }, [code, resolved, stableOpts, highlighterFactory]);
+  }, [code, resolved, stableOpts]);
 
   return highlightedCode;
 };
