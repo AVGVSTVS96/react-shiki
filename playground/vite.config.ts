@@ -6,4 +6,7 @@ import tailwind from '@tailwindcss/vite';
 
 export default defineConfig({
   plugins: [react(), mdx(), tailwind()],
+  resolve: {
+    dedupe: ['react', 'react-dom'],
+  },
 });
