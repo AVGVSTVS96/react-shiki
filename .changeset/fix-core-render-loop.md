@@ -2,4 +2,4 @@
 "react-shiki": patch
 ---
 
-Fix: `react-shiki/core` re-tokenizing on every render.
+Fix: `react-shiki/core` unstable factory identity causing re-tokenization on every render.
