@@ -4,6 +4,7 @@ import {
   useShikiHighlighter,
   createJavaScriptRegexEngine,
 } from '../src/index';
+import { useShikiHighlighter as useShikiHighlighterCore } from '../src/core';
 import type { Language, Theme, Themes } from '../src/lib/types';
 import type { ShikiTransformer, Highlighter, LanguageInput } from 'shiki';
 import { throttleHighlighting } from '../src/lib/utils';
@@ -374,6 +375,93 @@ describe('useShikiHighlighter Hook', () => {
       });
 
       expect(factory).toHaveBeenCalledTimes(1);
+    });
+  });
+
+  describe('Render stability', () => {
+    // Regression coverage for issue #161: https://github.com/AVGVSTVS96/react-shiki/issues/161
+    // The hook must treat semantically-identical
+    // renders as no-ops so heavy work (Oniguruma, codeToHtml, codeToHast)
+    // runs once per real input change, never per parent re-render.
+
+    test('tolerates a fresh factory arrow on every render', async () => {
+      const highlighter = createMockHighlighter();
+      const codeToHtml = highlighter.codeToHtml as ReturnType<typeof vi.fn>;
+
+      const UnstableFactoryHarness = ({ tick }: { tick: number }) => {
+        // tick forces a parent re-render but does not change anything the
+        // hook should care about.
+        void tick;
+
+        // A fresh arrow each render — same shape as the `/core` entry's
+        // `async () => highlighter`. The hook should tolerate this.
+        const factory = async () => highlighter;
+
+        const highlighted = useBaseHook(
+          'SELECT 1',
+          'sql',
+          'github-dark',
+          { outputFormat: 'html', highlighter },
+          factory
+        );
+
+        return (
+          <div data-testid="out">
+            {typeof highlighted === 'string' ? highlighted : ''}
+          </div>
+        );
+      };
+
+      const { rerender } = render(<UnstableFactoryHarness tick={0} />);
+
+      await waitFor(() => {
+        expect(codeToHtml).toHaveBeenCalled();
+      });
+
+      rerender(<UnstableFactoryHarness tick={1} />);
+      rerender(<UnstableFactoryHarness tick={2} />);
+      rerender(<UnstableFactoryHarness tick={3} />);
+
+      await act(async () => {
+        await new Promise((r) => setTimeout(r, 50));
+      });
+
+      expect(codeToHtml).toHaveBeenCalledTimes(1);
+    });
+
+    test('useShikiHighlighter (core entry) tokenizes once per mount', async () => {
+      // Pins the bug location: `core.ts` must not introduce an unstable
+      // `highlighterFactory` arrow each render. With the bug present,
+      // codeToHtml is invoked more than once as the effect re-fires.
+      const highlighter = createMockHighlighter();
+      const codeToHtml = highlighter.codeToHtml as ReturnType<typeof vi.fn>;
+
+      const CoreHarness = () => {
+        const highlighted = useShikiHighlighterCore(
+          'SELECT 1',
+          'sql',
+          'github-dark',
+          { highlighter, outputFormat: 'html' }
+        );
+
+        return (
+          <div data-testid="out">
+            {typeof highlighted === 'string' ? highlighted : ''}
+          </div>
+        );
+      };
+
+      render(<CoreHarness />);
+
+      await waitFor(() => {
+        expect(codeToHtml).toHaveBeenCalled();
+      });
+
+      await act(async () => {
+        await new Promise((r) => setTimeout(r, 50));
+      });
+
+      expect(codeToHtml).toHaveBeenCalledTimes(1);
     });
   });
 
