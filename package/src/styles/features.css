@@ -1,5 +1,4 @@
 @layer base {
-  .line-numbers::before,
   .rs-line-number::before {
     counter-increment: line-number;
     content: counter(line-number);
@@ -20,7 +19,6 @@
     pointer-events: none;
   }
 
-  .has-line-numbers,
   .rs-has-line-numbers {
     counter-reset: line-number calc(var(--line-start, 1) - 1);
     --rs-line-numbers-foreground: var(
