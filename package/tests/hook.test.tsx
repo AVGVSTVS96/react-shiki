@@ -479,11 +479,7 @@ describe('useShikiHighlighter Hook', () => {
       await waitFor(() => {
         const container = getByTestId('highlighted');
         const codeElement = container.querySelector('code');
-        expect(codeElement).not.toHaveClass('has-line-numbers');
         expect(codeElement).not.toHaveClass('rs-has-line-numbers');
-
-        const lineElements = container.querySelectorAll('.line-numbers');
-        expect(lineElements).toHaveLength(0);
 
         const rsLineElements =
           container.querySelectorAll('.rs-line-number');
@@ -501,15 +497,11 @@ describe('useShikiHighlighter Hook', () => {
       await waitFor(() => {
         const container = getByTestId('highlighted');
         const codeElement = container.querySelector('code');
-        expect(codeElement).toHaveClass('has-line-numbers');
         expect(codeElement).toHaveClass('rs-has-line-numbers');
-
-        const lineElements = container.querySelectorAll('.line-numbers');
-        expect(lineElements.length).toBeGreaterThan(0);
 
         const rsLineElements =
           container.querySelectorAll('.rs-line-number');
-        expect(rsLineElements.length).toBe(lineElements.length);
+        expect(rsLineElements.length).toBeGreaterThan(0);
       });
     });
 

@@ -468,7 +468,7 @@ const highlightedCode = useShikiHighlighter(code, "javascript", "github-dark", {
 > ```
 
 > [!WARNING]
-> Legacy `.line-numbers` / `.has-line-numbers` selectors and unprefixed line-number CSS variables are still supported for this release cycle, but are deprecated and will be removed in the next major.
+> Legacy `.line-numbers` / `.has-line-numbers` selectors and unprefixed line-number CSS variables are removed as of 0.10.1.
 
 Component-internal default classes are namespaced under `rs-*` and shipped inside `@layer base` so app-level utilities can override them more predictably.
 
