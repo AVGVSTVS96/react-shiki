@@ -8,7 +8,7 @@ catalog:
   "@types/react": ^19.2.14
   "@types/react-dom": ^19.2.3
 
-onlyBuiltDependencies:
-  - "@biomejs/biome"
-  - "@tailwindcss/oxide"
-  - esbuild
+allowBuilds:
+  "@biomejs/biome": true
+  "@tailwindcss/oxide": true
+  esbuild: true
