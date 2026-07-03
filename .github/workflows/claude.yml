@@ -40,8 +40,8 @@ jobs:
           additional_permissions: |
             actions: read
 
-          # Optional: Specify model via CLI args (defaults to the action's current model)
-          claude_args: --model claude-opus-4-5-20251101
+          # "opus" is a Claude Code alias that always resolves to the latest Opus model
+          claude_args: --model opus
 
           # Optional: Customize the trigger phrase (default: @claude)
           # trigger_phrase: "/claude"
