@@ -90,4 +90,20 @@ describe('buildShikiOptions', () => {
       name: 'react-shiki:line-numbers',
     });
   });
+
+  test('adds highlighted line transformer with starting line number', () => {
+    const options = buildShikiOptions(
+      'typescript',
+      resolveTheme('github-dark'),
+      {
+        highlightLineNumbers: [10],
+        startingLineNumber: 10,
+      }
+    );
+
+    expect(options.transformers).toHaveLength(1);
+    expect(options.transformers?.[0]).toMatchObject({
+      name: 'react-shiki:highlight-lines',
+    });
+  });
 });

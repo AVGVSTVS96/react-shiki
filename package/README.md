@@ -218,6 +218,7 @@ See [Shiki - RegExp Engines](https://shiki.style/guide/regex-engines) for more i
 | `engine`            | `RegexEngine`      | Oniguruma       | RegExp engine for syntax highlighting (Oniguruma, JavaScript RegExp, or JavaScript Raw) |
 | `showLineNumbers`   | `boolean`          | `false`         | Display line numbers alongside code                                           |
 | `startingLineNumber` | `number`           | `1`             | Starting line number when line numbers are enabled                           |
+| `highlightLineNumbers` | `number[]`     | `[]`            | Displayed line numbers to highlight                                           |
 | `transformers`      | `array`            | `[]`            | Custom Shiki transformers for modifying the highlighting output               |
 | `cssVariablePrefix` | `string`           | `'--shiki'`     | Prefix for CSS variables storing theme colors                                 |
 | `defaultColor`      | `string \| false`  | `'light'`       | Default theme mode when using multiple themes, can also disable default theme |
@@ -436,6 +437,7 @@ Line numbers are CSS-based and can be customized with CSS variables:
   theme="github-dark"
   showLineNumbers
   startingLineNumber={0} // default is 1
+  highlightLineNumbers={[2, 4]}
 >
   {code}
 </ShikiHighlighter>
@@ -443,16 +445,19 @@ Line numbers are CSS-based and can be customized with CSS variables:
 // Hook (import 'react-shiki/css' for line numbers to work)
 const highlightedCode = useShikiHighlighter(code, "javascript", "github-dark", {
   showLineNumbers: true,
-  startingLineNumber: 0, 
+  startingLineNumber: 0,
+  highlightLineNumbers: [2, 4],
 });
 ```
 
 > [!NOTE]
-> When using the hook with line numbers, import the CSS file or provide your own CSS 
-> for `.rs-line-number` (line `span`) and `.rs-has-line-numbers` (container `code` element).
+> When using the hook with line numbers or highlighted lines, import the CSS file or provide your own CSS
+> for `.rs-line-number` (line `span`), `.rs-highlighted-line` (line `span`), and `.rs-has-line-numbers` (container `code` element).
 > ```tsx
 > import 'react-shiki/css';
 > ```
+
+`highlightLineNumbers` uses displayed line numbers, so it works with `startingLineNumber`.
 
 Component-internal default classes are namespaced under `rs-*` and written with zero-specificity `:where()` selectors, so they can't be clobbered by CSS resets (e.g. Tailwind preflight) regardless of stylesheet load order, while any rule in your own CSS — even a bare element selector — overrides them.
 
@@ -465,6 +470,7 @@ Available CSS variables for customization:
 --rs-line-numbers-font-size: inherit;
 --rs-line-numbers-font-weight: inherit;
 --rs-line-numbers-opacity: 1;
+--rs-highlighted-line-background: rgba(250, 204, 21, 0.18);
 ```
 
 You can customize them in your own CSS or by using the style prop on the component:

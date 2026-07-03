@@ -21,3 +21,12 @@
   user-select: none;
   pointer-events: none;
 }
+
+:where(.rs-highlighted-line) {
+  display: inline-block;
+  width: 100%;
+  background-color: var(
+    --rs-highlighted-line-background,
+    rgba(250, 204, 21, 0.18)
+  );
+}

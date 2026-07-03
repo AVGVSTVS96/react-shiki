@@ -7,7 +7,10 @@ import type {
 
 import type { HighlighterOptions } from './types';
 import type { ResolvedTheme } from './theme';
-import { lineNumbersTransformer } from './transformers';
+import {
+  highlightedLinesTransformer,
+  lineNumbersTransformer,
+} from './transformers';
 
 const buildThemeOptions = (
   resolvedTheme: ResolvedTheme,
@@ -46,6 +49,7 @@ export const buildShikiOptions = (
     cssVariablePrefix,
     showLineNumbers,
     startingLineNumber,
+    highlightLineNumbers,
     transformers: userTransformers,
     ...shikiPassthrough
   } = options;
@@ -53,6 +57,14 @@ export const buildShikiOptions = (
   const transformers = [...(userTransformers || [])];
   if (showLineNumbers) {
     transformers.push(lineNumbersTransformer(startingLineNumber));
+  }
+  if (highlightLineNumbers?.length) {
+    transformers.push(
+      highlightedLinesTransformer(
+        highlightLineNumbers,
+        startingLineNumber
+      )
+    );
   }
 
   return {
