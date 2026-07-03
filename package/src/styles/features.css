@@ -1,4 +1,4 @@
-@layer base {
+@layer react-shiki {
   .rs-has-line-numbers {
     counter-reset: line-number calc(var(--line-start, 1) - 1);
 

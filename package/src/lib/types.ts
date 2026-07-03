@@ -86,7 +86,7 @@ interface ReactShikiOptions {
   /**
    * Output format for the highlighted code.
    * - 'react': Returns React nodes (default, safer)
-   * - 'html': Returns HTML string (~15-45% faster, requires dangerouslySetInnerHTML)
+   * - 'html': Returns HTML string (rendered via dangerouslySetInnerHTML)
    * @default 'react'
    */
   outputFormat?: 'react' | 'html';

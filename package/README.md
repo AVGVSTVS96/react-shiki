@@ -1,6 +1,5 @@
 # 🎨 react-shiki
 
-
 A performant client-side syntax highlighting component and hook for React, built with [Shiki](https://shiki.matsu.io/).
 
 [See the demo page with highlighted code blocks showcasing several Shiki themes!](https://react-shiki.vercel.app/)
@@ -37,14 +36,14 @@ A performant client-side syntax highlighting component and hook for React, built
     - [Handling Inline Code](#handling-inline-code)
   - [Performance](#performance)
     - [Throttling Real-time Highlighting](#throttling-real-time-highlighting)
-    - [Output Format Optimization](#output-format-optimization)
+    - [Output Formats](#output-formats)
 <!--toc:end-->
 
 ## Features
 
 - 🖼️ Provides both a `ShikiHighlighter` component and a `useShikiHighlighter` hook for more flexibility
-- 🔐 Flexible output: Choose between React elements (no `dangerouslySetInnerHTML`) or HTML strings for better performance
-- 📦 Multiple bundle options: Full bundle (~1.2MB gz), web bundle (~695KB gz), or minimal core bundle for fine-grained bundle control
+- 🔐 Flexible output: Choose between React elements (no `dangerouslySetInnerHTML`) or HTML strings
+- 📦 Multiple bundle options: Full bundle (~1.2MB gz), web bundle (~707KB gz), or minimal core bundle for fine-grained bundle control
 - 🖌️ Full support for custom TextMate themes and languages
 - 🧬 Automatic highlighting of embedded languages (e.g. TypeScript fenced inside Markdown) via Shiki's `guessEmbeddedLanguages`
 - 🔧 Supports passing custom Shiki transformers to the highlighter, in addition to all other options supported by `codeToHast`
@@ -203,17 +202,15 @@ createJavaScriptRegexEngine({ forgiving: true });
 
 See [Shiki - RegExp Engines](https://shiki.style/guide/regex-engines) for more info.
 
-
 ## Configuration
 
 ### Common Configuration Options
 
-
 | Option              | Type               | Default         | Description                                                                   |
 | ------------------- | ------------------ | --------------- | ----------------------------------------------------------------------------- |
 | `code`            | `string`           | -               | Code to highlight                                                               |
-| `language`          | `string \| object` | -               | Language to highlight, built-in or custom textmate grammer object             |
-| `theme`             | `string \| object` | `'github-dark'` | Single or multi-theme configuration, built-in or custom textmate theme object |
+| `language`          | `string \| object` | -               | Language to highlight, built-in or custom TextMate grammar object             |
+| `theme`             | `string \| object` | `'github-dark'` | Single or multi-theme configuration, built-in or custom TextMate theme object |
 | `delay`             | `number`           | `0`             | Delay between highlights (in milliseconds)                                    |
 | `customLanguages`   | `array`            | `[]`            | **Deprecated**: use `preloadLanguages` instead. |
 | `preloadLanguages`  | `array`            | `[]`            | Preload bundled language IDs and custom language grammars |
@@ -227,7 +224,7 @@ See [Shiki - RegExp Engines](https://shiki.style/guide/regex-engines) for more i
 | `outputFormat`      | `string`           | `'react'`       | Output format: 'react' for React nodes, 'html' for HTML string                 |
 | `tabindex`          | `number`           | `0`             | Tab index for the code block                                                  |
 | `decorations`       | `array`            | `[]`            | Custom decorations to wrap the highlighted tokens with                        |
-| `structure`        | `string`           | `classic`  | The structure of the generated HAST and HTML - `classic` or `inline`               |
+| `structure`        | `string`           | `'classic'`  | The structure of the generated HAST and HTML - `classic` or `inline`               |
 | [`codeToHastOptions`](https://github.com/shikijs/shiki/blob/main/packages/types/src/options.ts#L121) | -             | -              | All other options supported by Shiki's `codeToHast`      |
 
 ### Component-specific Props
@@ -246,7 +243,7 @@ The `ShikiHighlighter` component offers minimal built-in styling and customizati
 
 ### Embedded Language Highlighting
 
-react-shiki uses Shiki's [`guessEmbeddedLanguages`](https://shiki.style) to automatically detect, load, and highlight languages nested inside other languages — for example, a TypeScript fenced code block inside a Markdown document will be highlighted as TypeScript without any extra configuration. Embedded languages are dynamically loaded on demand, as long as they exist in your bundle.
+react-shiki uses Shiki's [`guessEmbeddedLanguages`](https://github.com/shikijs/shiki/blob/main/packages/core/src/utils/strings.ts) to automatically detect, load, and highlight languages nested inside other languages. For example, a TypeScript fenced code block inside a Markdown document will be highlighted as TypeScript without any extra configuration. Embedded languages are dynamically loaded on demand, as long as they exist in your bundle.
 
 ### Multi-theme Support
 
@@ -337,7 +334,7 @@ For broader browser support or more control, add CSS snippets to your site to en
 
 ### Custom Themes
 
-Custom themes can be passed as a TextMate theme in JavaScript object. For example, [it should look like this](https://github.com/antfu/textmate-grammars-themes/blob/main/packages/tm-themes/themes/dark-plus.json).
+Custom themes can be passed as a TextMate theme JavaScript object ([example](https://github.com/antfu/textmate-grammars-themes/blob/main/packages/tm-themes/themes/dark-plus.json)).
 
 ```tsx
 import tokyoNight from "../styles/tokyo-night.json";
@@ -353,7 +350,7 @@ const highlightedCode = useShikiHighlighter(code, "tsx", tokyoNight);
 
 ### Custom Languages
 
-Custom languages should be passed as a TextMate grammar in JavaScript object. For example, [it should look like this](https://github.com/shikijs/textmate-grammars-themes/blob/main/packages/tm-grammars/grammars/typescript.json)
+Custom languages should be passed as a TextMate grammar JavaScript object ([example](https://github.com/shikijs/textmate-grammars-themes/blob/main/packages/tm-grammars/grammars/typescript.json)).
 ```tsx
 import mcfunction from "../langs/mcfunction.tmLanguage.json";
 
@@ -390,7 +387,7 @@ const highlightedCode = useShikiHighlighter(code, "typescript", "github-dark", {
 ```
 
 > [!NOTE] 
-> Bundled language are dynamically loaded as needed, and do not need to be preloaded as long as they exist in your bundle.
+> Bundled languages are loaded on demand and do not need to be preloaded.
 
 ### Language Aliases
 
@@ -430,25 +427,15 @@ const highlightedCode = useShikiHighlighter(code, "tsx", "github-dark", {
 
 ### Line Numbers
 
-Display line numbers alongside your code, these are CSS-based
-and can be customized with CSS variables:
+Line numbers are CSS-based and can be customized with CSS variables:
 
 ```tsx
 // Component
 <ShikiHighlighter 
   language="javascript"
   theme="github-dark"
-  showLineNumbers,
+  showLineNumbers
   startingLineNumber={0} // default is 1
->
-  {code}
-</ShikiHighlighter>
-
-<ShikiHighlighter 
-  language="python" 
-  theme="github-dark" 
-  showLineNumbers 
-  startingLineNumber={0}
 >
   {code}
 </ShikiHighlighter>
@@ -462,15 +449,16 @@ const highlightedCode = useShikiHighlighter(code, "javascript", "github-dark", {
 
 > [!NOTE]
 > When using the hook with line numbers, import the CSS file or provide your own CSS 
-> for `.rs-line-number` (line `span`) and `.rs-has-line-numbers` (container `code` element). <!-- TODO: The CSS vars/classes/selectors are poorly documented -->
+> for `.rs-line-number` (line `span`) and `.rs-has-line-numbers` (container `code` element).
 > ```tsx
 > import 'react-shiki/css';
 > ```
 
-> [!WARNING]
-> Legacy `.line-numbers` / `.has-line-numbers` selectors and unprefixed line-number CSS variables are removed as of 0.10.1.
+Component-internal default classes are namespaced under `rs-*` and shipped inside the `@layer react-shiki` cascade layer, so unlayered app CSS and later layers take precedence over them. To control precedence explicitly, declare the layer order at the top of your stylesheet:
 
-Component-internal default classes are namespaced under `rs-*` and shipped inside `@layer base` so app-level utilities can override them more predictably.
+```css
+@layer react-shiki, theme, base, components, utilities;
+```
 
 Available CSS variables for customization:
 ```css
@@ -573,9 +561,9 @@ const CodeHighlight = ({ className, children, node, ...props }) => {
 **Method 2: Using the `rehypeInlineCodeProperty` plugin:**
 
 `react-shiki` also exports `rehypeInlineCodeProperty`, a rehype plugin that 
-provides the same API as `react-markdown` prior to `9.0.0`. It reintroduces the 
-`inline` prop which works by checking if `<code>` is nested within a `<pre>` tag, 
-if not, it's considered inline code and the `inline` prop is set to `true`.
+adds an `inline` prop to `react-markdown` code components. It works by checking 
+if `<code>` is nested within a `<pre>` tag; if not, it's considered inline code 
+and the `inline` prop is set to `true`.
 
 It's passed as a `rehypePlugin` to `react-markdown`:
 
@@ -623,7 +611,7 @@ const CodeHighlight = ({
 
 ### Throttling Real-time Highlighting
 
-For improved performance when highlighting frequently changing code:
+To reduce highlighting work for frequently changing code:
 
 ```tsx
 // With the component
@@ -637,11 +625,11 @@ const highlightedCode = useShikiHighlighter(code, "tsx", "github-dark", {
 });
 ```
 
-### Output Format Optimization
+### Output Formats
 
-`react-shiki` provides two output formats to balance safety and performance:
+`react-shiki` can return highlighted code in two formats:
 
-**React Nodes (Default)** - Safer, no `dangerouslySetInnerHTML` required
+**React Nodes (Default)** - Rendered as React elements, no `dangerouslySetInnerHTML` required
 ```tsx
 // Hook
 const highlightedCode = useShikiHighlighter(code, "tsx", "github-dark");
@@ -652,7 +640,7 @@ const highlightedCode = useShikiHighlighter(code, "tsx", "github-dark");
 </ShikiHighlighter>
 ```
 
-**HTML String** - 15-45% faster performance
+**HTML String** - Rendered via `dangerouslySetInnerHTML`
 ```tsx
 // Hook (returns HTML string, use dangerouslySetInnerHTML to render)
 const highlightedCode = useShikiHighlighter(code, "tsx", "github-dark", {
@@ -665,7 +653,9 @@ const highlightedCode = useShikiHighlighter(code, "tsx", "github-dark", {
 </ShikiHighlighter>
 ```
 
-Choose HTML output when performance is critical and you trust the code source. Use the default React output when handling untrusted content or when security is the primary concern.
+The two formats spend their rendering work in different phases. HTML output skips per-token React element creation and reconciliation, reducing render-phase overhead for large, one-shot highlights, but each update replaces the code block's entire DOM subtree via `innerHTML`. React output pays for element creation and diffing on every update, but commits only incremental DOM mutations, minimizing DOM churn for frequently re-highlighted code such as streaming LLM output.
+
+HTML output hands the highlighted markup to the DOM via `dangerouslySetInnerHTML`, so only use it with trusted code sources. The default React output is the safe choice for untrusted content.
 
 ---
 
