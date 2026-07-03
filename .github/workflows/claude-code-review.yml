@@ -37,8 +37,8 @@ jobs:
         with:
           claude_code_oauth_token: ${{ secrets.CLAUDE_CODE_OAUTH_TOKEN }}
 
-          # Optional: pin a model via CLI args ("opus" always resolves to the latest Opus)
-          # claude_args: --model opus
+          # "opus" is a Claude Code alias that always resolves to the latest Opus model
+          claude_args: --model opus
 
           # Prompt for automated review (no @claude mention needed)
           prompt: |
