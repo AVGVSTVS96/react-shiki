@@ -6,21 +6,10 @@
 :where(.rs-root.rs-default-styles) pre {
   overflow: auto;
   border-radius: 0.5rem;
-  padding-block: 1.25rem;
-}
-
-/*
- * Horizontal padding lives on the inner code element, not the scrolling pre:
- * browsers don't extend a scroll container's inline-end padding past
- * overflowing content, so padding on the pre vanishes at full scroll.
- * width: max-content keeps the padding attached to the content's far edge.
- */
-:where(.rs-root.rs-default-styles) pre code {
-  display: block;
-  width: max-content;
-  min-width: 100%;
-  box-sizing: border-box;
-  padding-inline: var(--rs-code-padding-inline, 1.5rem);
+  padding-left: 1.5rem;
+  padding-right: 1.5rem;
+  padding-top: 1.25rem;
+  padding-bottom: 1.25rem;
 }
 
 :where(.rs-root) .rs-language-label {

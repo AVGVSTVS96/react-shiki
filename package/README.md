@@ -465,7 +465,6 @@ Available CSS variables for customization:
 --rs-line-numbers-font-size: inherit;
 --rs-line-numbers-font-weight: inherit;
 --rs-line-numbers-opacity: 1;
---rs-code-padding-inline: 1.5rem; /* horizontal code padding with default styles */
 ```
 
 You can customize them in your own CSS or by using the style prop on the component:
