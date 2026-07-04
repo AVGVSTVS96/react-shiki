@@ -2,4 +2,4 @@
 'react-shiki': patch
 ---
 
-Updated dependency `shiki` to `^4.3.1`.
+Updated dependency `shiki` to `^4.3.0`.
