@@ -222,7 +222,7 @@ See [Shiki - RegExp Engines](https://shiki.style/guide/regex-engines) for more i
 | `transformers`      | `array`            | `[]`            | Custom Shiki transformers for modifying the highlighting output               |
 | `cssVariablePrefix` | `string`           | `'--shiki'`     | Prefix for CSS variables storing theme colors                                 |
 | `defaultColor`      | `string \| false`  | `'light'`       | Default theme mode when using multiple themes, can also disable default theme |
-| `outputFormat`      | `string`           | `'react'`       | Output format: 'react' for React nodes, 'html' for HTML string, or 'tokens' for Shiki tokens in the hook |
+| `outputFormat`      | `string`           | `'react'`       | Output format: 'react' for React nodes, 'html' for HTML string, or 'tokens' for Shiki tokens (hook only, experimental) |
 | `tabindex`          | `number`           | `0`             | Tab index for the code block                                                  |
 | `decorations`       | `array`            | `[]`            | Custom decorations to wrap the highlighted tokens with                        |
 | `structure`        | `string`           | `'classic'`  | The structure of the generated HAST and HTML - `classic` or `inline`               |
