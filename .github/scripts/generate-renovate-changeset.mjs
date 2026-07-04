@@ -19,7 +19,7 @@ const commitBody = execFileSync("git", ["show", "--format=%B", "--no-patch", "HE
   encoding: "utf8",
 });
 
-const updates = commitBody
+const hasDependencyTable = commitBody
   .split("\n")
   .map((line) => line.trim())
   .filter((line) => line.startsWith("|") && !line.includes("---"))
@@ -30,66 +30,30 @@ const updates = commitBody
       .map((cell) => cell.trim()),
   )
   .filter(([datasource, packageName, from, to]) => datasource && packageName && from && to)
-  .filter(([datasource]) => datasource !== "datasource")
-  .map(([, packageName, , to]) => ({ packageName, to }));
+  .some(([datasource]) => datasource !== "datasource");
 
-if (updates.length === 0) {
+if (!hasDependencyTable) {
   console.log("No Renovate dependency table found, skipping");
   process.exit(0);
-}
-
-const diff = execFileSync("git", ["diff", "HEAD~1", "HEAD"], { encoding: "utf8" });
-const specifiers = new Map();
-
-for (const line of diff.split("\n")) {
-  if (!line.startsWith("+") || line.startsWith("+++")) continue;
-
-  const jsonDependency = line.match(/^\+\s+"([^"]+)":\s+"([^"]+)"/);
-  if (jsonDependency) {
-    specifiers.set(jsonDependency[1], jsonDependency[2]);
-    continue;
-  }
-
-  const yamlDependency = line.match(/^\+\s+["']?([^"':]+)["']?:\s+(.+)$/);
-  if (yamlDependency) {
-    specifiers.set(yamlDependency[1], yamlDependency[2].trim());
-  }
 }
 
 const shortSha = execFileSync("git", ["rev-parse", "--short", "HEAD"], {
   encoding: "utf8",
 }).trim();
 const packageName = JSON.parse(readFileSync("package/package.json", "utf8")).name;
-const changesetFiles = updates.map(({ packageName: dependencyName, to }) => {
-  const specifier = specifiers.get(dependencyName) ?? to;
-  const slug = dependencyName
-    .toLowerCase()
-    .replace(/^@/, "")
-    .replace(/[^a-z0-9]+/g, "-")
-    .replace(/^-|-$/g, "");
-  const fileName = `.changeset/renovate-${shortSha}-${slug}.md`;
-  const message = [
-    "---",
-    `'${packageName}': patch`,
-    "---",
-    "",
-    `Updated dependency \`${dependencyName}\` to \`${specifier}\`.`,
-    "",
-  ].join("\n");
-
-  return { fileName, message };
-});
+const fileName = `.changeset/renovate-${shortSha}.md`;
+const message = ["---", `'${packageName}': patch`, "---", "", "Updated dependencies", ""].join(
+  "\n",
+);
 
 mkdirSync(".changeset", { recursive: true });
-for (const { fileName, message } of changesetFiles) {
-  writeFileSync(fileName, message);
-}
+writeFileSync(fileName, message);
 
 if (skipCommit) {
-  console.log(`Created ${changesetFiles.length} changesets`);
+  console.log(`Created changeset ${fileName}`);
   process.exit(0);
 }
 
-execFileSync("git", ["add", ...changesetFiles.map(({ fileName }) => fileName)], { stdio: "inherit" });
-execFileSync("git", ["commit", "-m", "chore: add renovate changesets"], { stdio: "inherit" });
+execFileSync("git", ["add", fileName], { stdio: "inherit" });
+execFileSync("git", ["commit", "-m", "chore: add renovate changeset"], { stdio: "inherit" });
 execFileSync("git", ["push"], { stdio: "inherit" });
