@@ -1,24 +1,34 @@
-@layer react-shiki {
-  .rs-root {
-    position: relative;
+/* Unlayered :where() defaults: immune to layered resets, overridden by any user rule. */
+:where(.rs-root) {
+  position: relative;
+}
 
-    &.rs-default-styles pre {
-      overflow: auto;
-      border-radius: 0.5rem;
-      padding-left: 1.5rem;
-      padding-right: 1.5rem;
-      padding-top: 1.25rem;
-      padding-bottom: 1.25rem;
-    }
+:where(.rs-root.rs-default-styles) pre {
+  overflow: auto;
+  border-radius: 0.5rem;
+  padding-block: 1.25rem;
+}
 
-    & .rs-language-label {
-      position: absolute;
-      right: 0.75rem;
-      top: 0.5rem;
-      font-family: monospace;
-      font-size: 0.75rem;
-      letter-spacing: -0.05em;
-      color: rgba(107, 114, 128, 0.85);
-    }
-  }
+/*
+ * Horizontal padding lives on the inner code element, not the scrolling pre:
+ * browsers don't extend a scroll container's inline-end padding past
+ * overflowing content, so padding on the pre vanishes at full scroll.
+ * width: max-content keeps the padding attached to the content's far edge.
+ */
+:where(.rs-root.rs-default-styles) pre code {
+  display: block;
+  width: max-content;
+  min-width: 100%;
+  box-sizing: border-box;
+  padding-inline: var(--rs-code-padding-inline, 1.5rem);
+}
+
+:where(.rs-root) .rs-language-label {
+  position: absolute;
+  right: 0.75rem;
+  top: 0.5rem;
+  font-family: monospace;
+  font-size: 0.75rem;
+  letter-spacing: -0.05em;
+  color: rgba(107, 114, 128, 0.85);
 }
