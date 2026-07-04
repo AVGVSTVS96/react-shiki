@@ -454,11 +454,7 @@ const highlightedCode = useShikiHighlighter(code, "javascript", "github-dark", {
 > import 'react-shiki/css';
 > ```
 
-Component-internal default classes are namespaced under `rs-*` and shipped inside the `@layer react-shiki` cascade layer, so unlayered app CSS and later layers take precedence over them. To control precedence explicitly, declare the layer order at the top of your stylesheet:
-
-```css
-@layer react-shiki, theme, base, components, utilities;
-```
+Component-internal default classes are namespaced under `rs-*` and written with zero-specificity `:where()` selectors, so they can't be clobbered by CSS resets (e.g. Tailwind preflight) regardless of stylesheet load order, while any rule in your own CSS — even a bare element selector — overrides them.
 
 Available CSS variables for customization:
 ```css
