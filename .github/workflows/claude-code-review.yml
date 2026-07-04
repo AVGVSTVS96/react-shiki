@@ -34,19 +34,17 @@ jobs:
           GH_TOKEN: ${{ github.token }}
           EVENT: ${{ github.event.action }}
           LABEL: ${{ github.event.label.name }}
-          AUTHOR: ${{ github.event.pull_request.user.login }}
-          OWNER: ${{ github.repository_owner }}
+          ASSOC: ${{ github.event.pull_request.author_association }}
           REPO: ${{ github.repository }}
           PR: ${{ github.event.pull_request.number }}
         run: |
-          # Own PRs: Fable, 30 min cooldown. Others: Opus, 8 h cooldown.
-          # The fable-review / opus-review labels bypass the cooldown and
-          # force their model.
-          if [ "$AUTHOR" = "$OWNER" ]; then
-            MODEL=fable COOLDOWN=1800
-          else
-            MODEL=opus COOLDOWN=28800
-          fi
+          # Owner/collaborator PRs: Fable, 30 min cooldown. Others: Opus,
+          # 8 h cooldown. The fable-review / opus-review labels bypass the
+          # cooldown and force their model.
+          case "$ASSOC" in
+            OWNER|COLLABORATOR) MODEL=fable COOLDOWN=1800 ;;
+            *) MODEL=opus COOLDOWN=28800 ;;
+          esac
 
           RUN=true
           if [ "$EVENT" = "labeled" ]; then
