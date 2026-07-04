@@ -2,47 +2,91 @@ name: Claude Code Review
 
 on:
   pull_request:
-    types: [opened, synchronize]
-    # Optional: Only run on specific file changes
-    # paths:
-    #   - "src/**/*.ts"
-    #   - "src/**/*.tsx"
-    #   - "src/**/*.js"
-    #   - "src/**/*.jsx"
+    types: [opened, synchronize, reopened, ready_for_review, labeled]
+
+concurrency:
+  group: claude-code-review-${{ github.event.pull_request.number }}
+  cancel-in-progress: true
 
 jobs:
   claude-review:
-    # Optional: Filter by PR author
-    # if: |
-    #   github.event.pull_request.user.login == 'external-contributor' ||
-    #   github.event.pull_request.user.login == 'new-developer' ||
-    #   github.event.pull_request.author_association == 'FIRST_TIME_CONTRIBUTOR'
-    
+    # Auto-runs skip drafts and bot PRs; label events run only for the two
+    # trigger labels (labels still work on bot PRs since the actor is human).
+    # Adding labels requires write access, so PR authors can't trigger runs.
+    if: >-
+      github.event.action == 'labeled'
+      && contains(fromJSON('["fable-review", "opus-review"]'), github.event.label.name)
+      || github.event.action != 'labeled'
+      && github.event.pull_request.draft == false
+      && github.event.pull_request.user.type != 'Bot'
     runs-on: ubuntu-latest
+    timeout-minutes: 15
     permissions:
       contents: read
       pull-requests: write
-      issues: read
+      issues: write
       id-token: write
-    
+
     steps:
+      - name: Gate review and select model
+        id: gate
+        env:
+          GH_TOKEN: ${{ github.token }}
+          EVENT: ${{ github.event.action }}
+          LABEL: ${{ github.event.label.name }}
+          AUTHOR: ${{ github.event.pull_request.user.login }}
+          OWNER: ${{ github.repository_owner }}
+          REPO: ${{ github.repository }}
+          PR: ${{ github.event.pull_request.number }}
+        run: |
+          # Own PRs: Fable, 30 min cooldown. Others: Opus, 8 h cooldown.
+          # The fable-review / opus-review labels bypass the cooldown and
+          # force their model.
+          if [ "$AUTHOR" = "$OWNER" ]; then
+            MODEL=fable COOLDOWN=1800
+          else
+            MODEL=opus COOLDOWN=28800
+          fi
+
+          RUN=true
+          if [ "$EVENT" = "labeled" ]; then
+            MODEL=${LABEL%-review}
+            # Remove the label so it can be re-added for the next manual run
+            gh api -X DELETE "repos/$REPO/issues/$PR/labels/$LABEL" || true
+          else
+            # The sticky review comment's updated_at is the last-review time;
+            # no comment yet (e.g. freshly opened PR) means review now
+            LAST=$(gh api --paginate "repos/$REPO/issues/$PR/comments" \
+              --jq '[.[] | select(.user.login == "claude[bot]") | .updated_at] | max // empty')
+            if [ -n "$LAST" ]; then
+              ELAPSED=$(( $(date +%s) - $(date -d "$LAST" +%s) ))
+              if [ "$ELAPSED" -lt "$COOLDOWN" ]; then
+                RUN=false
+                echo "Last review was $((ELAPSED / 60)) min ago (cooldown $((COOLDOWN / 60)) min), skipping"
+              fi
+            fi
+          fi
+
+          echo "run=$RUN" >> "$GITHUB_OUTPUT"
+          echo "model=$MODEL" >> "$GITHUB_OUTPUT"
+
       - name: Checkout repository
+        if: steps.gate.outputs.run == 'true'
         uses: actions/checkout@v6
         with:
           fetch-depth: 1
 
       - name: Run Claude Code Review
+        if: steps.gate.outputs.run == 'true'
         id: claude-review
         uses: anthropics/claude-code-action@v1
         with:
           claude_code_oauth_token: ${{ secrets.CLAUDE_CODE_OAUTH_TOKEN }}
 
-          # "opus" is a Claude Code alias that always resolves to the latest Opus model
           claude_args: |
-            --model opus
+            --model ${{ steps.gate.outputs.model }}
             --allowedTools "mcp__github_inline_comment__create_inline_comment,Bash(gh pr comment:*),Bash(gh pr diff:*),Bash(gh pr view:*)"
 
-          # Prompt for automated review (no @claude mention needed)
           prompt: |
             REPO: ${{ github.repository }}
             PR NUMBER: ${{ github.event.pull_request.number }}
@@ -58,32 +102,54 @@ jobs:
             Provide feedback on:
             - Code quality and best practices - readability, maintainability, elegance
             - Potential bugs, performance considerations, security concerns
-            
+
             Be constructive and helpful in your feedback.
 
-            ${{ github.event.pull_request.author_association == 'FIRST_TIME_CONTRIBUTOR' && 
+            ${{ github.event.pull_request.author_association == 'FIRST_TIME_CONTRIBUTOR' &&
             '
 
             Welcome! This is from a first-time contributor. Be encouraging and provide detailed explanations for any suggestions.' || '' }}
 
-          # allowed_bots: "renovate"
-          
-          # Optional: Use sticky comments to make Claude reuse the same comment on subsequent pushes to the same PR
+          # Reuse the same comment on subsequent reviews; its updated_at
+          # timestamp also drives the rate-limit gate above
           use_sticky_comment: true
-          
-          # Optional: Customize review based on file types
-          # prompt: |
-          #   Review this PR focusing on:
-          #   - For TypeScript files: Type safety and proper interface usage
-          #   - For API endpoints: Security, input validation, and error handling
-          #   - For React components: Performance, accessibility, and best practices
-          #   - For tests: Coverage, edge cases, and test quality
 
-          # Optional: Add specific tools for running tests or linting
-          # claude_args: --allowedTools "Bash(npm run test),Bash(npm run lint),Bash(npm run typecheck)"
-          
-          # Optional: Skip review for certain conditions
-          # if: |
-          #   !contains(github.event.pull_request.title, '[skip-review]') &&
-          #   !contains(github.event.pull_request.title, '[WIP]')
+      # Appends a model footer to the review comment. Fable's cybersecurity
+      # classifier can silently swap the session to Opus mid-run; the
+      # transcript is the only reliable signal of that downgrade, so runs
+      # meant for Fable get checked and flagged with a warning banner.
+      - name: Annotate review comment with model
+        if: steps.gate.outputs.run == 'true'
+        env:
+          GH_TOKEN: ${{ github.token }}
+          REPO: ${{ github.repository }}
+          PR: ${{ github.event.pull_request.number }}
+          MODEL: ${{ steps.gate.outputs.model }}
+          EXECUTION_FILE: ${{ steps.claude-review.outputs.execution_file }}
+        run: |
+          NAME="Fable 5"
+          [ "$MODEL" = "opus" ] && NAME="Opus 4.8"
 
+          FALLBACK=false
+          if [ "$MODEL" = "fable" ] && [ -f "$EXECUTION_FILE" ] \
+            && grep -q '"model_refusal_fallback"' "$EXECUTION_FILE"; then
+            FALLBACK=true
+            NAME="Opus 4.8 (Fable fallback)"
+            echo "::warning::Fable safeguard triggered — review served by Opus fallback"
+          fi
+
+          COMMENT=$(gh api --paginate "repos/$REPO/issues/$PR/comments" \
+            --jq '[.[] | select(.user.login == "claude[bot]")] | last')
+          [ -n "$COMMENT" ] && [ "$COMMENT" != "null" ] || exit 0
+
+          {
+            if [ "$FALLBACK" = true ]; then
+              printf '> [!WARNING]\n> **Fable safeguard triggered — this review was served by Opus 4.8.** Add the `fable-review` label to re-review with Fable.\n\n'
+            fi
+            jq -r .body <<<"$COMMENT"
+            printf '\n---\n🤖 Reviewed by %s\n🔁 Re-review: add the `fable-review` or `opus-review` label\n' "$NAME"
+          } > "$RUNNER_TEMP/comment-body.md"
+
+          gh api --method PATCH \
+            "repos/$REPO/issues/comments/$(jq -r .id <<<"$COMMENT")" \
+            -F body=@"$RUNNER_TEMP/comment-body.md"
