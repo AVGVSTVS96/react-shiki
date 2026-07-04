@@ -27,6 +27,6 @@
   width: 100%;
   background-color: var(
     --rs-highlighted-line-background,
-    rgba(250, 204, 21, 0.18)
+    color-mix(in srgb, currentColor 10%, transparent)
   );
 }

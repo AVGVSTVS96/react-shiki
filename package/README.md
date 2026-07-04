@@ -470,7 +470,7 @@ Available CSS variables for customization:
 --rs-line-numbers-font-size: inherit;
 --rs-line-numbers-font-weight: inherit;
 --rs-line-numbers-opacity: 1;
---rs-highlighted-line-background: rgba(250, 204, 21, 0.18);
+--rs-highlighted-line-background: color-mix(in srgb, currentColor 10%, transparent);
 ```
 
 You can customize them in your own CSS or by using the style prop on the component:
