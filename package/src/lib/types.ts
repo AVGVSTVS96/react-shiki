@@ -12,6 +12,7 @@ import type {
   SpecialLanguage,
   StringLiteralUnion,
   ThemeRegistrationAny,
+  TokensResult,
 } from 'shiki';
 
 import type { ReactElement } from 'react';
@@ -87,6 +88,11 @@ interface ReactShikiOptions {
    * Output format for the highlighted code.
    * - 'react': Returns React nodes (default, safer)
    * - 'html': Returns HTML string (rendered via dangerouslySetInnerHTML)
+   *
+   * The hook additionally accepts 'tokens' (experimental) to return raw
+   * Shiki tokens for custom rendering. It is deliberately excluded here
+   * and only enters through the hook's generic signature, so option
+   * objects typed with this interface keep the classic return type.
    * @default 'react'
    */
   outputFormat?: 'react' | 'html';
@@ -169,9 +175,33 @@ interface TimeoutState {
 }
 
 /**
- * Public API signature for the useShikiHighlighter hook.
+ * Supported output formats and their corresponding result shapes.
  */
-type HighlightedCode = ReactElement | string | null;
+type OutputFormat = 'react' | 'html' | 'tokens';
+
+interface HighlightResultMap {
+  react: ReactElement;
+  html: string;
+  tokens: TokensResult;
+}
+
+type HighlightResult<F extends OutputFormat = 'react'> =
+  | HighlightResultMap[F]
+  | null;
+
+/**
+ * Per-call options shape: every highlighter option except `outputFormat`,
+ * plus a narrowed `outputFormat?: F` so the return type can be inferred
+ * from the format the caller actually passes.
+ *
+ * This is the only place 'tokens' is accepted. Keeping it out of
+ * `HighlighterOptions` means values typed with that interface infer
+ * `F = 'react' | 'html'` and keep their pre-tokens return type.
+ */
+type HighlighterOptionsFor<F extends OutputFormat> = Omit<
+  HighlighterOptions,
+  'outputFormat'
+> & { outputFormat?: F };
 
 type HighlighterFactory = (
   langsToLoad: Language[],
@@ -179,12 +209,12 @@ type HighlighterFactory = (
   engine?: Awaitable<RegexEngine>
 ) => Promise<Highlighter | HighlighterCore>;
 
-export type UseShikiHighlighter = (
+export type UseShikiHighlighter = <F extends OutputFormat = 'react'>(
   code: string,
   lang: Language,
   themeInput: Theme | Themes,
-  options?: HighlighterOptions
-) => HighlightedCode;
+  options?: HighlighterOptionsFor<F>
+) => HighlightResult<F>;
 
 export type {
   Language,
@@ -193,6 +223,9 @@ export type {
   Element,
   TimeoutState,
   HighlighterOptions,
-  HighlightedCode,
+  HighlighterOptionsFor,
+  HighlightResult,
+  HighlightResultMap,
+  OutputFormat,
   HighlighterFactory,
 };

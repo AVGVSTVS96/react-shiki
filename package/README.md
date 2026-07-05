@@ -222,7 +222,7 @@ See [Shiki - RegExp Engines](https://shiki.style/guide/regex-engines) for more i
 | `transformers`      | `array`            | `[]`            | Custom Shiki transformers for modifying the highlighting output               |
 | `cssVariablePrefix` | `string`           | `'--shiki'`     | Prefix for CSS variables storing theme colors                                 |
 | `defaultColor`      | `string \| false`  | `'light'`       | Default theme mode when using multiple themes, can also disable default theme |
-| `outputFormat`      | `string`           | `'react'`       | Output format: 'react' for React nodes, 'html' for HTML string                 |
+| `outputFormat`      | `string`           | `'react'`       | Output format: 'react' for React nodes, 'html' for HTML string, or 'tokens' for Shiki tokens (hook only, experimental) |
 | `tabindex`          | `number`           | `0`             | Tab index for the code block                                                  |
 | `decorations`       | `array`            | `[]`            | Custom decorations to wrap the highlighted tokens with                        |
 | `structure`        | `string`           | `'classic'`  | The structure of the generated HAST and HTML - `classic` or `inline`               |
@@ -630,7 +630,7 @@ const highlightedCode = useShikiHighlighter(code, "tsx", "github-dark", {
 
 ### Output Formats
 
-`react-shiki` can return highlighted code in two formats:
+`react-shiki` can return highlighted code in three formats:
 
 **React Nodes (Default)** - Rendered as React elements, no `dangerouslySetInnerHTML` required
 ```tsx
@@ -656,9 +656,28 @@ const highlightedCode = useShikiHighlighter(code, "tsx", "github-dark", {
 </ShikiHighlighter>
 ```
 
-The two formats spend their rendering work in different phases. HTML output skips per-token React element creation and reconciliation, reducing render-phase overhead for large, one-shot highlights, but each update replaces the code block's entire DOM subtree via `innerHTML`. React output pays for element creation and diffing on every update, but commits only incremental DOM mutations, minimizing DOM churn for frequently re-highlighted code such as streaming LLM output.
+**Shiki Tokens (Experimental)** - Hook-only output for custom renderers
+```tsx
+const highlighted = useShikiHighlighter(code, "tsx", "github-dark", {
+  outputFormat: "tokens",
+});
+
+const rendered = highlighted?.tokens.map((line, i) => (
+  <div key={i}>
+    {line.map((token, j) => (
+      <span key={j} style={{ color: token.color }}>
+        {token.content}
+      </span>
+    ))}
+  </div>
+));
+```
+
+The React and HTML formats spend their rendering work in different phases. HTML output skips per-token React element creation and reconciliation, reducing render-phase overhead for large, one-shot highlights, but each update replaces the code block's entire DOM subtree via `innerHTML`. React output pays for element creation and diffing on every update, but commits only incremental DOM mutations, minimizing DOM churn for frequently re-highlighted code such as streaming LLM output.
 
 HTML output hands the highlighted markup to the DOM via `dangerouslySetInnerHTML`, so only use it with trusted code sources. The default React output is the safe choice for untrusted content.
+
+Token output is for when you need to own rendering yourself; it is intentionally available on the hook, not the `ShikiHighlighter` component, since react-shiki's markup-based features no longer apply once you control the markup. Note that Shiki's `codeToTokens` does not run transformers or decorations, so markup-producing options, including transformers, decorations, line numbers, and `structure`, have no effect on token output.
 
 ---
 

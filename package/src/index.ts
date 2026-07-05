@@ -18,6 +18,9 @@ export type {
   Themes,
   Element,
   HighlighterOptions,
+  HighlighterOptionsFor,
+  HighlightResult,
+  OutputFormat,
 } from './lib/types';
 
 export {
@@ -25,7 +28,7 @@ export {
   createJavaScriptRawEngine,
 } from 'shiki/engine/javascript';
 
-export type { LanguageRegistration } from 'shiki';
+export type { LanguageRegistration, TokensResult } from 'shiki';
 
 /**
  * Highlight code with shiki (full bundle)
@@ -34,7 +37,7 @@ export type { LanguageRegistration } from 'shiki';
  * @param lang - Language (bundled or custom)
  * @param theme - Theme (bundled, multi-theme, or custom)
  * @param options - react-shiki options + shiki options
- * @returns Highlighted code as React elements or HTML string
+ * @returns Highlighted code as React elements (default), HTML string, or Shiki tokens, based on `outputFormat`
  *
  * @example
  * ```tsx
@@ -55,15 +58,7 @@ export const useShikiHighlighter: UseShikiHighlighter = (
   lang,
   themeInput,
   options = {}
-) => {
-  return useHighlight(
-    code,
-    lang,
-    themeInput,
-    options,
-    createFullHighlighter
-  );
-};
+) => useHighlight(code, lang, themeInput, options, createFullHighlighter);
 
 /**
  * ShikiHighlighter component using the full bundle.

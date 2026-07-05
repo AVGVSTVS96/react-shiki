@@ -1,4 +1,5 @@
 import React, { useRef } from 'react';
+import { vi } from 'vitest';
 import { render, waitFor } from '@testing-library/react';
 import {
   ShikiHighlighter,
@@ -244,6 +245,38 @@ describe('ShikiHighlighter Component', () => {
         expect(container.querySelector('pre')).toBeInTheDocument();
         expect(container.querySelector('code')).toBeInTheDocument();
       });
+    });
+
+    test('warns and falls back to react output when outputFormat is tokens', async () => {
+      const warnSpy = vi
+        .spyOn(console, 'warn')
+        .mockImplementation(() => {});
+
+      const { container } = render(
+        <ShikiHighlighter
+          language="javascript"
+          theme="github-dark"
+          // Types forbid 'tokens' on the component; plain-JS callers can still pass it
+          outputFormat={'tokens' as never}
+        >
+          {codeSample}
+        </ShikiHighlighter>
+      );
+
+      await waitFor(() => {
+        expect(warnSpy).toHaveBeenCalledWith(
+          expect.stringContaining("outputFormat 'tokens'")
+        );
+
+        // Falls back to React element output instead of crashing
+        const shikiContainer = getContainer(container);
+        expect(
+          shikiContainer?.querySelector('pre.shiki')
+        ).toBeInTheDocument();
+        expect(shikiContainer?.querySelector('code')).toBeInTheDocument();
+      });
+
+      warnSpy.mockRestore();
     });
   });
 

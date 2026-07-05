@@ -5,11 +5,33 @@ import { clsx } from 'clsx';
 import type {
   HighlighterOptions,
   Language,
+  OutputFormat,
   Theme,
   Themes,
   UseShikiHighlighter,
 } from './types';
 import { forwardRef } from 'react';
+
+let warnedTokensOutputFormat = false;
+
+/**
+ * The component's props exclude `outputFormat: 'tokens'`, but plain-JS
+ * callers can still pass it. Tokens are not renderable React children,
+ * so fall back to 'react' instead of crashing the render.
+ */
+const resolveOutputFormat = (
+  outputFormat: HighlighterOptions['outputFormat']
+): HighlighterOptions['outputFormat'] => {
+  if ((outputFormat as OutputFormat) !== 'tokens') return outputFormat;
+
+  if (!warnedTokensOutputFormat) {
+    warnedTokensOutputFormat = true;
+    console.warn(
+      "[react-shiki] outputFormat 'tokens' is only supported by the useShikiHighlighter hook, falling back to 'react'"
+    );
+  }
+  return 'react';
+};
 
 /**
  * Props for the ShikiHighlighter component
@@ -127,11 +149,11 @@ export const createShikiHighlighterComponent = (
         as: Element = 'div',
         customLanguages,
         preloadLanguages,
+        outputFormat,
         ...shikiOptions
       },
       ref
     ) => {
-      // Destructure some options for use in hook
       const options: HighlighterOptions = {
         delay,
         transformers,
@@ -142,6 +164,7 @@ export const createShikiHighlighterComponent = (
         cssVariablePrefix,
         startingLineNumber,
         highlightLineNumbers,
+        outputFormat: resolveOutputFormat(outputFormat),
         ...shikiOptions,
       };
 
