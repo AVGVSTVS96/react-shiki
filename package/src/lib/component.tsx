@@ -87,6 +87,11 @@ export interface ShikiHighlighterProps extends HighlighterOptions {
   startingLineNumber?: number;
 
   /**
+   * Displayed line numbers to highlight
+   */
+  highlightLineNumbers?: number[];
+
+  /**
    * The HTML element that wraps the generated code block.
    * @default 'div'
    */
@@ -117,6 +122,7 @@ export const createShikiHighlighterComponent = (
         showLanguage = true,
         showLineNumbers = false,
         startingLineNumber = 1,
+        highlightLineNumbers,
         children: code,
         as: Element = 'div',
         customLanguages,
@@ -135,6 +141,7 @@ export const createShikiHighlighterComponent = (
         defaultColor,
         cssVariablePrefix,
         startingLineNumber,
+        highlightLineNumbers,
         ...shikiOptions,
       };
 

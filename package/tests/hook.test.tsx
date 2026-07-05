@@ -18,6 +18,7 @@ interface TestComponentProps {
   langAlias?: Record<string, string>;
   showLineNumbers?: boolean;
   startingLineNumber?: number;
+  highlightLineNumbers?: number[];
   outputFormat?: 'react' | 'html';
   defaultColor?: string;
   cssVariablePrefix?: string;
@@ -386,7 +387,9 @@ describe('useShikiHighlighter Hook', () => {
 
     test('tolerates a fresh factory arrow on every render', async () => {
       const highlighter = createMockHighlighter();
-      const codeToHtml = highlighter.codeToHtml as ReturnType<typeof vi.fn>;
+      const codeToHtml = highlighter.codeToHtml as ReturnType<
+        typeof vi.fn
+      >;
 
       const UnstableFactoryHarness = ({ tick }: { tick: number }) => {
         // tick forces a parent re-render but does not change anything the
@@ -434,7 +437,9 @@ describe('useShikiHighlighter Hook', () => {
       // `highlighterFactory` arrow each render. With the bug present,
       // codeToHtml is invoked more than once as the effect re-fires.
       const highlighter = createMockHighlighter();
-      const codeToHtml = highlighter.codeToHtml as ReturnType<typeof vi.fn>;
+      const codeToHtml = highlighter.codeToHtml as ReturnType<
+        typeof vi.fn
+      >;
 
       const CoreHarness = () => {
         const highlighted = useShikiHighlighterCore(
@@ -539,6 +544,30 @@ describe('useShikiHighlighter Hook', () => {
           '[style*="--line-start"]'
         );
         expect(elementsWithStyle.length).toBe(0);
+      });
+    });
+
+    test('highlights displayed line numbers', async () => {
+      const { getByTestId } = renderComponent({
+        code,
+        language: 'javascript',
+        startingLineNumber: 41,
+        highlightLineNumbers: [42],
+      });
+
+      await waitFor(() => {
+        const container = getByTestId('highlighted');
+        const highlightedLines = container.querySelectorAll(
+          '.rs-highlighted-line'
+        );
+
+        expect(highlightedLines).toHaveLength(1);
+        expect(highlightedLines[0]?.textContent).toContain(
+          "return 'hello';"
+        );
+        expect(
+          container.querySelector('code.rs-has-highlighted-lines')
+        ).not.toBeNull();
       });
     });
   });

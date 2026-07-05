@@ -214,6 +214,32 @@ console.log(result); // 55
 `.trim()}
 </ShikiHighlighter>
 
+### Highlighted Lines
+[View docs →](https://github.com/avgvstvs96/react-shiki#line-numbers)
+
+<ShikiHighlighter language="javascript" theme="material-theme-ocean" showLineNumbers highlightLineNumbers={[2, 3, 7]}>
+{`
+function fibonacci(n) {
+    if (n <= 1) return n;
+    return fibonacci(n - 1) + fibonacci(n - 2); // this is a deliberately long highlighted line to test how the highlight background behaves when the code block scrolls horizontally past the visible area
+}
+
+// Example usage
+const result = fibonacci(10);
+console.log(result); // 55
+`.trim()}
+</ShikiHighlighter>
+
+Without line numbers:
+
+<ShikiHighlighter language="javascript" theme="material-theme-ocean" highlightLineNumbers={[2]}>
+{`
+function greet(name) {
+    return \`Hello, \${name}!\`;
+}
+`.trim()}
+</ShikiHighlighter>
+
 ### Integration with react-markdown
 [View docs →](https://github.com/avgvstvs96/react-shiki#integration-with-react-markdown)
 
