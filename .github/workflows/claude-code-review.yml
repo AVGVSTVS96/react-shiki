@@ -1,29 +1,49 @@
 name: Claude Code Review
 
-# pull_request_target (not pull_request) so fork PRs get repo secrets,
-# which GitHub withholds from fork-triggered pull_request runs. It executes
-# in the base repo's context, so fork PRs only run via the label gate below.
+# Two triggers, two auth paths:
+# - Same-repo PRs run on pull_request: OIDC → app token, reviews post as
+#   claude[bot] via the action's sticky comment.
+# - Fork PRs can't use that path (GitHub withholds secrets/OIDC from fork
+#   pull_request runs, and Anthropic's OIDC exchange rejects fork
+#   pull_request_target contexts with 401 Invalid OIDC token). They run on
+#   pull_request_target — base-repo context, so secrets exist — gated to the
+#   trigger labels only, with github_token handed to the action directly.
+#   Without the app token the sticky-comment machinery is unavailable, so
+#   the prompt tells Claude to post the review itself via gh pr comment,
+#   which lands as github-actions[bot].
 on:
-  pull_request_target:
+  pull_request:
     types: [opened, synchronize, reopened, ready_for_review, labeled]
+  pull_request_target:
+    types: [labeled]
 
+# event_name is part of the group: a same-repo label add fires both events,
+# and without it the pull_request_target run (which the gate skips) would
+# cancel the real pull_request run.
 concurrency:
-  group: claude-code-review-${{ github.event.pull_request.number }}
+  group: claude-code-review-${{ github.event_name }}-${{ github.event.pull_request.number }}
   cancel-in-progress: true
 
 jobs:
   claude-review:
-    # Auto-runs are same-repo only and skip drafts and bot PRs; fork PRs
-    # review only via the two trigger labels (labels still work on bot PRs
-    # since the actor is human). Adding labels requires write access, so PR
-    # authors can't trigger runs against pull_request_target's secrets.
+    # pull_request handles same-repo PRs only: auto-runs skip drafts and bot
+    # PRs; the two trigger labels force a run (labels still work on bot PRs
+    # since the actor is human). pull_request_target handles fork PRs only,
+    # and only via the trigger labels — adding labels requires write access,
+    # so fork authors can't trigger runs against the repo's secrets.
     if: >-
-      github.event.action == 'labeled'
+      github.event_name == 'pull_request_target'
+      && github.event.pull_request.head.repo.full_name != github.repository
       && contains(fromJSON('["fable-review", "opus-review"]'), github.event.label.name)
-      || github.event.action != 'labeled'
+      || github.event_name == 'pull_request'
       && github.event.pull_request.head.repo.full_name == github.repository
-      && github.event.pull_request.draft == false
-      && github.event.pull_request.user.type != 'Bot'
+      && (
+        github.event.action == 'labeled'
+        && contains(fromJSON('["fable-review", "opus-review"]'), github.event.label.name)
+        || github.event.action != 'labeled'
+        && github.event.pull_request.draft == false
+        && github.event.pull_request.user.type != 'Bot'
+      )
     runs-on: ubuntu-latest
     timeout-minutes: 15
     permissions:
@@ -80,9 +100,10 @@ jobs:
         uses: actions/checkout@v6
         with:
           # pull_request_target checks out the base branch by default;
-          # review the PR's code instead. Safe to check out untrusted code
-          # here: allowedTools only reads the PR via gh, never executes it.
-          ref: ${{ github.event.pull_request.head.sha }}
+          # review the PR's code instead (empty = event default). Safe to
+          # check out untrusted code here: allowedTools only reads the PR
+          # via gh, never executes it.
+          ref: ${{ github.event_name == 'pull_request_target' && github.event.pull_request.head.sha || '' }}
           fetch-depth: 1
 
       - name: Run Claude Code Review
@@ -91,11 +112,10 @@ jobs:
         uses: anthropics/claude-code-action@v1
         with:
           claude_code_oauth_token: ${{ secrets.CLAUDE_CODE_OAUTH_TOKEN }}
-          # Fork PRs only: Anthropic's OIDC → app-token exchange 401s in
-          # fork contexts, so hand the action a token directly. Fork reviews
-          # post as github-actions[bot]; same-repo PRs take the OIDC path
-          # (empty string = unset) and keep posting as claude[bot].
-          github_token: ${{ github.event.pull_request.head.repo.full_name != github.repository && secrets.GITHUB_TOKEN || '' }}
+          # Fork runs skip the OIDC → app-token exchange (401s in fork
+          # contexts) by taking a token directly; empty = unset, so
+          # same-repo runs keep the OIDC path and the claude[bot] identity.
+          github_token: ${{ github.event_name == 'pull_request_target' && secrets.GITHUB_TOKEN || '' }}
 
           claude_args: |
             --model ${{ steps.gate.outputs.model }}
@@ -119,14 +139,20 @@ jobs:
 
             Be constructive and helpful in your feedback.
 
+            ${{ github.event_name == 'pull_request_target' &&
+            '
+
+            IMPORTANT: When finished, post your complete review as a PR comment using `gh pr comment`. Nothing else will publish it for you — a review that is not posted with `gh pr comment` is lost.' || '' }}
+
             ${{ github.event.pull_request.author_association == 'FIRST_TIME_CONTRIBUTOR' &&
             '
 
             Welcome! This is from a first-time contributor. Be encouraging and provide detailed explanations for any suggestions.' || '' }}
 
           # Reuse the same comment on subsequent reviews; its updated_at
-          # timestamp also drives the rate-limit gate above
-          use_sticky_comment: true
+          # timestamp also drives the rate-limit gate above. Sticky comments
+          # need the app token, so fork runs post via gh pr comment instead.
+          use_sticky_comment: ${{ github.event_name == 'pull_request' }}
 
       # Appends a model footer to the review comment. Fable's cybersecurity
       # classifier can silently swap the session to Opus mid-run; the
@@ -140,9 +166,9 @@ jobs:
           PR: ${{ github.event.pull_request.number }}
           MODEL: ${{ steps.gate.outputs.model }}
           EXECUTION_FILE: ${{ steps.claude-review.outputs.execution_file }}
-          # Matches the review's author: fork PRs run with github_token and
-          # post as github-actions[bot]; same-repo PRs post as claude[bot]
-          BOT: ${{ github.event.pull_request.head.repo.full_name != github.repository && 'github-actions[bot]' || 'claude[bot]' }}
+          # Matches the review's author: fork runs post with github_token as
+          # github-actions[bot]; same-repo runs post as claude[bot]
+          BOT: ${{ github.event_name == 'pull_request_target' && 'github-actions[bot]' || 'claude[bot]' }}
         run: |
           NAME="Fable 5"
           [ "$MODEL" = "opus" ] && NAME="Opus 4.8"
