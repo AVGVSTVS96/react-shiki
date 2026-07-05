@@ -1,24 +1,48 @@
 name: Claude Code Review
 
+# Two triggers, two auth paths:
+# - Same-repo PRs run on pull_request: Anthropic's OIDC exchange mints
+#   an app token and reviews post as claude[bot].
+# - Fork PRs can't use that path (GitHub withholds secrets/OIDC from
+#   fork pull_request runs, and Anthropic's exchange rejects all
+#   pull_request_target runs with 401). They run on pull_request_target
+#   — base-repo context, so secrets exist — gated to the trigger labels
+#   only, with GITHUB_TOKEN handed to the action directly; reviews post
+#   as github-actions[bot].
 on:
   pull_request:
     types: [opened, synchronize, reopened, ready_for_review, labeled]
+  pull_request_target:
+    types: [labeled]
 
+# event_name is part of the group: a same-repo label add fires both
+# events, and without it the pull_request_target run (which the gate
+# skips) would cancel the real pull_request run.
 concurrency:
-  group: claude-code-review-${{ github.event.pull_request.number }}
+  group: claude-code-review-${{ github.event_name }}-${{ github.event.pull_request.number }}
   cancel-in-progress: true
 
 jobs:
   claude-review:
-    # Auto-runs skip drafts and bot PRs; label events run only for the two
-    # trigger labels (labels still work on bot PRs since the actor is human).
-    # Adding labels requires write access, so PR authors can't trigger runs.
+    # pull_request handles same-repo PRs only: auto-runs skip drafts and
+    # bot PRs; the two trigger labels force a run (labels still work on
+    # bot PRs since the actor is human). pull_request_target handles
+    # fork PRs only, and only via the trigger labels — adding labels
+    # requires write access, so fork authors can't trigger runs against
+    # the repo's secrets.
     if: >-
-      github.event.action == 'labeled'
+      github.event_name == 'pull_request_target'
+      && github.event.pull_request.head.repo.full_name != github.repository
       && contains(fromJSON('["fable-review", "opus-review"]'), github.event.label.name)
-      || github.event.action != 'labeled'
-      && github.event.pull_request.draft == false
-      && github.event.pull_request.user.type != 'Bot'
+      || github.event_name == 'pull_request'
+      && github.event.pull_request.head.repo.full_name == github.repository
+      && (
+        github.event.action == 'labeled'
+        && contains(fromJSON('["fable-review", "opus-review"]'), github.event.label.name)
+        || github.event.action != 'labeled'
+        && github.event.pull_request.draft == false
+        && github.event.pull_request.user.type != 'Bot'
+      )
     runs-on: ubuntu-latest
     timeout-minutes: 15
     permissions:
@@ -40,7 +64,8 @@ jobs:
         run: |
           # Owner/collaborator PRs: Fable, 30 min cooldown. Others: Opus,
           # 8 h cooldown. The fable-review / opus-review labels bypass the
-          # cooldown and force their model.
+          # cooldown and force their model. Fork runs are label-only, so
+          # they never consult the cooldown.
           case "$ASSOC" in
             OWNER|COLLABORATOR) MODEL=fable COOLDOWN=1800 ;;
             *) MODEL=opus COOLDOWN=28800 ;;
@@ -52,8 +77,10 @@ jobs:
             # Remove the label so it can be re-added for the next manual run
             gh api -X DELETE "repos/$REPO/issues/$PR/labels/$LABEL" || true
           else
-            # The sticky review comment's updated_at is the last-review time;
-            # no comment yet (e.g. freshly opened PR) means review now
+            # Claude updates its review comment in place, so its
+            # updated_at is the last-review time; no comment yet (e.g.
+            # freshly opened PR) means review now. claude[bot] is right
+            # here: this branch only runs for same-repo PRs.
             LAST=$(gh api --paginate "repos/$REPO/issues/$PR/comments" \
               --jq '[.[] | select(.user.login == "claude[bot]") | .updated_at] | max // empty')
             if [ -n "$LAST" ]; then
@@ -67,11 +94,18 @@ jobs:
 
           echo "run=$RUN" >> "$GITHUB_OUTPUT"
           echo "model=$MODEL" >> "$GITHUB_OUTPUT"
+          # The verify step only accepts comments newer than this
+          echo "started=$(date -u +%Y-%m-%dT%H:%M:%SZ)" >> "$GITHUB_OUTPUT"
 
       - name: Checkout repository
         if: steps.gate.outputs.run == 'true'
         uses: actions/checkout@v6
         with:
+          # pull_request_target checks out the base branch by default;
+          # review the PR's code instead (empty = event default). Safe to
+          # check out untrusted code here: allowedTools only reads the PR
+          # via gh, never executes it.
+          ref: ${{ github.event_name == 'pull_request_target' && github.event.pull_request.head.sha || '' }}
           fetch-depth: 1
 
       - name: Run Claude Code Review
@@ -80,6 +114,10 @@ jobs:
         uses: anthropics/claude-code-action@v1
         with:
           claude_code_oauth_token: ${{ secrets.CLAUDE_CODE_OAUTH_TOKEN }}
+          # Fork runs skip the OIDC exchange by taking a token directly;
+          # empty = unset, so same-repo runs keep the OIDC path and the
+          # claude[bot] identity.
+          github_token: ${{ github.event_name == 'pull_request_target' && secrets.GITHUB_TOKEN || '' }}
 
           claude_args: |
             --model ${{ steps.gate.outputs.model }}
@@ -103,27 +141,35 @@ jobs:
 
             Be constructive and helpful in your feedback.
 
+            ${{ github.event_name == 'pull_request_target' &&
+            '
+
+            IMPORTANT: When finished, post your complete review as a PR comment using `gh pr comment`. Nothing else will publish it for you — a review that is not posted with `gh pr comment` is lost.' || '' }}
+
             ${{ github.event.pull_request.author_association == 'FIRST_TIME_CONTRIBUTOR' &&
             '
 
             Welcome! This is from a first-time contributor. Be encouraging and provide detailed explanations for any suggestions.' || '' }}
 
-          # Reuse the same comment on subsequent reviews; its updated_at
-          # timestamp also drives the rate-limit gate above
-          use_sticky_comment: true
-
-      # Appends a model footer to the review comment. Fable's cybersecurity
-      # classifier can silently swap the session to Opus mid-run; the
-      # transcript is the only reliable signal of that downgrade, so runs
-      # meant for Fable get checked and flagged with a warning banner.
-      - name: Annotate review comment with model
+      # The action never posts the review itself — Claude publishes it
+      # through the allowlisted gh commands. This step enforces that a
+      # comment actually landed (fail red instead of silently green),
+      # then appends a model footer. Fable's cybersecurity classifier
+      # can silently swap the session to Opus mid-run; the transcript is
+      # the only reliable signal of that downgrade, so runs meant for
+      # Fable get checked and flagged with a warning banner.
+      - name: Verify review posted and annotate with model
         if: steps.gate.outputs.run == 'true'
         env:
           GH_TOKEN: ${{ github.token }}
           REPO: ${{ github.repository }}
           PR: ${{ github.event.pull_request.number }}
           MODEL: ${{ steps.gate.outputs.model }}
+          STARTED: ${{ steps.gate.outputs.started }}
           EXECUTION_FILE: ${{ steps.claude-review.outputs.execution_file }}
+          # Matches the review's author: fork runs post with GITHUB_TOKEN
+          # as github-actions[bot]; same-repo runs post as claude[bot]
+          BOT: ${{ github.event_name == 'pull_request_target' && 'github-actions[bot]' || 'claude[bot]' }}
         run: |
           NAME="Fable 5"
           [ "$MODEL" = "opus" ] && NAME="Opus 4.8"
@@ -136,9 +182,14 @@ jobs:
             echo "::warning::Fable safeguard triggered — review served by Opus fallback"
           fi
 
+          # Only accept a comment created/updated during this run — a
+          # stale one means Claude finished without publishing anything
           COMMENT=$(gh api --paginate "repos/$REPO/issues/$PR/comments" \
-            --jq '[.[] | select(.user.login == "claude[bot]")] | last')
-          [ -n "$COMMENT" ] && [ "$COMMENT" != "null" ] || exit 0
+            --jq '[.[] | select(.user.login == "'"$BOT"'" and .updated_at >= "'"$STARTED"'")] | last')
+          if [ -z "$COMMENT" ] || [ "$COMMENT" = "null" ]; then
+            echo "::error::Review ran but no $BOT comment was posted since $STARTED — re-add the label to retry"
+            exit 1
+          fi
 
           {
             if [ "$FALLBACK" = true ]; then
