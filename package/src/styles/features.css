@@ -22,11 +22,26 @@
   pointer-events: none;
 }
 
+/* Size the code element to its content so line backgrounds
+   span the full scroll width, not just the visible area. */
+:where(.rs-has-highlighted-lines) {
+  display: block;
+  width: fit-content;
+  min-width: 100%;
+}
+
 :where(.rs-highlighted-line) {
   display: inline-block;
   width: 100%;
   background-color: var(
     --rs-highlighted-line-background,
     color-mix(in srgb, currentColor 10%, transparent)
+  );
+}
+
+:where(.rs-has-line-numbers .rs-highlighted-line)::before {
+  color: var(
+    --rs-highlighted-line-number-foreground,
+    color-mix(in srgb, currentColor 65%, transparent)
   );
 }

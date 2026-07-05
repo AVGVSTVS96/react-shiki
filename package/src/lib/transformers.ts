@@ -43,6 +43,9 @@ export function highlightedLinesTransformer(
 
   return {
     name: 'react-shiki:highlight-lines',
+    code(node) {
+      this.addClassToHast(node, 'rs-has-highlighted-lines');
+    },
     line(node, line) {
       const displayedLine = startLine + line - 1;
 

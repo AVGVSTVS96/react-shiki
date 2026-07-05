@@ -565,6 +565,9 @@ describe('useShikiHighlighter Hook', () => {
         expect(highlightedLines[0]?.textContent).toContain(
           "return 'hello';"
         );
+        expect(
+          container.querySelector('code.rs-has-highlighted-lines')
+        ).not.toBeNull();
       });
     });
   });

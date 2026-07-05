@@ -452,7 +452,7 @@ const highlightedCode = useShikiHighlighter(code, "javascript", "github-dark", {
 
 > [!NOTE]
 > When using the hook with line numbers or highlighted lines, import the CSS file or provide your own CSS
-> for `.rs-line-number` (line `span`), `.rs-highlighted-line` (line `span`), and `.rs-has-line-numbers` (container `code` element).
+> for `.rs-line-number` (line `span`), `.rs-highlighted-line` (line `span`), and `.rs-has-line-numbers` / `.rs-has-highlighted-lines` (container `code` element).
 > ```tsx
 > import 'react-shiki/css';
 > ```
@@ -471,6 +471,7 @@ Available CSS variables for customization:
 --rs-line-numbers-font-weight: inherit;
 --rs-line-numbers-opacity: 1;
 --rs-highlighted-line-background: color-mix(in srgb, currentColor 10%, transparent);
+--rs-highlighted-line-number-foreground: color-mix(in srgb, currentColor 65%, transparent);
 ```
 
 You can customize them in your own CSS or by using the style prop on the component:
