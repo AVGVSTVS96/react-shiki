@@ -677,7 +677,7 @@ The React and HTML formats spend their rendering work in different phases. HTML 
 
 HTML output hands the highlighted markup to the DOM via `dangerouslySetInnerHTML`, so only use it with trusted code sources. The default React output is the safe choice for untrusted content.
 
-Token output is for when you need to own rendering yourself; it is intentionally available on the hook, not the `ShikiHighlighter` component, since react-shiki's markup-based features no longer apply once you control the markup. Note that transformers and decorations run in the HAST pipeline that token output bypasses, so they have no effect on token output.
+Token output is for when you need to own rendering yourself; it is intentionally available on the hook, not the `ShikiHighlighter` component, since react-shiki's markup-based features no longer apply once you control the markup. Note that Shiki's `codeToTokens` does not run transformers or decorations, so markup-producing options, including transformers, decorations, line numbers, and `structure`, have no effect on token output.
 
 ---
 

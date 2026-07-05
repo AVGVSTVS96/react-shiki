@@ -1,13 +1,6 @@
 import { useHighlight } from './lib/hook';
 import { createWebHighlighter } from './bundles/web';
-import type {
-  HighlighterOptionsFor,
-  Language,
-  OutputFormat,
-  Theme,
-  Themes,
-  UseShikiHighlighter,
-} from './lib/types';
+import type { UseShikiHighlighter } from './lib/types';
 
 export { isInlineCode, rehypeInlineCodeProperty } from './lib/plugins';
 
@@ -63,15 +56,12 @@ export type {
  *
  * Web bundle (~3.8MB minified, 695KB gzipped). For other bundles: `react-shiki` or `react-shiki/core`
  */
-export const useShikiHighlighter: UseShikiHighlighter = <
-  F extends OutputFormat = 'react',
->(
-  code: string,
-  lang: Language,
-  themeInput: Theme | Themes,
-  options: HighlighterOptionsFor<F> = {}
-) =>
-  useHighlight<F>(code, lang, themeInput, options, createWebHighlighter);
+export const useShikiHighlighter: UseShikiHighlighter = (
+  code,
+  lang,
+  themeInput,
+  options = {}
+) => useHighlight(code, lang, themeInput, options, createWebHighlighter);
 
 /**
  * ShikiHighlighter component using the web bundle.

@@ -1,13 +1,6 @@
 import { useHighlight } from './lib/hook';
 import { validateCoreHighlighter } from './bundles/core';
-import type {
-  HighlighterOptionsFor,
-  Language,
-  OutputFormat,
-  Theme,
-  Themes,
-  UseShikiHighlighter,
-} from './lib/types';
+import type { UseShikiHighlighter } from './lib/types';
 
 export { isInlineCode, rehypeInlineCodeProperty } from './lib/plugins';
 
@@ -72,18 +65,16 @@ export type { LanguageRegistration, TokensResult } from 'shiki/core';
  *
  * Core bundle (minimal). For plug-and-play: `react-shiki` or `react-shiki/web`
  */
-export const useShikiHighlighter: UseShikiHighlighter = <
-  F extends OutputFormat = 'react',
->(
-  code: string,
-  lang: Language,
-  themeInput: Theme | Themes,
-  options: HighlighterOptionsFor<F> = {}
+export const useShikiHighlighter: UseShikiHighlighter = (
+  code,
+  lang,
+  themeInput,
+  options = {}
 ) => {
   // Validate that highlighter is provided
   const highlighter = validateCoreHighlighter(options.highlighter);
 
-  return useHighlight<F>(
+  return useHighlight(
     code,
     lang,
     themeInput,
