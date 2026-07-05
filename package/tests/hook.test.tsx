@@ -6,7 +6,6 @@ import {
 } from '../src/index';
 import { useShikiHighlighter as useShikiHighlighterCore } from '../src/core';
 import type {
-  ComponentOutputFormat,
   HighlightResult,
   Language,
   Theme,
@@ -25,7 +24,7 @@ interface TestComponentProps {
   showLineNumbers?: boolean;
   startingLineNumber?: number;
   highlightLineNumbers?: number[];
-  outputFormat?: ComponentOutputFormat;
+  outputFormat?: 'react' | 'html';
   defaultColor?: string;
   cssVariablePrefix?: string;
   mergeWhitespaces?: boolean;
@@ -908,7 +907,7 @@ describe('useShikiHighlighter Hook', () => {
             ]),
           ],
         });
-        expect(capturedOutput!.tokens[0].length).toBeGreaterThan(1);
+        expect(capturedOutput?.tokens[0]?.length).toBeGreaterThan(1);
       });
     });
   });

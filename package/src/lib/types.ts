@@ -88,10 +88,14 @@ interface ReactShikiOptions {
    * Output format for the highlighted code.
    * - 'react': Returns React nodes (default, safer)
    * - 'html': Returns HTML string (rendered via dangerouslySetInnerHTML)
-   * - 'tokens': Returns Shiki tokens for custom rendering (hook only)
+   *
+   * The hook additionally accepts 'tokens' (experimental) to return raw
+   * Shiki tokens for custom rendering. It is deliberately excluded here
+   * and only enters through the hook's generic signature, so option
+   * objects typed with this interface keep the classic return type.
    * @default 'react'
    */
-  outputFormat?: OutputFormat;
+  outputFormat?: 'react' | 'html';
 
   /**
    * Custom Shiki highlighter instance to use instead of the default one.
@@ -174,7 +178,6 @@ interface TimeoutState {
  * Supported output formats and their corresponding result shapes.
  */
 type OutputFormat = 'react' | 'html' | 'tokens';
-type ComponentOutputFormat = Exclude<OutputFormat, 'tokens'>;
 
 interface HighlightResultMap {
   react: ReactElement;
@@ -190,14 +193,15 @@ type HighlightResult<F extends OutputFormat = 'react'> =
  * Per-call options shape: every highlighter option except `outputFormat`,
  * plus a narrowed `outputFormat?: F` so the return type can be inferred
  * from the format the caller actually passes.
+ *
+ * This is the only place 'tokens' is accepted. Keeping it out of
+ * `HighlighterOptions` means values typed with that interface infer
+ * `F = 'react' | 'html'` and keep their pre-tokens return type.
  */
 type HighlighterOptionsFor<F extends OutputFormat> = Omit<
   HighlighterOptions,
   'outputFormat'
 > & { outputFormat?: F };
-
-type ComponentHighlighterOptions =
-  HighlighterOptionsFor<ComponentOutputFormat>;
 
 type HighlighterFactory = (
   langsToLoad: Language[],
@@ -220,10 +224,8 @@ export type {
   TimeoutState,
   HighlighterOptions,
   HighlighterOptionsFor,
-  ComponentHighlighterOptions,
   HighlightResult,
   HighlightResultMap,
   OutputFormat,
-  ComponentOutputFormat,
   HighlighterFactory,
 };

@@ -3,8 +3,7 @@ import '../styles/features.css';
 import { clsx } from 'clsx';
 
 import type {
-  ComponentHighlighterOptions,
-  ComponentOutputFormat,
+  HighlighterOptions,
   Language,
   OutputFormat,
   Theme,
@@ -16,13 +15,13 @@ import { forwardRef } from 'react';
 let warnedTokensOutputFormat = false;
 
 /**
- * The component's types exclude `outputFormat: 'tokens'`, but plain-JS
+ * The component's props exclude `outputFormat: 'tokens'`, but plain-JS
  * callers can still pass it. Tokens are not renderable React children,
  * so fall back to 'react' instead of crashing the render.
  */
 const resolveOutputFormat = (
-  outputFormat: ComponentOutputFormat | undefined
-): ComponentOutputFormat | undefined => {
+  outputFormat: HighlighterOptions['outputFormat']
+): HighlighterOptions['outputFormat'] => {
   if ((outputFormat as OutputFormat) !== 'tokens') return outputFormat;
 
   if (!warnedTokensOutputFormat) {
@@ -37,8 +36,7 @@ const resolveOutputFormat = (
 /**
  * Props for the ShikiHighlighter component
  */
-export interface ShikiHighlighterProps
-  extends ComponentHighlighterOptions {
+export interface ShikiHighlighterProps extends HighlighterOptions {
   /**
    * The programming language for syntax highlighting
    * Supports custom textmate grammar objects in addition to Shiki's bundled languages
@@ -156,7 +154,7 @@ export const createShikiHighlighterComponent = (
       },
       ref
     ) => {
-      const options: ComponentHighlighterOptions = {
+      const options: HighlighterOptions = {
         delay,
         transformers,
         customLanguages,
@@ -175,13 +173,12 @@ export const createShikiHighlighterComponent = (
           ? language.name || null
           : language?.trim() || null;
 
-      const highlightedCode =
-        useShikiHighlighterImpl<ComponentOutputFormat>(
-          code,
-          language,
-          theme,
-          options
-        );
+      const highlightedCode = useShikiHighlighterImpl(
+        code,
+        language,
+        theme,
+        options
+      );
 
       return (
         <Element

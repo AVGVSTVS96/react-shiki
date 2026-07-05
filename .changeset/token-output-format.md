@@ -1,5 +1,7 @@
 ---
-"react-shiki": minor
+"react-shiki": patch
 ---
 
-Add experimental `outputFormat: 'tokens'` support to `useShikiHighlighter` for returning Shiki's raw token output (`TokensResult`) for custom rendering. Hook-only: the `ShikiHighlighter` component excludes it at the type level and falls back to `'react'` with a console warning if passed at runtime. The hook's return type now narrows based on the `outputFormat` passed (`'react'` → `ReactElement`, `'html'` → `string`, `'tokens'` → `TokensResult`).
+Add experimental `outputFormat: 'tokens'` support to `useShikiHighlighter`, returning Shiki's raw `TokensResult` for custom rendering. The hook's return type narrows based on the literal `outputFormat` passed: `'react'` returns `ReactElement`, `'html'` returns `string`, and `'tokens'` returns `TokensResult`.
+
+Token output is hook-only. `'tokens'` is accepted through the hook's generic signature but excluded from `HighlighterOptions` and the component's props, so existing option objects and wrappers keep their current types. The `ShikiHighlighter` component warns and falls back to `'react'` if `'tokens'` is passed at runtime.

@@ -5,7 +5,11 @@ import type {
   CodeToHastOptions,
 } from 'shiki';
 
-import type { HighlighterOptions } from './types';
+import type {
+  HighlighterOptions,
+  HighlighterOptionsFor,
+  OutputFormat,
+} from './types';
 import type { ResolvedTheme } from './theme';
 import {
   highlightedLinesTransformer,
@@ -35,7 +39,7 @@ const buildThemeOptions = (
 export const buildShikiOptions = (
   languageId: string,
   resolvedTheme: ResolvedTheme,
-  options: HighlighterOptions
+  options: HighlighterOptionsFor<OutputFormat>
 ): CodeToHastOptions => {
   const {
     delay,
