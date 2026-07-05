@@ -81,8 +81,10 @@ jobs:
             # updated_at is the last-review time; no comment yet (e.g.
             # freshly opened PR) means review now. claude[bot] is right
             # here: this branch only runs for same-repo PRs.
-            LAST=$(gh api --paginate "repos/$REPO/issues/$PR/comments" \
-              --jq '[.[] | select(.user.login == "claude[bot]") | .updated_at] | max // empty')
+            # --slurp wraps pages in an outer array so max is global, not
+            # per-page
+            LAST=$(gh api --paginate --slurp "repos/$REPO/issues/$PR/comments" \
+              | jq -r '[.[][] | select(.user.login == "claude[bot]") | .updated_at] | max // empty')
             if [ -n "$LAST" ]; then
               ELAPSED=$(( $(date +%s) - $(date -d "$LAST" +%s) ))
               if [ "$ELAPSED" -lt "$COOLDOWN" ]; then
@@ -121,7 +123,7 @@ jobs:
 
           claude_args: |
             --model ${{ steps.gate.outputs.model }}
-            --allowedTools "mcp__github_inline_comment__create_inline_comment,Bash(gh pr comment:*),Bash(gh pr diff:*),Bash(gh pr view:*)"
+            --allowedTools "mcp__github_inline_comment__create_inline_comment,Bash(gh pr comment:*),Bash(gh pr diff:*),Bash(gh pr view:*)${{ github.event_name == 'pull_request' && ',Bash(gh api graphql:*)' || '' }}"
 
           prompt: |
             REPO: ${{ github.repository }}
@@ -141,10 +143,11 @@ jobs:
 
             Be constructive and helpful in your feedback.
 
-            ${{ github.event_name == 'pull_request_target' &&
-            '
+            ${{ github.event_name == 'pull_request' &&
+            format('Inline comments: on re-reviews, leave open threads equal to your current findings. Reply with a one-line reason and resolve (GraphQL) your prior threads that are addressed or superseded — post fresh comments for superseded findings rather than editing. Never resolve human-authored threads.
 
-            IMPORTANT: When finished, post your complete review as a PR comment using `gh pr comment`. Nothing else will publish it for you — a review that is not posted with `gh pr comment` is lost.' || '' }}
+            IMPORTANT: When finished, publish your review summary with `gh pr comment {0} --edit-last --create-if-none --body ...` — nothing else publishes it for you, and an unposted review fails this workflow. Omit any model footer; one is appended for you.', github.event.pull_request.number) ||
+            format('IMPORTANT: When finished, post your complete review summary with `gh pr comment {0} --body ...` — nothing else publishes it for you, and an unposted review fails this workflow. Omit any model footer; one is appended for you.', github.event.pull_request.number) }}
 
             ${{ github.event.pull_request.author_association == 'FIRST_TIME_CONTRIBUTOR' &&
             '
@@ -184,8 +187,8 @@ jobs:
 
           # Only accept a comment created/updated during this run — a
           # stale one means Claude finished without publishing anything
-          COMMENT=$(gh api --paginate "repos/$REPO/issues/$PR/comments" \
-            --jq '[.[] | select(.user.login == "'"$BOT"'" and .updated_at >= "'"$STARTED"'")] | last')
+          COMMENT=$(gh api --paginate --slurp "repos/$REPO/issues/$PR/comments" \
+            | jq '[.[][] | select(.user.login == "'"$BOT"'" and .updated_at >= "'"$STARTED"'")] | max_by(.updated_at)')
           if [ -z "$COMMENT" ] || [ "$COMMENT" = "null" ]; then
             echo "::error::Review ran but no $BOT comment was posted since $STARTED — re-add the label to retry"
             exit 1
