@@ -25,6 +25,9 @@ export type {
   Themes,
   Element,
   HighlighterOptions,
+  HighlighterOptionsFor,
+  HighlightResult,
+  OutputFormat,
 } from './lib/types';
 
 export {
@@ -32,7 +35,10 @@ export {
   createJavaScriptRawEngine,
 } from 'shiki/engine/javascript';
 
-export type { LanguageRegistration } from 'shiki/bundle/web';
+export type {
+  LanguageRegistration,
+  TokensResult,
+} from 'shiki/bundle/web';
 
 /**
  * Highlight code with shiki (web bundle)
@@ -41,7 +47,7 @@ export type { LanguageRegistration } from 'shiki/bundle/web';
  * @param lang - Language (bundled or custom)
  * @param theme - Theme (bundled, multi-theme, or custom)
  * @param options - react-shiki options + shiki options
- * @returns Highlighted code as React elements or HTML string
+ * @returns Highlighted code as React elements (default), HTML string, or Shiki tokens, based on `outputFormat`
  *
  * @example
  * ```tsx

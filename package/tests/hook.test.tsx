@@ -910,6 +910,21 @@ describe('useShikiHighlighter Hook', () => {
         expect(capturedOutput?.tokens[0]?.length).toBeGreaterThan(1);
       });
     });
+
+    test('falls back to react rendering for unrecognized outputFormat', async () => {
+      const { getByTestId } = renderComponent({
+        code: 'const x = 1;',
+        language: 'javascript',
+        outputFormat: 'token' as any,
+      });
+
+      await waitFor(() => {
+        const container = getByTestId('highlighted');
+        expect(
+          container.querySelector('pre.shiki code span.line')
+        ).toBeInTheDocument();
+      });
+    });
   });
 
   describe('Engine Configuration', () => {

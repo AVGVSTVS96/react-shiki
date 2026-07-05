@@ -69,7 +69,9 @@ export async function highlight<F extends OutputFormat = 'react'>(
     tokens: () => highlighter.codeToTokens(code, options),
   };
 
-  return outputs[format]() as HighlightResultMap[F];
+  // Untyped call sites can pass formats outside OutputFormat; degrade to
+  // react rendering like the pre-tokens ternary did instead of throwing.
+  return (outputs[format] ?? outputs.react)() as HighlightResultMap[F];
 }
 
 export const useHighlight = <F extends OutputFormat = 'react'>(

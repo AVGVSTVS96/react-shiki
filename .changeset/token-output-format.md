@@ -1,5 +1,5 @@
 ---
-"react-shiki": patch
+"react-shiki": minor
 ---
 
 Add experimental `outputFormat: 'tokens'` support to `useShikiHighlighter`, returning Shiki's raw `TokensResult` for custom rendering. The hook's return type narrows based on the literal `outputFormat` passed: `'react'` returns `ReactElement`, `'html'` returns `string`, and `'tokens'` returns `TokensResult`.
