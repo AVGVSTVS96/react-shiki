@@ -26,12 +26,11 @@ jobs:
       && github.event.pull_request.user.type != 'Bot'
     runs-on: ubuntu-latest
     timeout-minutes: 15
-    # No id-token: the action gets github_token directly, skipping the OIDC
-    # exchange that Anthropic rejects for fork-PR (pull_request_target) runs.
     permissions:
       contents: read
       pull-requests: write
       issues: write
+      id-token: write
 
     steps:
       - name: Gate review and select model
@@ -59,9 +58,11 @@ jobs:
             gh api -X DELETE "repos/$REPO/issues/$PR/labels/$LABEL" || true
           else
             # The sticky review comment's updated_at is the last-review time;
-            # no comment yet (e.g. freshly opened PR) means review now
+            # no comment yet (e.g. freshly opened PR) means review now.
+            # claude[bot] is right here: this branch only runs for same-repo
+            # PRs, which review via the OIDC path.
             LAST=$(gh api --paginate "repos/$REPO/issues/$PR/comments" \
-              --jq '[.[] | select(.user.login == "github-actions[bot]") | .updated_at] | max // empty')
+              --jq '[.[] | select(.user.login == "claude[bot]") | .updated_at] | max // empty')
             if [ -n "$LAST" ]; then
               ELAPSED=$(( $(date +%s) - $(date -d "$LAST" +%s) ))
               if [ "$ELAPSED" -lt "$COOLDOWN" ]; then
@@ -90,9 +91,11 @@ jobs:
         uses: anthropics/claude-code-action@v1
         with:
           claude_code_oauth_token: ${{ secrets.CLAUDE_CODE_OAUTH_TOKEN }}
-          # Skip the OIDC → app-token exchange (401s on fork PRs); comments
-          # post as github-actions[bot] instead of claude[bot] as a result
-          github_token: ${{ secrets.GITHUB_TOKEN }}
+          # Fork PRs only: Anthropic's OIDC → app-token exchange 401s in
+          # fork contexts, so hand the action a token directly. Fork reviews
+          # post as github-actions[bot]; same-repo PRs take the OIDC path
+          # (empty string = unset) and keep posting as claude[bot].
+          github_token: ${{ github.event.pull_request.head.repo.full_name != github.repository && secrets.GITHUB_TOKEN || '' }}
 
           claude_args: |
             --model ${{ steps.gate.outputs.model }}
@@ -137,6 +140,9 @@ jobs:
           PR: ${{ github.event.pull_request.number }}
           MODEL: ${{ steps.gate.outputs.model }}
           EXECUTION_FILE: ${{ steps.claude-review.outputs.execution_file }}
+          # Matches the review's author: fork PRs run with github_token and
+          # post as github-actions[bot]; same-repo PRs post as claude[bot]
+          BOT: ${{ github.event.pull_request.head.repo.full_name != github.repository && 'github-actions[bot]' || 'claude[bot]' }}
         run: |
           NAME="Fable 5"
           [ "$MODEL" = "opus" ] && NAME="Opus 4.8"
@@ -150,7 +156,7 @@ jobs:
           fi
 
           COMMENT=$(gh api --paginate "repos/$REPO/issues/$PR/comments" \
-            --jq '[.[] | select(.user.login == "github-actions[bot]")] | last')
+            --jq '[.[] | select(.user.login == "'"$BOT"'")] | last')
           [ -n "$COMMENT" ] && [ "$COMMENT" != "null" ] || exit 0
 
           {
