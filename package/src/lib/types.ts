@@ -134,7 +134,6 @@ interface ReactShikiOptions {
 
   /**
    * Displayed line numbers to highlight
-   * @default []
    */
   highlightLineNumbers?: number[];
 }

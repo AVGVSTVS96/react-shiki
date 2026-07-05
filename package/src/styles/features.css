@@ -33,6 +33,7 @@
 :where(.rs-highlighted-line) {
   display: inline-block;
   width: 100%;
+  min-height: 1lh;
   background-color: var(
     --rs-highlighted-line-background,
     color-mix(in srgb, currentColor 10%, transparent)

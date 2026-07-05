@@ -88,7 +88,6 @@ export interface ShikiHighlighterProps extends HighlighterOptions {
 
   /**
    * Displayed line numbers to highlight
-   * @default []
    */
   highlightLineNumbers?: number[];
 

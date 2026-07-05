@@ -218,7 +218,7 @@ See [Shiki - RegExp Engines](https://shiki.style/guide/regex-engines) for more i
 | `engine`            | `RegexEngine`      | Oniguruma       | RegExp engine for syntax highlighting (Oniguruma, JavaScript RegExp, or JavaScript Raw) |
 | `showLineNumbers`   | `boolean`          | `false`         | Display line numbers alongside code                                           |
 | `startingLineNumber` | `number`           | `1`             | Starting line number when line numbers are enabled                           |
-| `highlightLineNumbers` | `number[]`     | `[]`            | Displayed line numbers to highlight                                           |
+| `highlightLineNumbers` | `number[]`     | -               | Displayed line numbers to highlight                                           |
 | `transformers`      | `array`            | `[]`            | Custom Shiki transformers for modifying the highlighting output               |
 | `cssVariablePrefix` | `string`           | `'--shiki'`     | Prefix for CSS variables storing theme colors                                 |
 | `defaultColor`      | `string \| false`  | `'light'`       | Default theme mode when using multiple themes, can also disable default theme |
