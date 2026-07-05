@@ -1,7 +1,10 @@
 name: Claude Code Review
 
+# pull_request_target (not pull_request) so fork PRs get OIDC and secrets,
+# which GitHub withholds from fork-triggered pull_request runs. It executes
+# in the base repo's context, so fork PRs only run via the label gate below.
 on:
-  pull_request:
+  pull_request_target:
     types: [opened, synchronize, reopened, ready_for_review, labeled]
 
 concurrency:
@@ -10,13 +13,15 @@ concurrency:
 
 jobs:
   claude-review:
-    # Auto-runs skip drafts and bot PRs; label events run only for the two
-    # trigger labels (labels still work on bot PRs since the actor is human).
-    # Adding labels requires write access, so PR authors can't trigger runs.
+    # Auto-runs are same-repo only and skip drafts and bot PRs; fork PRs
+    # review only via the two trigger labels (labels still work on bot PRs
+    # since the actor is human). Adding labels requires write access, so PR
+    # authors can't trigger runs against pull_request_target's secrets.
     if: >-
       github.event.action == 'labeled'
       && contains(fromJSON('["fable-review", "opus-review"]'), github.event.label.name)
       || github.event.action != 'labeled'
+      && github.event.pull_request.head.repo.full_name == github.repository
       && github.event.pull_request.draft == false
       && github.event.pull_request.user.type != 'Bot'
     runs-on: ubuntu-latest
@@ -72,6 +77,10 @@ jobs:
         if: steps.gate.outputs.run == 'true'
         uses: actions/checkout@v6
         with:
+          # pull_request_target checks out the base branch by default;
+          # review the PR's code instead. Safe to check out untrusted code
+          # here: allowedTools only reads the PR via gh, never executes it.
+          ref: ${{ github.event.pull_request.head.sha }}
           fetch-depth: 1
 
       - name: Run Claude Code Review
