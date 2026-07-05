@@ -1,6 +1,6 @@
 name: Claude Code Review
 
-# pull_request_target (not pull_request) so fork PRs get OIDC and secrets,
+# pull_request_target (not pull_request) so fork PRs get repo secrets,
 # which GitHub withholds from fork-triggered pull_request runs. It executes
 # in the base repo's context, so fork PRs only run via the label gate below.
 on:
@@ -26,11 +26,12 @@ jobs:
       && github.event.pull_request.user.type != 'Bot'
     runs-on: ubuntu-latest
     timeout-minutes: 15
+    # No id-token: the action gets github_token directly, skipping the OIDC
+    # exchange that Anthropic rejects for fork-PR (pull_request_target) runs.
     permissions:
       contents: read
       pull-requests: write
       issues: write
-      id-token: write
 
     steps:
       - name: Gate review and select model
@@ -60,7 +61,7 @@ jobs:
             # The sticky review comment's updated_at is the last-review time;
             # no comment yet (e.g. freshly opened PR) means review now
             LAST=$(gh api --paginate "repos/$REPO/issues/$PR/comments" \
-              --jq '[.[] | select(.user.login == "claude[bot]") | .updated_at] | max // empty')
+              --jq '[.[] | select(.user.login == "github-actions[bot]") | .updated_at] | max // empty')
             if [ -n "$LAST" ]; then
               ELAPSED=$(( $(date +%s) - $(date -d "$LAST" +%s) ))
               if [ "$ELAPSED" -lt "$COOLDOWN" ]; then
@@ -89,6 +90,9 @@ jobs:
         uses: anthropics/claude-code-action@v1
         with:
           claude_code_oauth_token: ${{ secrets.CLAUDE_CODE_OAUTH_TOKEN }}
+          # Skip the OIDC → app-token exchange (401s on fork PRs); comments
+          # post as github-actions[bot] instead of claude[bot] as a result
+          github_token: ${{ secrets.GITHUB_TOKEN }}
 
           claude_args: |
             --model ${{ steps.gate.outputs.model }}
@@ -146,7 +150,7 @@ jobs:
           fi
 
           COMMENT=$(gh api --paginate "repos/$REPO/issues/$PR/comments" \
-            --jq '[.[] | select(.user.login == "claude[bot]")] | last')
+            --jq '[.[] | select(.user.login == "github-actions[bot]")] | last')
           [ -n "$COMMENT" ] && [ "$COMMENT" != "null" ] || exit 0
 
           {
