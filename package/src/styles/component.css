@@ -6,14 +6,13 @@
 :where(.rs-root.rs-default-styles) pre {
   overflow: auto;
   border-radius: 0.5rem;
-  padding-left: 1.5rem;
-  padding-right: 1.5rem;
-  padding-top: 1.25rem;
-  padding-bottom: 1.25rem;
+  padding-inline: 1.5rem;
+  padding-block: 1.25rem;
 }
 
 :where(.rs-root) .rs-language-label {
   position: absolute;
+  z-index: 1;
   right: 0.75rem;
   top: 0.5rem;
   font-family: monospace;

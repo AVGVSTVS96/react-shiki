@@ -22,8 +22,6 @@
   pointer-events: none;
 }
 
-/* Size the code element to its content so line backgrounds
-   span the full scroll width, not just the visible area. */
 :where(.rs-has-highlighted-lines) {
   display: block;
   width: fit-content;
@@ -31,13 +29,21 @@
 }
 
 :where(.rs-highlighted-line) {
-  display: inline-block;
-  width: 100%;
-  min-height: 1lh;
-  background-color: var(
+  --_rs-hl-background: var(
     --rs-highlighted-line-background,
     color-mix(in srgb, currentColor 10%, transparent)
   );
+  display: inline-block;
+  width: 100%;
+  min-height: 1lh;
+  background-color: var(--_rs-hl-background);
+}
+
+/* Full bleed: the 100vw outset paints into the pre's padding, clipped by its overflow. */
+:where(.rs-default-styles) .rs-highlighted-line {
+  background-color: transparent;
+  border-image: linear-gradient(var(--_rs-hl-background) 0 0) fill 0 / 0 / 0
+    100vw;
 }
 
 :where(.rs-has-line-numbers .rs-highlighted-line)::before {
