@@ -474,6 +474,8 @@ Available CSS variables for customization:
 --rs-highlighted-line-number-foreground: color-mix(in srgb, currentColor 65%, transparent);
 ```
 
+With default styles, highlighted-line backgrounds automatically extend into the `pre`'s horizontal padding, reaching the container edges. When styling the `pre` yourself, highlights cover the code content area.
+
 You can customize them in your own CSS or by using the style prop on the component:
 ```tsx
 <ShikiHighlighter 
