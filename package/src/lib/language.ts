@@ -114,7 +114,8 @@ export const resolveLanguage = (
     primaryLang = lang;
   } else {
     // Language is string
-    const lowerLang = lang.toLowerCase();
+    const normalizedLang = lang.trim();
+    const lowerLang = normalizedLang.toLowerCase();
     const matches = (str: string | undefined): boolean =>
       str?.toLowerCase() === lowerLang;
 
@@ -133,16 +134,16 @@ export const resolveLanguage = (
     );
 
     if (customMatch) {
-      languageId = customMatch.name || lang;
+      languageId = customMatch.name || normalizedLang;
       primaryLang = customMatch;
-    } else if (langAliases?.[lang]) {
+    } else if (langAliases?.[normalizedLang]) {
       // Language is aliased
-      languageId = langAliases[lang];
-      primaryLang = langAliases[lang];
+      languageId = langAliases[normalizedLang];
+      primaryLang = langAliases[normalizedLang];
     } else {
       // For any other string, pass it through to the factory
-      languageId = lang;
-      primaryLang = lang;
+      languageId = normalizedLang;
+      primaryLang = normalizedLang;
     }
   }
 
