@@ -1,5 +1,33 @@
 # react-shiki
 
+## 0.11.0
+
+### Minor Changes
+
+- Feat: add `highlightLineNumbers` option to highlight specific lines by displayed line number (respects `startingLineNumber`) _[`#172`](https://github.com/AVGVSTVS96/react-shiki/pull/172) [`cdf859a`](https://github.com/avgvstvs96/react-shiki/commit/cdf859a8968baf51cc231e761969b12a99c25bd7) [@aouxwoux](https://github.com/aouxwoux)_
+
+  Highlighted lines get the `rs-highlighted-line` class. The highlight color adapts to the active theme, deriving from its text color. With default styles, backgrounds automatically extend into the pre's horizontal padding so they reach the container edges.
+
+  New CSS variables:
+
+  - `--rs-highlighted-line-background`: highlight color (default: theme text color at 10% opacity)
+  - `--rs-highlighted-line-number-foreground`: line number color on highlighted lines (default: theme text color at 65% opacity)
+
+- Add experimental `outputFormat: 'tokens'` support to `useShikiHighlighter`, returning Shiki's raw `TokensResult` for custom rendering. The hook's return type narrows based on the literal `outputFormat` passed: `'react'` returns `ReactElement`, `'html'` returns `string`, and `'tokens'` returns `TokensResult`. _[`#146`](https://github.com/AVGVSTVS96/react-shiki/pull/146) [`4937a4c`](https://github.com/avgvstvs96/react-shiki/commit/4937a4ccbe66c4dc3e18a860c84150b7b596177c) [@AVGVSTVS96](https://github.com/AVGVSTVS96)_
+
+  Token output is hook-only. `'tokens'` is accepted through the hook's generic signature but excluded from `HighlighterOptions` and the component's props, so existing option objects and wrappers keep their current types. The `ShikiHighlighter` component warns and falls back to `'react'` if `'tokens'` is passed at runtime.
+
+- Fix(css): default styles no longer use `@layer base`, which broke Tailwind v3 builds (its PostCSS plugin treats `@layer base` as a Tailwind directive). Default styles are now unlayered with zero-specificity `:where()` selectors: CSS resets (e.g. Tailwind preflight) can no longer override them, while any rule in your own CSS still can. _[`#174`](https://github.com/AVGVSTVS96/react-shiki/pull/174) [`3907885`](https://github.com/avgvstvs96/react-shiki/commit/3907885f92bd19b2b6623f35a60db615334ce216) [@AVGVSTVS96](https://github.com/AVGVSTVS96)_
+
+  BREAKING CHANGE (css): Small risk for users with `applyDefaultStyles` enabled:
+
+  - `pre` padding or `border-radius` overrides from cascade layers (e.g. Tailwind `[&_pre]:p-3.5`) no longer apply. Use `!` / `!important` or disable default styles. Plain (unlayered) CSS is unaffected.
+
+### Patch Changes
+
+- Fix: trim language ids before resolving _[`#183`](https://github.com/AVGVSTVS96/react-shiki/pull/183) [`7b22c1e`](https://github.com/avgvstvs96/react-shiki/commit/7b22c1e24e0f1eac047ff2a048e63c59007a3499) [@aouxwoux](https://github.com/aouxwoux)_
+- Updated dependencies _[`#175`](https://github.com/AVGVSTVS96/react-shiki/pull/175) [`f538013`](https://github.com/avgvstvs96/react-shiki/commit/f5380133061a056b3b26633f045b0738994409e1) [@AVGVSTVS96](https://github.com/AVGVSTVS96)_
+
 ## 0.10.1
 
 ### Patch Changes
