@@ -26,7 +26,8 @@
 ### Patch Changes
 
 - Fix: trim language ids before resolving _[`#183`](https://github.com/AVGVSTVS96/react-shiki/pull/183) [`7b22c1e`](https://github.com/avgvstvs96/react-shiki/commit/7b22c1e24e0f1eac047ff2a048e63c59007a3499) [@aouxwoux](https://github.com/aouxwoux)_
-- Updated dependencies _[`#175`](https://github.com/AVGVSTVS96/react-shiki/pull/175) [`f538013`](https://github.com/avgvstvs96/react-shiki/commit/f5380133061a056b3b26633f045b0738994409e1) [@AVGVSTVS96](https://github.com/AVGVSTVS96)_
+- Updated dependencies _[`#166`](https://github.com/AVGVSTVS96/react-shiki/pull/166) [`a8c491f`](https://github.com/avgvstvs96/react-shiki/commit/a8c491f686c6c8c9a24cf3e23e80c431cabe7f58) [@renovate](https://github.com/apps/renovate)_
+- Updated dependencies _[`#167`](https://github.com/AVGVSTVS96/react-shiki/pull/167) [`721b1b1`](https://github.com/avgvstvs96/react-shiki/commit/721b1b15396d38c582edba620cb7d3b7246f72cb) [@renovate](https://github.com/apps/renovate)_
 
 ## 0.10.1
 
