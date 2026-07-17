@@ -1,5 +1,13 @@
 # react-shiki
 
+## 0.11.1
+
+### Patch Changes
+
+- Fix case-insensitive matching for language aliases. _[`#184`](https://github.com/AVGVSTVS96/react-shiki/pull/184) [`2484f24`](https://github.com/avgvstvs96/react-shiki/commit/2484f24bc73617f0370fd31abe6e16d87bc75bb9) [@aouxwoux](https://github.com/aouxwoux)_
+- Fix: styles silently dropped from webpack production builds. `sideEffects` still listed pre-0.10 source paths instead of the published `dist/style.css`, so webpack tree-shook the stylesheet import with no warning (affects 0.10.0–0.11.0). Now `**/*.css`. _[`#185`](https://github.com/AVGVSTVS96/react-shiki/pull/185) [`607be76`](https://github.com/avgvstvs96/react-shiki/commit/607be763a4e43632a1e21054f6b155b4529b12b8) [@AVGVSTVS96](https://github.com/AVGVSTVS96)_
+- Fix(css): three default-style selectors left part of the selector outside `:where()` (`pre`, language label, highlighted line), giving them real specificity that could tie with or beat user rules depending on stylesheet order. All selectors are now fully wrapped and zero-specificity, so any user rule always wins. _[`#185`](https://github.com/AVGVSTVS96/react-shiki/pull/185) [`607be76`](https://github.com/avgvstvs96/react-shiki/commit/607be763a4e43632a1e21054f6b155b4529b12b8) [@AVGVSTVS96](https://github.com/AVGVSTVS96)_
+
 ## 0.11.0
 
 ### Minor Changes
