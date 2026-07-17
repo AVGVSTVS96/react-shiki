@@ -32,8 +32,7 @@
     "src/styles/css.d.ts"
   ],
   "sideEffects": [
-    "src/styles/component.css",
-    "src/styles/features.css"
+    "**/*.css"
   ],
   "publishConfig": {
     "access": "public",
