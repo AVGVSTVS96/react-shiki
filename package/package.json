@@ -28,7 +28,6 @@
   "types": "./dist/index.d.mts",
   "files": [
     "dist",
-    "src/styles/features.css",
     "src/styles/css.d.ts"
   ],
   "sideEffects": [
@@ -53,12 +52,13 @@
     },
     "./css": {
       "types": "./src/styles/css.d.ts",
-      "default": "./src/styles/features.css"
+      "default": "./dist/style.css"
     }
   },
   "scripts": {
     "dev": "tsdown --watch",
     "build": "tsdown",
+    "check:package": "node scripts/check-package.mjs",
     "test": "vitest",
     "bench": "vitest bench",
     "lint": "biome lint .",

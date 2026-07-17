@@ -459,6 +459,8 @@ const highlightedCode = useShikiHighlighter(code, "javascript", "github-dark", {
 
 `highlightLineNumbers` uses displayed line numbers, so it works with `startingLineNumber`.
 
+Component styles are embedded in the JS and injected automatically at runtime — no CSS import or bundler configuration needed. The complete compiled stylesheet is also exported as `react-shiki/css` for use without JS.
+
 Component-internal default classes are namespaced under `rs-*` and written with zero-specificity `:where()` selectors, so they can't be clobbered by CSS resets (e.g. Tailwind preflight) regardless of stylesheet load order, while any rule in your own CSS — even a bare element selector — overrides them.
 
 Available CSS variables for customization:

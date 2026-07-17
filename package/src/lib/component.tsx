@@ -1,5 +1,5 @@
-import '../styles/component.css';
-import '../styles/features.css';
+import styles from '../styles/index.css?inline';
+import '../styles/index.css';
 import { clsx } from 'clsx';
 
 import type {
@@ -11,6 +11,29 @@ import type {
   UseShikiHighlighter,
 } from './types';
 import { forwardRef } from 'react';
+
+let stylesInjected = false;
+
+/**
+ * Must run inside the factory, not at module scope: bundlers may drop
+ * top-level statements in side-effect-free packages, but never a call
+ * whose result is a used export.
+ */
+const injectStyles = () => {
+  if (stylesInjected || typeof document === 'undefined') return;
+  stylesInjected = true;
+  try {
+    // Exempt from CSP style-src, unlike the <style> fallback
+    const sheet = new CSSStyleSheet();
+    sheet.replaceSync(styles);
+    document.adoptedStyleSheets = [...document.adoptedStyleSheets, sheet];
+  } catch {
+    const style = document.createElement('style');
+    style.dataset.reactShiki = '';
+    style.textContent = styles;
+    document.head.append(style);
+  }
+};
 
 let warnedTokensOutputFormat = false;
 
@@ -127,6 +150,7 @@ export interface ShikiHighlighterProps extends HighlighterOptions {
 export const createShikiHighlighterComponent = (
   useShikiHighlighterImpl: UseShikiHighlighter
 ) => {
+  injectStyles();
   return forwardRef<HTMLElement, ShikiHighlighterProps>(
     (
       {

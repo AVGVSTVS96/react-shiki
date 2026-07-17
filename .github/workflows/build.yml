@@ -26,3 +26,6 @@ jobs:
 
       - name: Build
         run: pnpm --filter react-shiki build
+
+      - name: Verify package integrity
+        run: pnpm --filter react-shiki check:package
