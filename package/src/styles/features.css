@@ -40,10 +40,10 @@
 }
 
 /* Full bleed: the 100vw outset paints into the pre's padding, clipped by its overflow. */
-:where(.rs-default-styles) .rs-highlighted-line {
+:where(.rs-default-styles .rs-highlighted-line) {
   background-color: transparent;
-  border-image: linear-gradient(var(--_rs-hl-background) 0 0) fill 0 / 0 / 0
-    100vw;
+  border-image:
+    linear-gradient(var(--_rs-hl-background) 0 0) fill 0 / 0 / 0 100vw;
 }
 
 :where(.rs-has-line-numbers .rs-highlighted-line)::before {
