@@ -3,14 +3,14 @@
   position: relative;
 }
 
-:where(.rs-root.rs-default-styles) pre {
+:where(.rs-root.rs-default-styles pre) {
   overflow: auto;
   border-radius: 0.5rem;
   padding-inline: 1.5rem;
   padding-block: 1.25rem;
 }
 
-:where(.rs-root) .rs-language-label {
+:where(.rs-root .rs-language-label) {
   position: absolute;
   z-index: 1;
   right: 0.75rem;
