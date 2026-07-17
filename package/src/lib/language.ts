@@ -136,14 +136,20 @@ export const resolveLanguage = (
     if (customMatch) {
       languageId = customMatch.name || normalizedLang;
       primaryLang = customMatch;
-    } else if (langAliases?.[normalizedLang]) {
-      // Language is aliased
-      languageId = langAliases[normalizedLang];
-      primaryLang = langAliases[normalizedLang];
     } else {
-      // For any other string, pass it through to the factory
-      languageId = normalizedLang;
-      primaryLang = normalizedLang;
+      const alias = Object.entries(langAliases ?? {}).find(([name]) =>
+        matches(name)
+      )?.[1];
+
+      if (alias) {
+        // Language is aliased
+        languageId = alias;
+        primaryLang = alias;
+      } else {
+        // For any other string, pass it through to the factory
+        languageId = normalizedLang;
+        primaryLang = normalizedLang;
+      }
     }
   }
 

@@ -165,6 +165,17 @@ describe('resolveLanguage', () => {
     });
   });
 
+  test('matches alias map keys case-insensitively', () => {
+    expect(
+      resolveLanguage('MyLang', undefined, {
+        mylang: 'javascript',
+      })
+    ).toEqual({
+      languageId: 'javascript',
+      langsToLoad: ['javascript'],
+    });
+  });
+
   test('falls back to passthrough when no resolver match exists', () => {
     expect(resolveLanguage('plain-old-lang', customLanguage)).toEqual({
       languageId: 'plain-old-lang',
