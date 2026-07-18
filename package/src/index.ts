@@ -64,7 +64,6 @@ export const useShikiHighlighter: UseShikiHighlighter = (
  * ShikiHighlighter component using the full bundle.
  * Includes all languages and themes for maximum compatibility.
  */
-export const ShikiHighlighter = createShikiHighlighterComponent(
-  useShikiHighlighter
-);
+export const ShikiHighlighter =
+  /*#__PURE__*/ createShikiHighlighterComponent(useShikiHighlighter);
 export default ShikiHighlighter;

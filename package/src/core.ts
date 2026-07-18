@@ -90,7 +90,6 @@ export const useShikiHighlighter: UseShikiHighlighter = (
  * ShikiHighlighter component using a custom highlighter.
  * Requires a highlighter to be provided.
  */
-export const ShikiHighlighter = createShikiHighlighterComponent(
-  useShikiHighlighter
-);
+export const ShikiHighlighter =
+  /*#__PURE__*/ createShikiHighlighterComponent(useShikiHighlighter);
 export default ShikiHighlighter;
