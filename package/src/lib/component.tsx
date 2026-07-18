@@ -1,7 +1,3 @@
-import styles from '../styles/index.css?inline';
-// Side-effect import so tsdown emits dist/style.css for the ./css export;
-// stripped from the built JS, guarded by check:package
-import '../styles/index.css';
 import { clsx } from 'clsx';
 
 import type {
@@ -13,29 +9,7 @@ import type {
   UseShikiHighlighter,
 } from './types';
 import { forwardRef } from 'react';
-
-let stylesInjected = false;
-
-/**
- * Must run inside the factory, not at module scope: bundlers may drop
- * top-level statements in side-effect-free packages, but never a call
- * whose result is a used export.
- */
-const injectStyles = () => {
-  if (stylesInjected || typeof document === 'undefined') return;
-  stylesInjected = true;
-  try {
-    // Not governed by CSP style-src in current browsers, unlike the <style> fallback
-    const sheet = new CSSStyleSheet();
-    sheet.replaceSync(styles);
-    document.adoptedStyleSheets = [...document.adoptedStyleSheets, sheet];
-  } catch {
-    const style = document.createElement('style');
-    style.dataset.reactShiki = '';
-    style.textContent = styles;
-    document.head.append(style);
-  }
-};
+import { useComponentStyles } from './styles';
 
 let warnedTokensOutputFormat = false;
 
@@ -152,7 +126,6 @@ export interface ShikiHighlighterProps extends HighlighterOptions {
 export const createShikiHighlighterComponent = (
   useShikiHighlighterImpl: UseShikiHighlighter
 ) => {
-  injectStyles();
   return forwardRef<HTMLElement, ShikiHighlighterProps>(
     (
       {
@@ -180,6 +153,10 @@ export const createShikiHighlighterComponent = (
       },
       ref
     ) => {
+      // Kept inside the component so hook-only bundles can tree-shake it
+      // together with the component CSS.
+      useComponentStyles();
+
       const options: HighlighterOptions = {
         delay,
         transformers,

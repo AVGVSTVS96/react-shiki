@@ -2,12 +2,15 @@
 import { readFile, readdir } from 'node:fs/promises';
 import { join } from 'node:path';
 import { fileURLToPath, pathToFileURL } from 'node:url';
+import { rolldown } from 'rolldown';
 
 const dist = fileURLToPath(new URL('../dist/', import.meta.url));
 const fail = (msg) => {
   console.error(`✗ ${msg}`);
   process.exitCode = 1;
 };
+
+const entries = ['index.mjs', 'web.mjs', 'core.mjs'];
 
 for (const file of await readdir(dist)) {
   if (!file.endsWith('.mjs')) continue;
@@ -19,11 +22,15 @@ for (const file of await readdir(dist)) {
   ) {
     fail(`${file} contains a CSS import`);
   }
-  // Style injection survives tree-shaking only because bundlers must
-  // retain a factory call that isn't annotated pure
-  if (/__PURE__\s*\*\/\s*createShikiHighlighterComponent\(/.test(code)) {
+}
+
+// Tree-shaking hook-only bundles depends on the factory calls staying
+// pure-annotated (injection happens when the component mounts)
+for (const entry of entries) {
+  const code = await readFile(join(dist, entry), 'utf8');
+  if (!/__PURE__\s*\*\/\s*createShikiHighlighterComponent\(/.test(code)) {
     fail(
-      `${file} has a PURE-annotated factory call, bundlers would strip style injection`
+      `${entry} factory call lost its PURE annotation, hook-only consumers would bundle the component`
     );
   }
 }
@@ -37,7 +44,7 @@ for (const selector of ['.rs-root', '.rs-highlighted-line']) {
   }
 }
 
-for (const entry of ['index.mjs', 'web.mjs', 'core.mjs']) {
+for (const entry of entries) {
   try {
     await import(pathToFileURL(join(dist, entry)).href);
   } catch (error) {
@@ -45,6 +52,48 @@ for (const entry of ['index.mjs', 'web.mjs', 'core.mjs']) {
       `plain Node ESM import of dist/${entry} failed: ${error.message}`
     );
   }
+}
+
+// Bundle dist as a consumer would and verify what tree-shaking keeps:
+// hook-only bundles must drop the component and its styles entirely
+const bundleDist = async (source) => {
+  const bundle = await rolldown({
+    input: 'virtual-entry',
+    external: (id) =>
+      id !== 'virtual-entry' &&
+      !id.startsWith('file:') &&
+      !id.startsWith('.') &&
+      !id.startsWith('/'),
+    logLevel: 'silent',
+    plugins: [
+      {
+        name: 'virtual-entry',
+        resolveId: (id) => (id === 'virtual-entry' ? id : null),
+        load: (id) => (id === 'virtual-entry' ? source : null),
+      },
+    ],
+  });
+  const { output } = await bundle.generate({ format: 'esm' });
+  await bundle.close();
+  return output[0].code;
+};
+
+const indexPath = pathToFileURL(join(dist, 'index.mjs')).href;
+const hookOnly = await bundleDist(
+  `export { useShikiHighlighter } from ${JSON.stringify(indexPath)};`
+);
+if (hookOnly.includes('rs-root')) {
+  fail('hook-only bundle retains the component or its styles');
+}
+if (!hookOnly.includes('.rs-highlighted-line')) {
+  fail('hook-only bundle dropped the gated feature styles');
+}
+
+const withComponent = await bundleDist(
+  `export { ShikiHighlighter } from ${JSON.stringify(indexPath)};`
+);
+if (!withComponent.includes(':where(.rs-root)')) {
+  fail('component bundle dropped the component styles');
 }
 
 if (process.exitCode) process.exit(process.exitCode);
