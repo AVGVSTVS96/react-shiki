@@ -1,4 +1,6 @@
 import styles from '../styles/index.css?inline';
+// Side-effect import so tsdown emits dist/style.css for the ./css export;
+// stripped from the built JS, guarded by check:package
 import '../styles/index.css';
 import { clsx } from 'clsx';
 
@@ -23,7 +25,7 @@ const injectStyles = () => {
   if (stylesInjected || typeof document === 'undefined') return;
   stylesInjected = true;
   try {
-    // Exempt from CSP style-src, unlike the <style> fallback
+    // Not governed by CSP style-src in current browsers, unlike the <style> fallback
     const sheet = new CSSStyleSheet();
     sheet.replaceSync(styles);
     document.adoptedStyleSheets = [...document.adoptedStyleSheets, sheet];

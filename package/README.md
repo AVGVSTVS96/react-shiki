@@ -442,7 +442,7 @@ Line numbers are CSS-based and can be customized with CSS variables:
   {code}
 </ShikiHighlighter>
 
-// Hook (import 'react-shiki/css' for line numbers to work)
+// Hook (styles are injected automatically, same as the component)
 const highlightedCode = useShikiHighlighter(code, "javascript", "github-dark", {
   showLineNumbers: true,
   startingLineNumber: 0,
@@ -451,15 +451,12 @@ const highlightedCode = useShikiHighlighter(code, "javascript", "github-dark", {
 ```
 
 > [!NOTE]
-> When using the hook with line numbers or highlighted lines, import the CSS file or provide your own CSS
-> for `.rs-line-number` (line `span`), `.rs-highlighted-line` (line `span`), and `.rs-has-line-numbers` / `.rs-has-highlighted-lines` (container `code` element).
-> ```tsx
-> import 'react-shiki/css';
-> ```
+> No CSS import is needed: line-number and highlight styles are injected automatically for both the component and the hook.
+> To customize them, override `.rs-line-number` (line `span`), `.rs-highlighted-line` (line `span`), and `.rs-has-line-numbers` / `.rs-has-highlighted-lines` (container `code` element) in your own CSS.
 
 `highlightLineNumbers` uses displayed line numbers, so it works with `startingLineNumber`.
 
-Component styles are embedded in the JS and injected automatically at runtime — no CSS import or bundler configuration needed. The complete compiled stylesheet is also exported as `react-shiki/css` for use without JS.
+Component styles are embedded in the JS and injected automatically at runtime — no CSS import or bundler configuration needed. The complete compiled stylesheet is also exported as `react-shiki/css` for explicit stylesheet pipelines or environments where runtime injection is unsuitable.
 
 Component-internal default classes are namespaced under `rs-*` and written with zero-specificity `:where()` selectors, so they can't be clobbered by CSS resets (e.g. Tailwind preflight) regardless of stylesheet load order, while any rule in your own CSS — even a bare element selector — overrides them.
 
