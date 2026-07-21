@@ -442,7 +442,7 @@ Line numbers are CSS-based and can be customized with CSS variables:
   {code}
 </ShikiHighlighter>
 
-// Hook (import 'react-shiki/css' for line numbers to work)
+// Hook (line-number styles inject automatically when enabled)
 const highlightedCode = useShikiHighlighter(code, "javascript", "github-dark", {
   showLineNumbers: true,
   startingLineNumber: 0,
@@ -451,13 +451,12 @@ const highlightedCode = useShikiHighlighter(code, "javascript", "github-dark", {
 ```
 
 > [!NOTE]
-> When using the hook with line numbers or highlighted lines, import the CSS file or provide your own CSS
-> for `.rs-line-number` (line `span`), `.rs-highlighted-line` (line `span`), and `.rs-has-line-numbers` / `.rs-has-highlighted-lines` (container `code` element).
-> ```tsx
-> import 'react-shiki/css';
-> ```
+> No CSS import is needed: the shared highlighting hook injects line-number and highlight styles automatically when those features are enabled, including when used through the component.
+> To customize them, override `.rs-line-number` (line `span`), `.rs-highlighted-line` (line `span`), and `.rs-has-line-numbers` / `.rs-has-highlighted-lines` (container `code` element) in your own CSS.
 
 `highlightLineNumbers` uses displayed line numbers, so it works with `startingLineNumber`.
+
+Component styles are embedded in the JS and installed automatically when the component mounts — no CSS import or bundler configuration needed. Injection is scoped to usage: component styles tree-shake out of hook-only bundles entirely, while line-number/highlight styles are installed only when those options are enabled. The complete compiled stylesheet is also exported as `react-shiki/css` for build-time CSS pipelines or as an externally loaded fallback. Importing it does not disable automatic runtime injection.
 
 Component-internal default classes are namespaced under `rs-*` and written with zero-specificity `:where()` selectors, so they can't be clobbered by CSS resets (e.g. Tailwind preflight) regardless of stylesheet load order, while any rule in your own CSS — even a bare element selector — overrides them.
 
