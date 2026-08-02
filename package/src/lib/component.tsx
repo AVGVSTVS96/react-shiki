@@ -1,5 +1,3 @@
-import '../styles/component.css';
-import '../styles/features.css';
 import { clsx } from 'clsx';
 
 import type {
@@ -11,6 +9,7 @@ import type {
   UseShikiHighlighter,
 } from './types';
 import { forwardRef } from 'react';
+import { useComponentStyles } from './styles';
 
 let warnedTokensOutputFormat = false;
 
@@ -154,6 +153,10 @@ export const createShikiHighlighterComponent = (
       },
       ref
     ) => {
+      // Kept inside the component so hook-only bundles can tree-shake it
+      // together with the component CSS.
+      useComponentStyles();
+
       const options: HighlighterOptions = {
         delay,
         transformers,

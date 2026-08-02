@@ -13,7 +13,7 @@ export default defineConfig((options) => {
     dts: true,
     sourcemap: true,
     clean: !dev,
-    css: { inject: true, minify: true },
+    css: { minify: true },
     deps: {
       onlyBundle: ['@types/hast', '@types/unist'],
     },

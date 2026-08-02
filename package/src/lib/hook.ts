@@ -17,6 +17,7 @@ import type {
 } from './types';
 
 import { throttleHighlighting, useStableValue } from './utils';
+import { useFeatureStyles } from './styles';
 import {
   getEmbeddedLanguages,
   resolveLanguage,
@@ -83,6 +84,14 @@ export const useHighlight = <F extends OutputFormat = 'react'>(
 ): HighlightResult<F> => {
   const [highlightedCode, setHighlightedCode] =
     useState<HighlightResult<F>>(null);
+
+  // This hook owns the line-number/highlight output, so it also owns the
+  // corresponding styles. The primitive boolean limits effect reruns.
+  useFeatureStyles(
+    Boolean(
+      options.showLineNumbers || options.highlightLineNumbers?.length
+    )
+  );
 
   const stableLang = useStableValue(lang);
   const stableTheme = useStableValue(themeInput);
