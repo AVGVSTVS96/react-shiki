@@ -81,6 +81,20 @@ export const resolveLoadedLanguage = (
     : FALLBACK_LANGUAGE;
 
 /**
+ * A registration matches a query by name, scopeName (full or its last
+ * segment, e.g. "source.tsx" -> "tsx"), aliases, or fileTypes.
+ */
+const registrationMatches = (
+  candidate: LanguageRegistration,
+  matches: (str: string | undefined) => boolean
+): boolean =>
+  matches(candidate.name) ||
+  matches(candidate.scopeName) ||
+  matches(candidate.scopeName?.split('.').pop()) ||
+  !!candidate.aliases?.some(matches) ||
+  !!candidate.fileTypes?.some(matches);
+
+/**
  * Resolves the language input to standardized IDs and objects for Shiki
  * @param lang The language input from props
  * @param customLanguages An array of custom textmate grammar objects or a single grammar object
@@ -96,69 +110,50 @@ export const resolveLanguage = (
 ): LanguageResult => {
   const customLangs = toArray(customLanguages);
   const preloadLangs = toArray(preloadLanguages);
-  const customMatchPool = [...customLangs, ...preloadLangs];
-  let languageId = FALLBACK_LANGUAGE;
-  let primaryLang: Language;
 
-  // Language is null or empty string
-  if (lang == null || (typeof lang === 'string' && !lang.trim())) {
-    return {
-      languageId,
-      langsToLoad: dedupeLanguages([...preloadLangs, ...customLangs]),
-    };
-  }
-
-  // Language is custom object
-  if (typeof lang === 'object') {
-    languageId = lang.name;
-    primaryLang = lang;
-  } else {
-    // Language is string
-    const normalizedLang = lang.trim();
-    const lowerLang = normalizedLang.toLowerCase();
-    const matches = (str: string | undefined): boolean =>
-      str?.toLowerCase() === lowerLang;
-
-    // Check custom registrations (from both customLanguages and preloadLanguages)
-    const customMatch = customMatchPool.find(
-      (candidate): candidate is LanguageRegistration =>
-        typeof candidate === 'object' &&
-        candidate != null &&
-        !!(
-          matches(candidate.name) ||
-          matches(candidate.scopeName) ||
-          matches(candidate.scopeName?.split('.').pop()) ||
-          candidate.aliases?.some(matches) ||
-          candidate.fileTypes?.some(matches)
-        )
-    );
-
-    if (customMatch) {
-      languageId = customMatch.name || normalizedLang;
-      primaryLang = customMatch;
-    } else {
-      const alias = Object.entries(langAliases ?? {}).find(([name]) =>
-        matches(name)
-      )?.[1];
-
-      if (alias) {
-        // Language is aliased
-        languageId = alias;
-        primaryLang = alias;
-      } else {
-        // For any other string, pass it through to the factory
-        languageId = normalizedLang;
-        primaryLang = normalizedLang;
-      }
-    }
-  }
-
-  return {
+  const result = (
+    languageId: string,
+    primary?: Language
+  ): LanguageResult => ({
     languageId,
     langsToLoad: dedupeLanguages([
-      primaryLang,
+      primary,
       ...preloadLangs,
       ...customLangs,
     ]),
-  };
+  });
+
+  if (lang == null || (typeof lang === 'string' && !lang.trim())) {
+    return result(FALLBACK_LANGUAGE);
+  }
+
+  if (typeof lang === 'object') {
+    return result(lang.name, lang);
+  }
+
+  const normalized = lang.trim();
+  const query = normalized.toLowerCase();
+  const matches = (str: string | undefined): boolean =>
+    str?.toLowerCase() === query;
+
+  // Custom registrations (from both customLanguages and preloadLanguages)
+  const customMatch = [...customLangs, ...preloadLangs].find(
+    (candidate): candidate is LanguageRegistration =>
+      typeof candidate === 'object' &&
+      candidate != null &&
+      registrationMatches(candidate, matches)
+  );
+  if (customMatch) {
+    return result(customMatch.name || normalized, customMatch);
+  }
+
+  const alias = Object.entries(langAliases ?? {}).find(([name]) =>
+    matches(name)
+  )?.[1];
+  if (alias) {
+    return result(alias, alias);
+  }
+
+  // Any other string passes through to the factory
+  return result(normalized, normalized);
 };
