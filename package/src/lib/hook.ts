@@ -24,6 +24,7 @@ import {
   resolveLoadedLanguage,
 } from './language';
 import { resolveTheme } from './theme';
+import { resolveEngine } from './engine';
 import { buildShikiOptions } from './options';
 
 export async function highlight<F extends OutputFormat = 'react'>(
@@ -46,7 +47,11 @@ export async function highlight<F extends OutputFormat = 'react'>(
   const highlighter =
     opts.highlighter ??
     (await (async () => {
-      const hl = await factory(langsToLoad, themesToLoad, opts.engine);
+      const hl = await factory(
+        langsToLoad,
+        themesToLoad,
+        resolveEngine(opts.engine)
+      );
       await hl.loadLanguage(
         ...getEmbeddedLanguages(code, languageId, hl)
       );

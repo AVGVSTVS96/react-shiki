@@ -63,6 +63,11 @@ type Themes = {
 };
 
 /**
+ * Named RegExp engines that react-shiki creates and caches internally.
+ */
+type EngineName = 'javascript' | 'oniguruma';
+
+/**
  * Configuration options specific to react-shiki
  */
 interface ReactShikiOptions {
@@ -71,6 +76,19 @@ interface ReactShikiOptions {
    * @default undefined (no throttling)
    */
   delay?: number;
+
+  /**
+   * RegExp engine for syntax highlighting.
+   * - 'oniguruma': compiled WebAssembly engine, maximum grammar support
+   * - 'javascript': pure-JS engine, no WASM fetch, faster startup
+   *
+   * Named engines are created lazily and cached by react-shiki, so they
+   * are safe to pass inline. A custom engine instance is also accepted;
+   * create it once at module scope, as a new instance on every render
+   * re-triggers highlighting.
+   * @default 'oniguruma'
+   */
+  engine?: EngineName | Awaitable<RegexEngine>;
 
   /**
    * Custom textmate grammars to be preloaded for highlighting.
@@ -155,10 +173,7 @@ interface HighlighterOptions
       'defaultColor' | 'cssVariablePrefix'
     >,
     Omit<CodeToHastOptions, 'lang' | 'theme' | 'themes'>,
-    Pick<
-      BundledHighlighterOptions<string, string>,
-      'langAlias' | 'engine'
-    > {}
+    Pick<BundledHighlighterOptions<string, string>, 'langAlias'> {}
 
 /**
  * State for the throttling logic
@@ -221,6 +236,7 @@ export type {
   Theme,
   Themes,
   Element,
+  EngineName,
   TimeoutState,
   HighlighterOptions,
   HighlighterOptionsFor,

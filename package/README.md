@@ -149,29 +149,54 @@ Shiki offers three built-in engines for syntax highlighting:
 
 #### Using Engines with Full and Web Bundles
 
-The full and web bundles use Oniguruma by default, but you can override this with the `engine` option:
+The full and web bundles use Oniguruma by default. The easiest way to switch is a named engine, which react-shiki creates and caches internally. No imports, no WASM fetch with `'javascript'`, and it's safe to pass inline:
 
 ```tsx
-import {
-  useShikiHighlighter,
-  createJavaScriptRegexEngine,
-  createJavaScriptRawEngine
-} from 'react-shiki';
-
-// Hook with JavaScript RegExp engine
+// Hook
 const highlightedCode = useShikiHighlighter(code, 'typescript', 'github-dark', {
-  engine: createJavaScriptRegexEngine()
+  engine: 'javascript'
 });
 
-// Component with JavaScript Raw engine (for pre-compiled languages)
-// See https://shiki.style/guide/regex-engines#pre-compiled-languages
-<ShikiHighlighter
-  language="typescript"
-  theme="github-dark"
-  engine={createJavaScriptRawEngine()}
->
+// Component
+<ShikiHighlighter language="typescript" theme="github-dark" engine="javascript">
   {code}
 </ShikiHighlighter>
+```
+
+> [!NOTE]
+> The underlying highlighter is a singleton created on the first highlight, so pass the same engine at every call site; mixed engines resolve to whichever highlighted first.
+>
+> **Heads up:** the next minor release, **0.12**, will swap the default engine from Oniguruma WASM to the JavaScript engine (with `forgiving` enabled by default, see [shiki/regex-engines](https://shiki.style/guide/regex-engines#use-with-unsupported-languages)).
+
+For engine configuration beyond the named defaults, pass an engine instance. **Create it once at module scope.** A new instance on every render defeats memoization and re-triggers highlighting on each render:
+
+```tsx
+import { useShikiHighlighter, createJavaScriptRegexEngine } from 'react-shiki';
+
+// Module scope: created once, stable across renders
+const engine = createJavaScriptRegexEngine({ forgiving: true });
+
+const highlightedCode = useShikiHighlighter(code, 'typescript', 'github-dark', {
+  engine
+});
+```
+
+The JavaScript Raw engine works the same way, but only with [pre-compiled languages](https://shiki.style/guide/regex-engines#pre-compiled-languages) (`@shikijs/langs-precompiled`). The full and web bundles ship regular grammars, so use it with the core bundle and a custom highlighter:
+
+```tsx
+import { useShikiHighlighter, createJavaScriptRawEngine } from 'react-shiki/core';
+import { createHighlighterCore } from 'react-shiki/core';
+
+// Module scope: raw engine + pre-compiled grammars, smallest and fastest
+const highlighter = await createHighlighterCore({
+  themes: [import('@shikijs/themes/github-dark')],
+  langs: [import('@shikijs/langs-precompiled/typescript')],
+  engine: createJavaScriptRawEngine()
+});
+
+const highlightedCode = useShikiHighlighter(code, 'typescript', 'github-dark', {
+  highlighter
+});
 ```
 
 #### Using Engines with Core Bundle
@@ -215,7 +240,7 @@ See [Shiki - RegExp Engines](https://shiki.style/guide/regex-engines) for more i
 | `customLanguages`   | `array`            | `[]`            | **Deprecated**: use `preloadLanguages` instead. |
 | `preloadLanguages`  | `array`            | `[]`            | Preload bundled language IDs and custom language grammars |
 | `langAlias`         | `object`           | `{}`            | Map of language aliases                                                       |
-| `engine`            | `RegexEngine`      | Oniguruma       | RegExp engine for syntax highlighting (Oniguruma, JavaScript RegExp, or JavaScript Raw) |
+| `engine`            | `'javascript' \| 'oniguruma' \| RegexEngine` | `'oniguruma'` | RegExp engine for syntax highlighting; named engines are created and cached internally |
 | `showLineNumbers`   | `boolean`          | `false`         | Display line numbers alongside code                                           |
 | `startingLineNumber` | `number`           | `1`             | Starting line number when line numbers are enabled                           |
 | `highlightLineNumbers` | `number[]`     | -               | Displayed line numbers to highlight                                           |
