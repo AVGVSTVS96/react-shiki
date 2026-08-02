@@ -70,7 +70,8 @@ describe('ShikiHighlighter Component', () => {
 
         expect(langLabel).toBeInTheDocument();
         expect(langLabel?.textContent).toBe('javascript');
-        expect(langLabel?.id).toBe('language-label');
+        // No id: multiple code blocks would otherwise produce duplicate ids
+        expect(langLabel?.id).toBe('');
       });
     });
 
