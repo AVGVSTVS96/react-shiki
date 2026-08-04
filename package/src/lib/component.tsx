@@ -96,23 +96,6 @@ export interface ShikiHighlighterProps extends HighlighterOptions {
   showLanguage?: boolean;
 
   /**
-   * Whether to show line numbers
-   * @default false
-   */
-  showLineNumbers?: boolean;
-
-  /**
-   * Starting line number (when showLineNumbers is true)
-   * @default 1
-   */
-  startingLineNumber?: number;
-
-  /**
-   * Displayed line numbers to highlight
-   */
-  highlightLineNumbers?: number[];
-
-  /**
    * The HTML element that wraps the generated code block.
    * @default 'div'
    */
@@ -131,45 +114,22 @@ export const createShikiHighlighterComponent = (
       {
         language,
         theme,
-        delay,
-        transformers,
-        defaultColor,
-        cssVariablePrefix,
         addDefaultStyles = true,
         style,
         langStyle,
         className,
         langClassName,
         showLanguage = true,
-        showLineNumbers = false,
-        startingLineNumber = 1,
-        highlightLineNumbers,
         children: code,
         as: Element = 'div',
-        customLanguages,
-        preloadLanguages,
         outputFormat,
-        ...shikiOptions
+        ...options
       },
       ref
     ) => {
       // Kept inside the component so hook-only bundles can tree-shake it
       // together with the component CSS.
       useComponentStyles();
-
-      const options: HighlighterOptions = {
-        delay,
-        transformers,
-        customLanguages,
-        preloadLanguages,
-        showLineNumbers,
-        defaultColor,
-        cssVariablePrefix,
-        startingLineNumber,
-        highlightLineNumbers,
-        outputFormat: resolveOutputFormat(outputFormat),
-        ...shikiOptions,
-      };
 
       const displayLanguageId =
         typeof language === 'object'
@@ -180,7 +140,10 @@ export const createShikiHighlighterComponent = (
         code,
         language,
         theme,
-        options
+        {
+          ...options,
+          outputFormat: resolveOutputFormat(outputFormat),
+        }
       );
 
       return (
