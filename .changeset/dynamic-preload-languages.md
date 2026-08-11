@@ -12,4 +12,4 @@ const preload = [() => import("../langs/mcfunction.tmLanguage.json")];
 </ShikiHighlighter>
 ```
 
-Promises, getters, and module objects are all accepted and resolved by shiki during highlighter setup. Define them at module scope; a fresh promise or arrow function on every render re-triggers highlighting. Additive only: strings and grammar objects work exactly as before.
+Promises, getters, and module objects are all accepted and resolved by shiki during highlighter setup. Define them at module scope, preferring the getter form: a fresh arrow function on every render re-triggers highlighting, while swapping a bare promise at runtime is not detected. Additive only: strings and grammar objects work exactly as before.

@@ -109,8 +109,9 @@ interface ReactShikiOptions {
    * Supports custom textmate grammars, replaces deprecated `customLanguages`
    *
    * Full/web bundles also accept dynamic grammar imports, keeping custom
-   * grammars out of the main bundle. Define them at module scope; a fresh
-   * promise or getter each render re-triggers highlighting.
+   * grammars out of the main bundle. Define them at module scope, preferring
+   * getters: a fresh getter each render re-triggers highlighting, while
+   * swapping a bare promise at runtime is not detected.
    *
    * @example
    * const preload = [() => import('../langs/mcfunction.json')];
