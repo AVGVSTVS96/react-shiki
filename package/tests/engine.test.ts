@@ -44,7 +44,9 @@ describe('resolveEngine', () => {
     vi.doMock('shiki/wasm', trap('shiki/wasm'));
 
     try {
-      const { resolveEngine: resolve } = await import('../src/lib/engine');
+      const { resolveEngine: resolve } = await import(
+        '../src/lib/engine'
+      );
       const engine = await resolve('javascript');
       expect(engine).toHaveProperty('createScanner');
     } finally {
@@ -65,7 +67,9 @@ describe('resolveEngine', () => {
     }));
 
     try {
-      const { resolveEngine: resolve } = await import('../src/lib/engine');
+      const { resolveEngine: resolve } = await import(
+        '../src/lib/engine'
+      );
 
       await expect(resolve('javascript')).rejects.toThrow(
         'transient load failure'
