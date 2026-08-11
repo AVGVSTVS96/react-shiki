@@ -2,7 +2,7 @@
 "react-shiki": patch
 ---
 
-Add named engines: `engine` now accepts `'javascript'` or `'oniguruma'` alongside engine instances.
+Feat: add named engines. `engine` now accepts `'javascript'` or `'oniguruma'` alongside engine instances.
 
 - Named engines are created, cached, and lazy-loaded internally; `'javascript'` skips the WASM fetch entirely
 - Referentially stable, so safe to pass inline without re-triggering highlighting on rerenders

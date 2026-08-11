@@ -2,4 +2,4 @@
 "react-shiki": patch
 ---
 
-Fix case-insensitive matching for language aliases.
+Fix: case-insensitive matching for language aliases.

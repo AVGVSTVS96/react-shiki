@@ -2,7 +2,7 @@
 "react-shiki": patch
 ---
 
-`preloadLanguages` now accepts dynamic grammar imports (shiki's `LanguageInput`) on the full and web bundles, so custom grammars can stay code-split instead of shipping in the main bundle:
+Feat: `preloadLanguages` now accepts dynamic grammar imports (shiki's `LanguageInput`) on the full and web bundles, so custom grammars can stay code-split instead of shipping in the main bundle:
 
 ```tsx
 const preload = [() => import("../langs/mcfunction.tmLanguage.json")];
