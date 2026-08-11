@@ -44,7 +44,7 @@ A performant client-side syntax highlighting component and hook for React, built
 - 🖼️ Provides both a `ShikiHighlighter` component and a `useShikiHighlighter` hook for more flexibility
 - 🔐 Flexible output: Choose between React elements (no `dangerouslySetInnerHTML`) or HTML strings
 - 📦 Multiple bundle options: Full bundle (~1.2MB gz), web bundle (~707KB gz), or minimal core bundle for fine-grained bundle control
-- 🖌️ Full support for custom TextMate themes and languages
+- 🖌️ Full support for custom TextMate themes and languages, passed as objects or dynamic imports
 - 🧬 Automatic highlighting of embedded languages (e.g. TypeScript fenced inside Markdown) via Shiki's `guessEmbeddedLanguages`
 - 🔧 Supports passing custom Shiki transformers to the highlighter, in addition to all other options supported by `codeToHast`
 - 🚰 Performant highlighting of streamed code, with optional throttling
@@ -309,7 +309,7 @@ The core inputs, positional arguments on the hook, props/children on the compone
 | `engine`            | `'javascript' \| 'oniguruma' \| RegexEngine` | `'oniguruma'` | RegExp engine for syntax highlighting; named engines are created and cached internally |
 | `highlighter`       | `Highlighter \| HighlighterCore` | -  | Custom highlighter instance, required for the core bundle                     |
 | `outputFormat`      | `string`           | `'react'`       | Output format: 'react' for React nodes, 'html' for HTML string, or 'tokens' for Shiki tokens (hook only, experimental) |
-| `preloadLanguages`  | `array`            | `[]`            | Preload bundled language IDs and custom language grammars |
+| `preloadLanguages`  | `array`            | `[]`            | Preload bundled language IDs, custom grammar objects, or dynamic grammar imports |
 | `customLanguages`   | `array`            | `[]`            | **Deprecated**: use `preloadLanguages` instead. |
 | `showLineNumbers`   | `boolean`          | `false`         | Display line numbers alongside code                                           |
 | `startingLineNumber` | `number`           | `1`             | Starting line number when line numbers are enabled                           |
@@ -490,7 +490,9 @@ import mcfunction from "../langs/mcfunction.tmLanguage.json";
 const highlightedCode = useShikiHighlighter(code, mcfunction, "github-dark");
 ```
 
-Passing grammar objects as props works with the full and web bundles, where react-shiki creates the highlighter and loads them for you. On the core bundle you own the highlighter, so include grammars there as dynamic imports:
+Passing grammar objects as props works with the full and web bundles, where react-shiki creates the highlighter and loads them for you. To keep custom grammars out of the main bundle, pass them as dynamic imports via `preloadLanguages` and reference them by name — see [Preloading Languages](#preloading-languages).
+
+On the core bundle you own the highlighter, so include grammars there as dynamic imports:
 
 ```tsx
 const highlighter = await createHighlighterCore({
