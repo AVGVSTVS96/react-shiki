@@ -1,5 +1,34 @@
 # react-shiki
 
+## 0.11.1
+
+### Patch Changes
+
+- Fix: case-insensitive matching for language aliases. _[`#184`](https://github.com/AVGVSTVS96/react-shiki/pull/184) [`2484f24`](https://github.com/avgvstvs96/react-shiki/commit/2484f24bc73617f0370fd31abe6e16d87bc75bb9) [@aouxwoux](https://github.com/aouxwoux)_
+- Fix(css): three default-style selectors left part of the selector outside `:where()` (`pre`, language label, highlighted line), giving them real specificity that could tie with or beat user rules depending on stylesheet order. All selectors are now fully wrapped and zero-specificity, so any user rule always wins. _[`#185`](https://github.com/AVGVSTVS96/react-shiki/pull/185) [`607be76`](https://github.com/avgvstvs96/react-shiki/commit/607be763a4e43632a1e21054f6b155b4529b12b8) [@AVGVSTVS96](https://github.com/AVGVSTVS96)_
+- Feat: `preloadLanguages` now accepts dynamic grammar imports (shiki's `LanguageInput`) on the full and web bundles, so custom grammars can stay code-split instead of shipping in the main bundle: _[`#193`](https://github.com/AVGVSTVS96/react-shiki/pull/193) [`530d033`](https://github.com/avgvstvs96/react-shiki/commit/530d0339e52dd15c16f12b2234c0c34603a3df44) [@AVGVSTVS96](https://github.com/AVGVSTVS96)_
+
+  ```tsx
+  const preload = [() => import("../langs/mcfunction.tmLanguage.json")];
+
+  <ShikiHighlighter language="mcfunction" preloadLanguages={preload}>
+    {code}
+  </ShikiHighlighter>;
+  ```
+
+  Promises, getters, and module objects are all accepted and resolved by shiki during highlighter setup. Define them at module scope, preferring the getter form: a fresh arrow function on every render re-triggers highlighting, while swapping a bare promise at runtime is not detected. Additive only: strings and grammar objects work exactly as before.
+
+- Feat: add named engines. `engine` now accepts `'javascript'` or `'oniguruma'` alongside engine instances. _[`#192`](https://github.com/AVGVSTVS96/react-shiki/pull/192) [`5f94c02`](https://github.com/avgvstvs96/react-shiki/commit/5f94c02cea58f4051def077f84d4aec4cac4f73c) [@AVGVSTVS96](https://github.com/AVGVSTVS96)_
+
+  - Named engines are created, cached, and lazy-loaded internally; `'javascript'` skips the WASM fetch entirely
+  - Referentially stable, so safe to pass inline without re-triggering highlighting on rerenders
+  - Engine instances are still accepted for custom configuration; create them once at module scope
+
+  **Heads up:** the next minor release will swap the default engine from Oniguruma WASM to the JavaScript engine (with `forgiving` enabled by default, see [shiki/regex-engines](https://shiki.style/guide/regex-engines#use-with-unsupported-languages)).
+
+- Fix: removed the hardcoded `id="language-label"` from the language label. Pages with multiple code blocks rendered duplicate ids (invalid HTML, and `getElementById` only ever found the first label). Style the label with the `.rs-language-label` class or `[data-slot="language-label"]` instead of `#language-label`. _[`#190`](https://github.com/AVGVSTVS96/react-shiki/pull/190) [`9b73990`](https://github.com/avgvstvs96/react-shiki/commit/9b739902f3e7e3c9dbcf196901f95939d91652f4) [@AVGVSTVS96](https://github.com/AVGVSTVS96)_
+- Fix: styles are embedded in the JS and install automatically at runtime (as before 0.10.0), no CSS import or bundler configuration needed. Fixes styles dropped from webpack production builds, `ERR_UNKNOWN_FILE_EXTENSION` crashes in plain Node ESM, and broken no-bundler/CDN usage. `react-shiki/css` still exports the complete compiled stylesheet for build-time CSS pipelines. _[`#188`](https://github.com/AVGVSTVS96/react-shiki/pull/188) [`6ef68a3`](https://github.com/avgvstvs96/react-shiki/commit/6ef68a3309c21de748a79b689ebda4314556443c) [@AVGVSTVS96](https://github.com/AVGVSTVS96)_
+
 ## 0.11.0
 
 ### Minor Changes
