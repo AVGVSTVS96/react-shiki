@@ -8,6 +8,7 @@ import { useShikiHighlighter as useShikiHighlighterCore } from '../src/core';
 import type {
   HighlightResult,
   Language,
+  PreloadLanguage,
   Theme,
   Themes,
 } from '../src/lib/types';
@@ -21,6 +22,7 @@ interface TestComponentProps {
   theme: Theme | Themes;
   transformers?: ShikiTransformer[];
   langAlias?: Record<string, string>;
+  preloadLanguages?: PreloadLanguage[];
   showLineNumbers?: boolean;
   startingLineNumber?: number;
   highlightLineNumbers?: number[];
@@ -182,6 +184,50 @@ describe('useShikiHighlighter Hook', () => {
         expect(preElement?.textContent).toBe(code);
         expect(lineSpan?.querySelectorAll('span[style]').length).toBe(0);
       });
+    });
+  });
+
+  describe('Dynamic Language Imports', () => {
+    const pointGrammar = {
+      name: 'point',
+      scopeName: 'source.point',
+      patterns: [{ match: '\\b(move|draw)\\b', name: 'keyword.control' }],
+      repository: {},
+    };
+
+    const expectHighlightedKeyword = async (
+      getByTestId: (id: string) => HTMLElement
+    ) => {
+      await waitFor(() => {
+        const preElement =
+          getByTestId('highlighted').querySelector('pre');
+        const keyword = Array.from(
+          preElement?.querySelectorAll('span') || []
+        ).find((span) => span.textContent === 'move');
+
+        expect(keyword).toBeInTheDocument();
+        expect(keyword).toHaveStyle('color: #D73A49');
+      });
+    };
+
+    test('highlights with a grammar preloaded via getter', async () => {
+      const { getByTestId } = renderComponent({
+        code: 'move 10 20',
+        language: 'point',
+        preloadLanguages: [() => Promise.resolve(pointGrammar)],
+      });
+
+      await expectHighlightedKeyword(getByTestId);
+    });
+
+    test('highlights with a grammar preloaded via module promise', async () => {
+      const { getByTestId } = renderComponent({
+        code: 'move 10 20',
+        language: 'point',
+        preloadLanguages: [Promise.resolve({ default: pointGrammar })],
+      });
+
+      await expectHighlightedKeyword(getByTestId);
     });
   });
 

@@ -14,6 +14,7 @@ export type { ShikiHighlighterProps };
 export type {
   UseShikiHighlighter,
   Language,
+  PreloadLanguage,
   Theme,
   Themes,
   Element,

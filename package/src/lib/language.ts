@@ -1,4 +1,4 @@
-import type { Language } from './types';
+import type { Language, PreloadLanguage } from './types';
 import { guessEmbeddedLanguages, isSpecialLang } from 'shiki/core';
 import type {
   DynamicImportLanguageRegistration,
@@ -27,21 +27,33 @@ export const getEmbeddedLanguages = (
  */
 type LanguageResult = {
   languageId: string;
-  langsToLoad: Language[];
+  langsToLoad: PreloadLanguage[];
 };
 
 const toArray = <T>(value?: T | T[]): T[] =>
   value == null ? [] : Array.isArray(value) ? value : [value];
 
-const languageKey = (lang: Language): string | null => {
+/** Deferred `LanguageInput` forms (getter, promise, module, array) that shiki resolves itself */
+type DynamicLanguage = Exclude<LanguageInput, LanguageRegistration>;
+
+const isDynamicLanguage = (
+  lang: PreloadLanguage
+): lang is DynamicLanguage =>
+  typeof lang === 'function' ||
+  lang instanceof Promise ||
+  Array.isArray(lang) ||
+  (typeof lang === 'object' && lang != null && 'default' in lang);
+
+const languageKey = (lang: PreloadLanguage): string | object | null => {
   if (lang == null) return null;
   if (typeof lang === 'string') return `s:${lang}`;
+  if (isDynamicLanguage(lang)) return lang;
   return `o:${lang.name}::${lang.scopeName}`;
 };
 
-const dedupeLanguages = (langs: Language[]): Language[] => {
-  const seen = new Set<string>();
-  const deduped: Language[] = [];
+const dedupeLanguages = (langs: PreloadLanguage[]): PreloadLanguage[] => {
+  const seen = new Set<string | object>();
+  const deduped: PreloadLanguage[] = [];
 
   for (const lang of langs) {
     const key = languageKey(lang);
@@ -55,14 +67,16 @@ const dedupeLanguages = (langs: Language[]): Language[] => {
 
 /**
  * Used in factories to check if language is supported.
- * Objects are validated as grammar registrations (name + scopeName).
+ * Objects are validated as grammar registrations (name + scopeName);
+ * dynamic imports pass through for shiki to resolve.
  */
 export const isLoadableLanguage = <T extends string>(
-  lang: Language,
+  lang: PreloadLanguage,
   bundledLanguages: Record<T, DynamicImportLanguageRegistration>
-): lang is NonNullable<Language> => {
+): lang is NonNullable<PreloadLanguage> => {
   if (lang == null) return false;
   if (typeof lang === 'string') return lang in bundledLanguages;
+  if (isDynamicLanguage(lang)) return true;
   return (
     typeof lang.name === 'string' && typeof lang.scopeName === 'string'
   );
@@ -106,7 +120,7 @@ export const resolveLanguage = (
   lang: Language,
   customLanguages?: LanguageRegistration | LanguageRegistration[],
   langAliases?: Record<string, string>,
-  preloadLanguages?: Language | Language[]
+  preloadLanguages?: PreloadLanguage | PreloadLanguage[]
 ): LanguageResult => {
   const customLangs = toArray(customLanguages);
   const preloadLangs = toArray(preloadLanguages);
@@ -141,6 +155,7 @@ export const resolveLanguage = (
     (candidate): candidate is LanguageRegistration =>
       typeof candidate === 'object' &&
       candidate != null &&
+      !isDynamicLanguage(candidate) &&
       registrationMatches(candidate, matches)
   );
   if (customMatch) {

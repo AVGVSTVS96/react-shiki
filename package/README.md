@@ -533,6 +533,27 @@ const highlightedCode = useShikiHighlighter(code, "typescript", "github-dark", {
 });
 ```
 
+Custom grammars can also be dynamic imports, keeping them out of the main bundle. Reference them by the grammar's `name` field:
+
+```tsx
+// Module scope: stable identity across renders, fetched on first highlight
+const preloadLanguages = [
+  () => import("../langs/mcfunction.tmLanguage.json"),
+  () => import("../langs/bosque.tmLanguage.json"),
+];
+
+<ShikiHighlighter
+  language="mcfunction"
+  theme="github-dark"
+  preloadLanguages={preloadLanguages}
+>
+  {code.trim()}
+</ShikiHighlighter>
+```
+
+> [!IMPORTANT]
+> Define dynamic imports at module scope. A fresh `import()` promise or arrow function on every render re-triggers highlighting.
+
 > [!NOTE] 
 > Bundled languages are loaded on demand and do not need to be preloaded. `preloadLanguages` applies to the full and web bundles; with a custom highlighter, load languages in `createHighlighterCore` instead.
 
