@@ -17,6 +17,7 @@ export type {
   Theme,
   Themes,
   Element,
+  EngineName,
   HighlighterOptions,
   HighlighterOptionsFor,
   HighlightResult,

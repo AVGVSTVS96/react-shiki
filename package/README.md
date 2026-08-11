@@ -184,8 +184,11 @@ const highlightedCode = useShikiHighlighter(code, 'typescript', 'github-dark', {
 The JavaScript Raw engine works the same way, but only with [pre-compiled languages](https://shiki.style/guide/regex-engines#pre-compiled-languages) (`@shikijs/langs-precompiled`). The full and web bundles ship regular grammars, so use it with the core bundle and a custom highlighter:
 
 ```tsx
-import { useShikiHighlighter, createJavaScriptRawEngine } from 'react-shiki/core';
-import { createHighlighterCore } from 'react-shiki/core';
+import {
+  useShikiHighlighter,
+  createHighlighterCore,
+  createJavaScriptRawEngine,
+} from 'react-shiki/core';
 
 // Module scope: raw engine + pre-compiled grammars, smallest and fastest
 const highlighter = await createHighlighterCore({

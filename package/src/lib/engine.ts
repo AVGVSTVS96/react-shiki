@@ -1,7 +1,7 @@
 import type { Awaitable, RegexEngine } from 'shiki/core';
 import type { EngineName } from './types';
 
-const engines = new Map<EngineName, Awaitable<RegexEngine>>();
+const engines = new Map<EngineName, Promise<RegexEngine>>();
 
 // Dynamic imports keep unused engines out of the loaded graph: naming an
 // engine loads only that engine, and 'javascript' never fetches the wasm.
@@ -35,10 +35,13 @@ export const resolveEngine = (
     );
   }
 
-  let instance = engines.get(engine);
-  if (!instance) {
-    instance = load();
-    engines.set(engine, instance);
-  }
+  const cached = engines.get(engine);
+  if (cached) return cached;
+
+  const instance = load();
+  // Evict rejected loads (e.g. transient wasm fetch failure) so the
+  // next highlight retries instead of reusing the cached rejection.
+  instance.catch(() => engines.delete(engine));
+  engines.set(engine, instance);
   return instance;
 };
