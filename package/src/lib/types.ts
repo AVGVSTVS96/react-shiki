@@ -7,6 +7,7 @@ import type {
   CodeToHastOptions,
   Highlighter,
   HighlighterCore,
+  LanguageInput,
   LanguageRegistration,
   RegexEngine,
   SpecialLanguage,
@@ -33,6 +34,13 @@ type Language =
   | StringLiteralUnion<BundledLanguage>
   | SpecialLanguage
   | undefined;
+
+/**
+ * A `preloadLanguages` entry: a bundled language id, a custom grammar
+ * object, or a dynamic grammar import (shiki's `LanguageInput`), e.g.
+ * `() => import('../langs/mcfunction.json')`
+ */
+type PreloadLanguage = Language | LanguageInput;
 
 type MultiThemeKey = 'dark' | 'light' | (string & {});
 
@@ -99,8 +107,15 @@ interface ReactShikiOptions {
   /**
    * Preload custom grammars or bundled languages.
    * Supports custom textmate grammars, replaces deprecated `customLanguages`
+   *
+   * Full/web bundles also accept dynamic grammar imports, keeping custom
+   * grammars out of the main bundle. Define them at module scope; a fresh
+   * promise or getter each render re-triggers highlighting.
+   *
+   * @example
+   * const preload = [() => import('../langs/mcfunction.json')];
    */
-  preloadLanguages?: Language | Language[];
+  preloadLanguages?: PreloadLanguage | PreloadLanguage[];
 
   /**
    * Output format for the highlighted code.
@@ -219,7 +234,7 @@ type HighlighterOptionsFor<F extends OutputFormat> = Omit<
 > & { outputFormat?: F };
 
 type HighlighterFactory = (
-  langsToLoad: Language[],
+  langsToLoad: PreloadLanguage[],
   themesToLoad: Theme[],
   engine?: Awaitable<RegexEngine>
 ) => Promise<Highlighter | HighlighterCore>;
@@ -233,6 +248,7 @@ export type UseShikiHighlighter = <F extends OutputFormat = 'react'>(
 
 export type {
   Language,
+  PreloadLanguage,
   Theme,
   Themes,
   Element,

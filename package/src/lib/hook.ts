@@ -11,6 +11,7 @@ import type {
   HighlightResultMap,
   Language,
   OutputFormat,
+  PreloadLanguage,
   Theme,
   Themes,
   TimeoutState,
@@ -31,7 +32,7 @@ export async function highlight<F extends OutputFormat = 'react'>(
   code: string,
   resolved: {
     languageId: string;
-    langsToLoad: Language[];
+    langsToLoad: PreloadLanguage[];
     themesToLoad: Theme[];
     shikiOptions: CodeToHastOptions;
   },

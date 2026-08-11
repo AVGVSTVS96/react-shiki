@@ -5,11 +5,15 @@ import type {
   HighlighterCore,
   RegexEngine,
 } from 'shiki/core';
-import type { HighlighterFactory, Language, Theme } from '../lib/types';
+import type {
+  HighlighterFactory,
+  PreloadLanguage,
+  Theme,
+} from '../lib/types';
 import { isLoadableLanguage } from '../lib/language';
 
 type GetSingletonHighlighter = (options: {
-  langs: NonNullable<Language>[];
+  langs: NonNullable<PreloadLanguage>[];
   themes: Theme[];
   engine: Awaitable<RegexEngine>;
 }) => Promise<HighlighterCore>;

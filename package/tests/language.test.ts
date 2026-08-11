@@ -35,6 +35,18 @@ describe('isLoadableLanguage', () => {
     ).toBe(true);
   });
 
+  test('returns true for dynamic language inputs', () => {
+    expect(
+      isLoadableLanguage(
+        () => Promise.resolve({}) as any,
+        bundledLanguages
+      )
+    ).toBe(true);
+    expect(
+      isLoadableLanguage(Promise.resolve({}) as any, bundledLanguages)
+    ).toBe(true);
+  });
+
   test('returns false for incomplete language registration objects', () => {
     expect(
       isLoadableLanguage(
@@ -221,6 +233,33 @@ describe('resolveLanguage', () => {
     ).toEqual({
       languageId: 'typescript',
       langsToLoad: ['typescript', 'javascript', customLanguage],
+    });
+  });
+
+  test('passes dynamic imports through to the factory', () => {
+    const grammarImport = () => Promise.resolve(customLanguage);
+    expect(
+      resolveLanguage('my-language', undefined, undefined, [
+        grammarImport,
+      ])
+    ).toEqual({
+      languageId: 'my-language',
+      langsToLoad: ['my-language', grammarImport],
+    });
+  });
+
+  test('dedupes dynamic imports by reference', () => {
+    const grammarImport = () => Promise.resolve(customLanguage);
+    const otherImport = () => Promise.resolve(customLanguage);
+    expect(
+      resolveLanguage('typescript', undefined, undefined, [
+        grammarImport,
+        grammarImport,
+        otherImport,
+      ])
+    ).toEqual({
+      languageId: 'typescript',
+      langsToLoad: ['typescript', grammarImport, otherImport],
     });
   });
 
