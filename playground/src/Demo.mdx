@@ -1,6 +1,10 @@
-import ShikiHighlighter from 'react-shiki';
+import Shiki from 'react-shiki';
 import mcfunction from './assets/mcfunction.tmLanguage.json';
 import bosque from './assets/bosque.tmLanguage.json';
+
+export const ShikiHighlighter = (props) => (
+  <Shiki engine="javascript" {...props} />
+);
 
 # 🎨 react-shiki
 
