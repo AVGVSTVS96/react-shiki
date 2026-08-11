@@ -167,7 +167,7 @@ const highlightedCode = useShikiHighlighter(code, 'typescript', 'github-dark', {
   {code}
 </ShikiHighlighter>
 ```
-<!-- TODO: painful that we need this callout, painful engine prop on component! -->
+
 > [!NOTE]
 > The underlying highlighter is a singleton created on the first highlight, so pass the same engine at every call site; mixed engines resolve to whichever highlighted first. 
 

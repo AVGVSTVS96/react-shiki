@@ -1,31 +1,15 @@
 import {
   getSingletonHighlighter,
   bundledLanguages,
-  type Highlighter,
-  type Awaitable,
-  type RegexEngine,
 } from 'shiki/bundle/web';
-import { createOnigurumaEngine } from 'shiki/engine/oniguruma';
-import type { Language, Theme } from '../lib/types';
-import { isLoadableLanguage } from '../lib/language';
+import { bundledHighlighterFactory } from './factory';
 
 /**
- * Creates a highlighter using the web Shiki bundle with web-focused languages.
- * Smaller than the full bundle while covering most web development needs.
- * Includes: HTML, CSS, JS, TS, JSON, Markdown, Vue, JSX, Svelte, etc.
+ * Highlighter factory for the web Shiki bundle: web-focused languages
+ * (HTML, CSS, JS, TS, JSON, Markdown, Vue, JSX, Svelte, etc.) at a
+ * fraction of the full bundle's size.
  */
-export async function createWebHighlighter(
-  langsToLoad: Language[],
-  themesToLoad: Theme[],
-  engine?: Awaitable<RegexEngine>
-): Promise<Highlighter> {
-  const langs = langsToLoad.filter((lang) =>
-    isLoadableLanguage(lang, bundledLanguages)
-  );
-
-  return await getSingletonHighlighter({
-    langs,
-    themes: themesToLoad,
-    engine: engine ?? createOnigurumaEngine(import('shiki/wasm')),
-  });
-}
+export const createWebHighlighter = bundledHighlighterFactory(
+  getSingletonHighlighter,
+  bundledLanguages
+);

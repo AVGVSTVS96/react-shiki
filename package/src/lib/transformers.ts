@@ -13,13 +13,12 @@ export function lineNumbersTransformer(startLine = 1): ShikiTransformer {
     code(node) {
       this.addClassToHast(node, 'rs-has-line-numbers');
       if (startLine !== 1) {
-        const existingStyle = (node.properties?.style as string) || '';
-        const newStyle = existingStyle
-          ? `${existingStyle}; --line-start: ${startLine}`
-          : `--line-start: ${startLine}`;
+        const existing = node.properties?.style as string | undefined;
         node.properties = {
           ...node.properties,
-          style: newStyle,
+          style: [existing, `--line-start: ${startLine}`]
+            .filter(Boolean)
+            .join('; '),
         };
       }
     },

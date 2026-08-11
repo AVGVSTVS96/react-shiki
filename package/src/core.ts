@@ -72,7 +72,6 @@ export const useShikiHighlighter: UseShikiHighlighter = (
   themeInput,
   options = {}
 ) => {
-  // Validate that highlighter is provided
   const highlighter = validateCoreHighlighter(options.highlighter);
 
   return useHighlight(
