@@ -143,9 +143,14 @@ const highlighter = await createHighlighterCore({
 ### RegExp Engines
 
 Shiki offers three built-in engines for syntax highlighting:
-- **Oniguruma** - Default engine using compiled WebAssembly, offers maximum language support
-- **JavaScript RegExp** - Smaller bundle, faster startup, compiles patterns on-the-fly, recommended for client-side highlighting
-- **JavaScript Raw** - For [pre-compiled languages](https://shiki.style/guide/regex-engines#pre-compiled-languages), skips transpilation step for best performance
+
+| Engine | Payload (gzip) | Startup | Grammar support |
+| --- | --- | --- | --- |
+| **Oniguruma** (default) | ~150 KB (466 KB WASM) | fetch + compile WASM | Reference engine, all grammars |
+| **JavaScript RegExp** | ~20 KB | none, plain JS | All built-in languages ([compatibility table](https://shiki.style/references/engine-js-compat)); [strict by default](https://shiki.style/guide/regex-engines#use-with-unsupported-languages) |
+| **JavaScript Raw** | ~1 KB | none | [Pre-compiled grammars](https://shiki.style/guide/regex-engines#pre-compiled-languages) only, has a [known bug](https://github.com/shikijs/shiki/issues/918) |
+
+Payload sizes measured against shiki 4.3.0: `onig.wasm` is 466 KB (149 KB gzipped), the JavaScript engine's pattern transpiler ([oniguruma-to-es](https://github.com/slevithan/oniguruma-to-es)) is 57 KB (20 KB gzipped), and the raw engine skips the transpiler entirely. Beyond the smaller download, the JavaScript engine also starts instantly (no WASM fetch and compile) and [runs patterns as native JavaScript RegExp](https://shiki.style/guide/regex-engines#javascript-regexp-engine), which is faster for some languages.
 
 #### Using Engines with Full and Web Bundles
 
@@ -202,9 +207,12 @@ const highlightedCode = useShikiHighlighter(code, 'typescript', 'github-dark', {
 });
 ```
 
+> [!WARNING]
+> Pre-compiled grammars have a [known upstream bug](https://github.com/shikijs/shiki/issues/918): some languages highlight incorrectly (Python, HTML, Perl, and YAML among those reported). Verify your languages render correctly before shipping, or use `createJavaScriptRegexEngine` with regular grammars.
+
 #### Using Engines with Core Bundle
 
-When using the core bundle, you must specify an engine:
+Named engines don't apply to the core bundle: react-shiki never creates the highlighter there, you build it yourself, and shiki's `createHighlighterCore` requires an engine instance. Creating it at module scope alongside the highlighter is the correct pattern:
 
 ```tsx
 import {
