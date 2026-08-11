@@ -552,7 +552,7 @@ const preloadLanguages = [
 ```
 
 > [!IMPORTANT]
-> Define dynamic imports at module scope. A fresh `import()` promise or arrow function on every render re-triggers highlighting.
+> Define dynamic imports at module scope, preferring the getter form (`() => import(...)`). A fresh arrow function on every render re-triggers highlighting; bare promises are compared by type, so swapping one at runtime won't be picked up.
 
 > [!NOTE] 
 > Bundled languages are loaded on demand and do not need to be preloaded. `preloadLanguages` applies to the full and web bundles; with a custom highlighter, load languages in `createHighlighterCore` instead.
