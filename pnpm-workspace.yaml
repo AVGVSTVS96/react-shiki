@@ -13,5 +13,7 @@ allowBuilds:
   "@tailwindcss/oxide": true
   esbuild: true
 
+
+# Vite 8.3.3 is included in this validated dependency upgrade batch.
 minimumReleaseAgeExclude:
   - vite@8.3.3
