@@ -37,3 +37,7 @@ jobs:
 
       - name: Test
         run: pnpm --filter react-shiki exec vitest run
+
+      - name: Benchmark smoke test
+        if: matrix.react-version == 'catalog'
+        run: pnpm --filter react-shiki bench --run -t 'Small JS'
