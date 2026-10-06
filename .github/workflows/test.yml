@@ -4,11 +4,17 @@ on: [pull_request]
 
 jobs:
   test:
+    name: test (${{ matrix.react-version }})
     runs-on: ubuntu-latest
     strategy:
       fail-fast: false
       matrix:
-        react-version: [18.3.1, 19.2.6]
+        include:
+          - react-version: 18.3.1
+            types-version: 18
+          - react-version: 19.2.6
+            types-version: 19
+          - react-version: catalog
     steps:
       - name: Checkout
         uses: actions/checkout@v6
@@ -26,7 +32,8 @@ jobs:
         run: pnpm --filter react-shiki install --frozen-lockfile
 
       - name: Use React ${{ matrix.react-version }}
-        run: pnpm --filter react-shiki add --save-dev react@${{ matrix.react-version }} react-dom@${{ matrix.react-version }}
+        if: matrix.react-version != 'catalog'
+        run: pnpm --filter react-shiki add --save-dev react@${{ matrix.react-version }} react-dom@${{ matrix.react-version }} @types/react@${{ matrix.types-version }} @types/react-dom@${{ matrix.types-version }}
 
       - name: Test
-        run: pnpm --filter react-shiki test
+        run: pnpm --filter react-shiki exec vitest run
