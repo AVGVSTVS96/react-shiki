@@ -23,3 +23,11 @@ jobs:
 
       - name: Check
         run: pnpm --filter react-shiki check
+
+      - name: Validate release plan and changelog
+        env:
+          GITHUB_TOKEN: ${{ github.token }}
+        run: |
+          if test -n "$(rg --files .changeset -g '*.md' -g '!README.md')"; then
+            pnpm changeset version
+          fi
