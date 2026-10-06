@@ -36,11 +36,13 @@ jobs:
 
       - name: Create Release Pull Request or Publish to npm
         id: changesets
-        uses: changesets/action@v1
+        uses: changesets/action@v2
         with:
-          commit: "chore: update versions"
-          title: "chore: update versions"
-          publish: pnpm ci:publish
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+          commit-message: "chore: update versions"
+          pr-title: "chore: update versions"
+          publish-script: pnpm ci:publish
         env:
+          # The custom changelog generator also uses this token.
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           NPM_CONFIG_PROVENANCE: true
