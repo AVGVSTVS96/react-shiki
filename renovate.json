@@ -14,20 +14,41 @@
     "41898282+github-actions[bot]@users.noreply.github.com"
   ],
   "rangeStrategy": "bump",
-  "labels": ["dependencies"],
+  "labels": [
+    "dependencies"
+  ],
   "commitMessageTopic": "{{depName}}",
   "commitBodyTable": true,
   "timezone": "America/New_York",
   "packageRules": [
     {
-      "matchDepTypes": ["peerDependencies"],
+      "matchDepTypes": [
+        "peerDependencies"
+      ],
       "enabled": false
     },
     {
       "groupName": "all non-major dependencies",
       "groupSlug": "all-non-major",
-      "matchUpdateTypes": ["minor", "patch", "pin", "digest"],
-      "matchPackageNames": ["*"]
+      "matchUpdateTypes": [
+        "minor",
+        "patch",
+        "pin",
+        "digest"
+      ],
+      "matchPackageNames": [
+        "*"
+      ]
+    },
+    {
+      "description": "The MDX language-service plugin requires the TypeScript 6 JavaScript compiler API.",
+      "matchFileNames": [
+        "playground/package.json"
+      ],
+      "matchPackageNames": [
+        "typescript"
+      ],
+      "allowedVersions": "<7"
     }
   ]
 }
