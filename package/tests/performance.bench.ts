@@ -9,7 +9,7 @@
  * Each benchmark is run with different code sizes and configurations to provide
  * a comprehensive view of performance characteristics.
  */
-import { describe, bench, beforeAll, afterAll, beforeEach } from 'vitest';
+import { describe, test, beforeAll, afterAll, beforeEach } from 'vitest';
 
 import {
   getSingletonHighlighter,
@@ -22,7 +22,8 @@ import htmlReactParser from 'html-react-parser';
 
 import type { Language, Theme, Themes } from '../src/lib/types';
 
-import { resolveLanguage, resolveTheme } from '../src/lib/resolvers';
+import { resolveLanguage } from '../src/lib/language';
+import { resolveTheme } from '../src/lib/theme';
 // --- Test Data ---
 
 // Small code sample (few lines)
@@ -160,14 +161,14 @@ async function runApproachA(
   theme: Theme | Themes
 ) {
   const { languageId } = resolveLanguage(lang);
-  const { isMultiTheme, singleTheme, multiTheme } = resolveTheme(theme);
+  const resolved = resolveTheme(theme);
 
   const options: CodeToHastOptions = {
     ...shikiOptionsBase,
     lang: languageId,
-    ...(isMultiTheme
-      ? { themes: multiTheme as Themes }
-      : { theme: singleTheme as Theme }),
+    ...(resolved.isMulti
+      ? { themes: resolved.themes }
+      : { theme: resolved.theme }),
   };
 
   const hast = highlighter.codeToHast(code, options);
@@ -183,14 +184,14 @@ async function runApproachB(
   theme: Theme | Themes
 ) {
   const { languageId } = resolveLanguage(lang);
-  const { isMultiTheme, singleTheme, multiTheme } = resolveTheme(theme);
+  const resolved = resolveTheme(theme);
 
   const options: CodeToHastOptions = {
     ...(shikiOptionsBase as CodeToHastOptions),
     lang: languageId,
-    ...(isMultiTheme
-      ? { themes: multiTheme as Themes }
-      : { theme: singleTheme as Theme }),
+    ...(resolved.isMulti
+      ? { themes: resolved.themes }
+      : { theme: resolved.theme }),
   };
 
   const html = highlighter.codeToHtml(code, options);
@@ -206,14 +207,14 @@ async function runApproachC(
   theme: Theme | Themes
 ) {
   const { languageId } = resolveLanguage(lang);
-  const { isMultiTheme, singleTheme, multiTheme } = resolveTheme(theme);
+  const resolved = resolveTheme(theme);
 
   const options: CodeToHastOptions = {
     ...(shikiOptionsBase as CodeToHastOptions),
     lang: languageId,
-    ...(isMultiTheme
-      ? { themes: multiTheme as Themes }
-      : { theme: singleTheme as Theme }),
+    ...(resolved.isMulti
+      ? { themes: resolved.themes }
+      : { theme: resolved.theme }),
   };
 
   const html = highlighter.codeToHtml(code, options);
@@ -276,63 +277,40 @@ beforeEach(() => {
   }
 });
 
-// --- 1. Raw Transformation Benchmarks ---
-describe('1. Raw Transformation Performance', () => {
+// Compare the same three transformations through Vitest 5's bench fixture.
+describe('Raw Transformation Performance', () => {
   for (const config of rawTransformConfigs) {
-    describe(`Scenario: ${config.name}`, () => {
-      // Benchmark Approach A (codeToHast -> toJsxRuntime)
-      bench(
-        'codeToHast -> toJsxRuntime',
-        async () => {
-          if (!highlighterInstance)
-            throw new Error('Highlighter not initialized');
-          await runApproachA(
-            highlighterInstance,
+    test(`Scenario: ${config.name}`, { timeout: 20000 }, async ({
+      bench,
+    }) => {
+      if (!highlighterInstance)
+        throw new Error('Highlighter not initialized');
+      const highlighter = highlighterInstance;
+      await bench.compare(
+        bench('codeToHast -> toJsxRuntime', () =>
+          runApproachA(
+            highlighter,
             config.code,
             config.lang,
             config.theme
-          );
-        },
-        {
-          time: 2000, // 2 seconds per benchmark
-          iterations: config.size === 'very-large' ? 5 : 20, // Fewer iterations for large code
-          warmupIterations: 3, // Warm up before measuring
-        }
-      );
-
-      // Benchmark Approach B (codeToHtml -> htmlReactParser)
-      bench(
-        'codeToHtml -> html-react-parser',
-        async () => {
-          if (!highlighterInstance)
-            throw new Error('Highlighter not initialized');
-          await runApproachB(
-            highlighterInstance,
+          )
+        ),
+        bench('codeToHtml -> html-react-parser', () =>
+          runApproachB(
+            highlighter,
             config.code,
             config.lang,
             config.theme
-          );
-        },
-        {
-          time: 2000,
-          iterations: config.size === 'very-large' ? 5 : 20,
-          warmupIterations: 3,
-        }
-      );
-
-      // Benchmark Approach C (codeToHtml -> dangerouslySetInnerHTML)
-      bench(
-        'codeToHtml -> dangerouslySetInnerHTML',
-        async () => {
-          if (!highlighterInstance)
-            throw new Error('Highlighter not initialized');
-          await runApproachC(
-            highlighterInstance,
+          )
+        ),
+        bench('codeToHtml -> dangerouslySetInnerHTML', () =>
+          runApproachC(
+            highlighter,
             config.code,
             config.lang,
             config.theme
-          );
-        },
+          )
+        ),
         {
           time: 2000,
           iterations: config.size === 'very-large' ? 5 : 20,
