@@ -1,5 +1,12 @@
 # react-shiki
 
+## 0.11.2
+
+### Patch Changes
+
+- Fix throttle state typing for React 18 and validate dependency compatibility across supported React versions. _[`#194`](https://github.com/AVGVSTVS96/react-shiki/pull/194) [`b0033d5`](https://github.com/avgvstvs96/react-shiki/commit/b0033d5150fb79c6a117e2775f985cb7f76fdc6e) [@AVGVSTVS96](https://github.com/AVGVSTVS96)_
+- Update Shiki and React compatibility dependencies, migrate the native TypeScript compiler and build/test tooling, and refresh the package manager and release automation. _[`#198`](https://github.com/AVGVSTVS96/react-shiki/pull/198) [`b1ac6f8`](https://github.com/avgvstvs96/react-shiki/commit/b1ac6f8dc63c73d827c5257bde6f8ee6fff0c22a) [@renovate](https://github.com/apps/renovate)_
+
 ## 0.11.1
 
 ### Patch Changes
