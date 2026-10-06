@@ -4,6 +4,7 @@ on: [pull_request]
 
 jobs:
   test:
+    name: test (${{ matrix.react-version }})
     runs-on: ubuntu-latest
     strategy:
       fail-fast: false

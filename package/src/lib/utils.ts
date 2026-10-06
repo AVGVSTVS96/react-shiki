@@ -30,7 +30,7 @@ export const useStableValue = <T>(value: T): T => {
  */
 export const throttleHighlighting = (
   performHighlight: () => Promise<void>,
-  timeoutControl: React.RefObject<TimeoutState>,
+  timeoutControl: { current: TimeoutState },
   throttleMs: number
 ) => {
   clearTimeout(timeoutControl.current.timeoutId);
