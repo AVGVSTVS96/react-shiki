@@ -24,7 +24,7 @@ jobs:
         uses: pnpm/action-setup@v6
 
       - name: Setup node.js
-        uses: actions/setup-node@v6
+        uses: actions/setup-node@v7
         with:
           # npm trusted publishing requires npm >= 11.5.1 and Node >= 22.14.0.
           # Node 24 ships with npm 11+.
