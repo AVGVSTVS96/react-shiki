@@ -306,6 +306,7 @@ The core inputs, positional arguments on the hook, props/children on the compone
 | Option              | Type               | Default         | Description                                                                   |
 | ------------------- | ------------------ | --------------- | ----------------------------------------------------------------------------- |
 | `delay`             | `number`           | -               | Minimum time between highlights (in milliseconds), no throttling by default   |
+| `cache`             | `Map`              | -               | Keeps highlighted output across unmounts, see [Caching Across Remounts](#caching-across-remounts) |
 | `engine`            | `'javascript' \| 'oniguruma' \| RegexEngine` | `'oniguruma'` | RegExp engine for syntax highlighting; named engines are created and cached internally |
 | `highlighter`       | `Highlighter \| HighlighterCore` | -  | Custom highlighter instance, required for the core bundle                     |
 | `outputFormat`      | `string`           | `'react'`       | Output format: 'react' for React nodes, 'html' for HTML string, or 'tokens' for Shiki tokens (hook only, experimental) |
@@ -797,6 +798,22 @@ const highlightedCode = useShikiHighlighter(code, "tsx", "github-dark", {
   delay: 150,
 });
 ```
+
+### Caching Across Remounts
+
+Lists that remount their content, like chat transcripts when switching threads or virtualized lists while scrolling, highlight every code block again by default. Pass a `Map` as `cache` and unchanged blocks paint on their first render instead:
+
+```tsx
+const cache = new Map();
+
+<ShikiHighlighter language="tsx" theme="github-dark" cache={cache}>
+  {code}
+</ShikiHighlighter>
+```
+
+- A block's output is stored when it unmounts, so the partial code of a streaming block is never cached.
+- Entries are keyed by code, language, theme and options, so blocks with different settings can share one cache. Transformers are told apart by `name`, so give blocks with different transformers of the same name their own cache.
+- The cache is yours: keep one per app or per conversation and `clear()` it when that content goes away.
 
 ---
 
