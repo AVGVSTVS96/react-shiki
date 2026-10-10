@@ -88,20 +88,19 @@ export const useHighlight = <F extends OutputFormat = 'react'>(
   options: HighlighterOptionsFor<F> = {},
   highlighterFactory: HighlighterFactory
 ): HighlightResult<F> => {
-  const [highlightedCode, setHighlightedCode] =
-    useState<HighlightResult<F>>(null);
+  const { cache, ...rest } = options;
+  const cacheRef = useRef(cache);
+  cacheRef.current = cache;
 
   // This hook owns the line-number/highlight output, so it also owns the
   // corresponding styles. The primitive boolean limits effect reruns.
   useFeatureStyles(
-    Boolean(
-      options.showLineNumbers || options.highlightLineNumbers?.length
-    )
+    Boolean(rest.showLineNumbers || rest.highlightLineNumbers?.length)
   );
 
   const stableLang = useStableValue(lang);
   const stableTheme = useStableValue(themeInput);
-  const stableOpts = useStableValue(options);
+  const stableOpts = useStableValue(rest);
 
   const resolved = useMemo(() => {
     const { languageId, langsToLoad } = resolveLanguage(
@@ -122,6 +121,38 @@ export const useHighlight = <F extends OutputFormat = 'react'>(
     };
   }, [stableLang, stableTheme, stableOpts]);
 
+  const hasCache = Boolean(cache);
+  const cacheScope = useMemo(
+    () =>
+      hasCache
+        ? JSON.stringify([
+            stableOpts.outputFormat ?? 'react',
+            resolved.shikiOptions,
+            stableOpts.startingLineNumber,
+            stableOpts.highlightLineNumbers,
+          ])
+        : undefined,
+    [hasCache, resolved, stableOpts]
+  );
+  const cacheKey = cacheScope && `${cacheScope}\n${code}`;
+
+  const [highlightedCode, setHighlightedCode] = useState<
+    HighlightResult<F>
+  >(
+    () =>
+      (cacheKey && (cache?.get(cacheKey) as HighlightResult<F>)) || null
+  );
+
+  const shown = useRef({ key: cacheKey, result: highlightedCode });
+
+  useEffect(
+    () => () => {
+      const { key, result } = shown.current;
+      if (key && result) cacheRef.current?.set(key, result);
+    },
+    []
+  );
+
   const requestIdRef = useRef(0);
 
   const timeoutControl = useRef<TimeoutState>({
@@ -139,6 +170,18 @@ export const useHighlight = <F extends OutputFormat = 'react'>(
 
     if (!resolved.languageId) return;
 
+    const show = (result: HighlightResult<F>) => {
+      shown.current = { key: cacheKey, result };
+      setHighlightedCode(result);
+    };
+
+    const cached =
+      cacheKey && (cacheRef.current?.get(cacheKey) as HighlightResult<F>);
+    if (cached) {
+      if (shown.current.result !== cached) show(cached);
+      return;
+    }
+
     const run = async () => {
       try {
         const result = await highlight<F>(
@@ -147,9 +190,7 @@ export const useHighlight = <F extends OutputFormat = 'react'>(
           stableOpts,
           highlighterFactoryRef.current
         );
-        if (requestId === requestIdRef.current) {
-          setHighlightedCode(result);
-        }
+        if (requestId === requestIdRef.current) show(result);
       } catch (error) {
         console.error('[react-shiki] highlight failed', error);
       }
@@ -164,7 +205,7 @@ export const useHighlight = <F extends OutputFormat = 'react'>(
     return () => {
       clearTimeout(timeoutControl.current.timeoutId);
     };
-  }, [code, resolved, stableOpts]);
+  }, [code, cacheKey, resolved, stableOpts]);
 
   return highlightedCode;
 };
