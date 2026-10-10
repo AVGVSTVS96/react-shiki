@@ -812,7 +812,7 @@ const cache = new Map();
 ```
 
 - A block's output is stored when it unmounts, so the partial code of a streaming block is never cached.
-- Entries are keyed by code, language, theme and options, so blocks with different settings can share one cache.
+- Entries are keyed by code, language, theme and options, so blocks with different settings can share one cache. Transformers are told apart by `name`, so give blocks with different transformers of the same name their own cache.
 - The cache is yours: keep one per app or per conversation and `clear()` it when that content goes away.
 
 ---
