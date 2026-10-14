@@ -2,6 +2,13 @@ name: Check
 
 on: [pull_request]
 
+permissions:
+  contents: read
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
 jobs:
   check:
     runs-on: ubuntu-latest
@@ -15,7 +22,7 @@ jobs:
       - name: Setup Node.js
         uses: actions/setup-node@v7
         with:
-          node-version: 24.21.0
+          node-version-file: .node-version
           cache: pnpm
 
       - name: Install dependencies
@@ -28,6 +35,6 @@ jobs:
         env:
           GITHUB_TOKEN: ${{ github.token }}
         run: |
-          if test -n "$(rg --files .changeset -g '*.md' -g '!README.md')"; then
+          if find .changeset -name '*.md' ! -name README.md | grep -q .; then
             pnpm changeset version
           fi

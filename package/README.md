@@ -298,7 +298,7 @@ The core inputs, positional arguments on the hook, props/children on the compone
 | ------------------- | ------------------ | --------------- | ----------------------------------------------------------------------------- |
 | `code`            | `string`           | -               | Code to highlight                                                               |
 | `language`          | `string \| object` | -               | Language to highlight, built-in or custom TextMate grammar object             |
-| `theme`             | `string \| object` | `'github-dark'` | Single or multi-theme configuration, built-in or custom TextMate theme object |
+| `theme`             | `string \| object` | -               | Single or multi-theme configuration, built-in or custom TextMate theme object |
 
 #### react-shiki Options
 
@@ -342,7 +342,7 @@ The `ShikiHighlighter` component offers minimal built-in styling and customizati
 | ------------------ | --------- | ------- | ---------------------------------------------------------- |
 | `showLanguage`     | `boolean` | `true`  | Displays language label in top-right corner                |
 | `addDefaultStyles` | `boolean` | `true`  | Adds minimal default styling to the highlighted code block |
-| `as`               | `string`  | `'div'` | Component's Root HTML element                              |
+| `as`               | `React.ElementType` | `'div'` | Component's Root HTML element                              |
 | `className`        | `string`  | -       | Custom class name for the code block                       |
 | `langClassName`    | `string`  | -       | Class name for styling the language label                  |
 | `style`            | `object`  | -       | Inline style object for the code block                     |
@@ -763,7 +763,7 @@ const CodeHighlight = ({
   children,
   node,
   ...props
-}: CodeHighlightProps): JSX.Element => {
+}: CodeHighlightProps): React.JSX.Element => {
   const match = className?.match(/language-(\w+)/);
   const language = match ? match[1] : undefined;
   const code = String(children).trim();

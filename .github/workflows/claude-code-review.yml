@@ -62,18 +62,19 @@ jobs:
           REPO: ${{ github.repository }}
           PR: ${{ github.event.pull_request.number }}
         run: |
-          # Owner/collaborator PRs: Fable, 30 min cooldown. Others: Opus,
-          # 8 h cooldown. The fable-review / opus-review labels bypass the
-          # cooldown and force their model. Fork runs are label-only, so
-          # they never consult the cooldown.
+          # Auto reviews run on Opus 5.5: owner/collaborator PRs with a
+          # 30 min cooldown, others 8 h. The fable-review / opus-review
+          # labels bypass the cooldown and force their model. Fork runs
+          # are label-only, so they never consult the cooldown.
+          MODEL=claude-opus-5-5
           case "$ASSOC" in
-            OWNER|COLLABORATOR) MODEL=fable COOLDOWN=1800 ;;
-            *) MODEL=opus COOLDOWN=28800 ;;
+            OWNER|COLLABORATOR) COOLDOWN=1800 ;;
+            *) COOLDOWN=28800 ;;
           esac
 
           RUN=true
           if [ "$EVENT" = "labeled" ]; then
-            MODEL=${LABEL%-review}
+            [ "$LABEL" = "fable-review" ] && MODEL=claude-fable-5-1
             # Remove the label so it can be re-added for the next manual run
             gh api -X DELETE "repos/$REPO/issues/$PR/labels/$LABEL" || true
           else
@@ -106,6 +107,8 @@ jobs:
           # Keep the trusted base/event revision for fork reviews.
           # Review changes through the allowlisted GitHub PR commands.
           fetch-depth: 1
+          # Don't leave GITHUB_TOKEN in .git/config for the agent's shell
+          persist-credentials: false
 
       - name: Run Claude Code Review
         if: steps.gate.outputs.run == 'true'
@@ -155,9 +158,10 @@ jobs:
       # through the allowlisted gh commands. This step enforces that a
       # comment actually landed (fail red instead of silently green),
       # then appends a model footer. Fable's cybersecurity classifier
-      # can silently swap the session to Opus mid-run; the transcript is
-      # the only reliable signal of that downgrade, so runs meant for
-      # Fable get checked and flagged with a warning banner.
+      # can silently swap the session to another model mid-run; the
+      # transcript is the only reliable signal of that downgrade, so
+      # runs meant for Fable get checked and flagged with a warning
+      # banner naming the model that actually served the review.
       - name: Verify review posted and annotate with model
         if: steps.gate.outputs.run == 'true'
         env:
@@ -171,15 +175,20 @@ jobs:
           # as github-actions[bot]; same-repo runs post as claude[bot]
           BOT: ${{ github.event_name == 'pull_request_target' && 'github-actions[bot]' || 'claude[bot]' }}
         run: |
-          NAME="Fable 5"
-          [ "$MODEL" = "opus" ] && NAME="Opus 4.8"
+          # claude-opus-5-5 -> "Opus 5.5"
+          pretty() {
+            sed -E 's/^claude-//; s/-([0-9]+)-([0-9]+)$/ \1.\2/; s/^(.)/\u\1/' <<<"$1"
+          }
+          NAME=$(pretty "$MODEL")
 
           FALLBACK=false
-          if [ "$MODEL" = "fable" ] && [ -f "$EXECUTION_FILE" ] \
+          if [[ "$MODEL" == claude-fable-* ]] && [ -f "$EXECUTION_FILE" ] \
             && grep -q '"model_refusal_fallback"' "$EXECUTION_FILE"; then
             FALLBACK=true
-            NAME="Opus 4.8 (Fable fallback)"
-            echo "::warning::Fable safeguard triggered — review served by Opus fallback"
+            SERVED=$(grep -o '"fallback_model": *"[^"]*"' "$EXECUTION_FILE" \
+              | head -n1 | sed -E 's/.*"([^"]*)"$/\1/')
+            NAME="$(pretty "${SERVED:-claude-opus}") (Fable fallback)"
+            echo "::warning::Fable safeguard triggered — review served by $NAME"
           fi
 
           # Only accept a comment created/updated during this run — a
@@ -193,7 +202,7 @@ jobs:
 
           {
             if [ "$FALLBACK" = true ]; then
-              printf '> [!WARNING]\n> **Fable safeguard triggered — this review was served by Opus 4.8.** Add the `fable-review` label to re-review with Fable.\n\n'
+              printf '> [!WARNING]\n> **Fable safeguard triggered — this review was served by %s.** Add the `fable-review` label to re-review with Fable.\n\n' "${NAME% (Fable fallback)}"
             fi
             jq -r .body <<<"$COMMENT"
             printf '\n---\n🤖 Reviewed by %s\n🔁 Re-review: add the `fable-review` or `opus-review` label\n' "$NAME"

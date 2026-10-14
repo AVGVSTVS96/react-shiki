@@ -141,7 +141,7 @@ interface ReactShikiOptions {
    *   createHighlighterCore,
    *   createOnigurumaEngine,
    *   useShikiHighlighter
-   * } from "react-shiki";
+   * } from "react-shiki/core";
    *
    * const customHighlighter = await createHighlighterCore({
    *   themes: [
@@ -198,7 +198,7 @@ interface TimeoutState {
   /**
    * Id of the timeout that is currently scheduled
    */
-  timeoutId: NodeJS.Timeout | undefined;
+  timeoutId: ReturnType<typeof setTimeout> | undefined;
   /**
    * Next time when the timeout can be scheduled
    */
