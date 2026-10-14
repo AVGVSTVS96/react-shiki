@@ -202,3 +202,9 @@ jobs:
           gh api --method PATCH \
             "repos/$REPO/issues/comments/$(jq -r .id <<<"$COMMENT")" \
             -F body=@"$RUNNER_TEMP/comment-body.md"
+
+      - name: Capture Claude accounting
+        if: always()
+        uses: AVGVSTVS96/autofork/.github/actions/usage@0fb1e96705913302e556e71c9909966e8da44331
+        with:
+          execution-file: ${{ steps.claude-review.outputs.execution_file }}

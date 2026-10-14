@@ -59,3 +59,8 @@ jobs:
           # settings: |
           #   { "env": { "NODE_ENV": "test" } }
 
+      - name: Capture Claude accounting
+        if: always()
+        uses: AVGVSTVS96/autofork/.github/actions/usage@0fb1e96705913302e556e71c9909966e8da44331
+        with:
+          execution-file: ${{ steps.claude.outputs.execution_file }}
