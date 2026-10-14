@@ -205,6 +205,6 @@ jobs:
 
       - name: Capture Claude accounting
         if: always()
-        uses: AVGVSTVS96/autofork/.github/actions/usage@1b93ad6d0d8d3859c076eff67347f3b4d3d3624e
+        uses: AVGVSTVS96/autofork/.github/actions/usage@bf88ce65d7096d600ebe31ea4e607260ba1b9826
         with:
           execution-file: ${{ steps.claude-review.outputs.execution_file }}
