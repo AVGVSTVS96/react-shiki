@@ -21,6 +21,7 @@ export type {
   EngineName,
   HighlighterOptions,
   HighlighterOptionsFor,
+  HighlightCache,
   HighlightResult,
   OutputFormat,
 } from './lib/types';
