@@ -6,6 +6,7 @@ import {
 } from '../src/index';
 import { useShikiHighlighter as useShikiHighlighterCore } from '../src/core';
 import type {
+  HighlightCache,
   HighlightResult,
   Language,
   PreloadLanguage,
@@ -521,6 +522,120 @@ describe('useShikiHighlighter Hook', () => {
       });
 
       expect(codeToHtml).toHaveBeenCalledTimes(1);
+    });
+  });
+
+  describe('Cache', () => {
+    const setup = () => {
+      const highlighter = createMockHighlighter();
+      const codeToHtml = highlighter.codeToHtml as ReturnType<
+        typeof vi.fn
+      >;
+      codeToHtml.mockImplementation(
+        (code: string) => `<pre>${code}</pre>`
+      );
+
+      const Harness = ({
+        code,
+        theme = 'github-dark',
+        cache,
+      }: {
+        code: string;
+        theme?: Theme;
+        cache?: Map<string, unknown>;
+      }) => {
+        const highlighted = useBaseHook(
+          code,
+          'sql',
+          theme,
+          {
+            outputFormat: 'html',
+            highlighter,
+            cache: cache as HighlightCache,
+          },
+          async () => highlighter
+        );
+        return <div data-testid="out">{highlighted ?? 'pending'}</div>;
+      };
+
+      return { codeToHtml, harness: Harness };
+    };
+
+    test('remount paints cached output on first render without highlighting', async () => {
+      const { codeToHtml, harness: Harness } = setup();
+      const cache = new Map();
+
+      const first = render(<Harness code="SELECT 1" cache={cache} />);
+      await waitFor(() =>
+        expect(first.getByTestId('out').textContent).toBe(
+          '<pre>SELECT 1</pre>'
+        )
+      );
+      first.unmount();
+
+      const second = render(<Harness code="SELECT 1" cache={cache} />);
+      expect(second.getByTestId('out').textContent).toBe(
+        '<pre>SELECT 1</pre>'
+      );
+
+      await act(async () => {
+        await new Promise((r) => setTimeout(r, 20));
+      });
+      expect(codeToHtml).toHaveBeenCalledTimes(1);
+    });
+
+    test('stores only what was shown at unmount, not streaming partials', async () => {
+      const { harness: Harness } = setup();
+      const cache = new Map();
+
+      const view = render(<Harness code="SEL" cache={cache} />);
+      await waitFor(() =>
+        expect(view.getByTestId('out').textContent).toBe('<pre>SEL</pre>')
+      );
+      view.rerender(<Harness code="SELECT 1" cache={cache} />);
+      await waitFor(() =>
+        expect(view.getByTestId('out').textContent).toBe(
+          '<pre>SELECT 1</pre>'
+        )
+      );
+
+      expect(cache.size).toBe(0);
+      view.unmount();
+      expect([...cache.values()]).toEqual(['<pre>SELECT 1</pre>']);
+    });
+
+    test('a different theme misses the cache', async () => {
+      const { codeToHtml, harness: Harness } = setup();
+      const cache = new Map();
+
+      const first = render(<Harness code="SELECT 1" cache={cache} />);
+      await waitFor(() => expect(codeToHtml).toHaveBeenCalledTimes(1));
+      first.unmount();
+
+      const second = render(
+        <Harness code="SELECT 1" theme="nord" cache={cache} />
+      );
+      expect(second.getByTestId('out').textContent).toBe('pending');
+      await waitFor(() => expect(codeToHtml).toHaveBeenCalledTimes(2));
+    });
+
+    test('switching back to cached code reuses it while mounted', async () => {
+      const { codeToHtml, harness: Harness } = setup();
+      const cache = new Map();
+
+      const first = render(<Harness code="SELECT 1" cache={cache} />);
+      await waitFor(() => expect(codeToHtml).toHaveBeenCalledTimes(1));
+      first.unmount();
+
+      const view = render(<Harness code="SELECT 2" cache={cache} />);
+      await waitFor(() => expect(codeToHtml).toHaveBeenCalledTimes(2));
+      view.rerender(<Harness code="SELECT 1" cache={cache} />);
+      await waitFor(() =>
+        expect(view.getByTestId('out').textContent).toBe(
+          '<pre>SELECT 1</pre>'
+        )
+      );
+      expect(codeToHtml).toHaveBeenCalledTimes(2);
     });
   });
 

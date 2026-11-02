@@ -161,6 +161,22 @@ interface ReactShikiOptions {
   highlighter?: Highlighter | HighlighterCore;
 
   /**
+   * Keeps highlighted output across unmounts, so remounting unchanged code
+   * paints on its first render without highlighting again. Pass a `Map` you
+   * own, shared by every highlighter that should reuse results, and
+   * `clear()` it when the content it holds goes away. Output is stored on
+   * unmount, so partial code from streaming never lands in it.
+   *
+   * @example
+   * const cache = new Map();
+   *
+   * <ShikiHighlighter cache={cache} language="ts" theme="nord">
+   *   {code}
+   * </ShikiHighlighter>
+   */
+  cache?: HighlightCache;
+
+  /**
    * Whether to show line numbers
    * @default false
    */
@@ -216,6 +232,14 @@ interface HighlightResultMap {
   tokens: TokensResult;
 }
 
+/**
+ * Where highlighted output is kept between mounts; a `Map` satisfies it.
+ */
+type HighlightCache = Pick<
+  Map<string, HighlightResultMap[OutputFormat]>,
+  'get' | 'set'
+>;
+
 type HighlightResult<F extends OutputFormat = 'react'> =
   | HighlightResultMap[F]
   | null;
@@ -257,6 +281,7 @@ export type {
   TimeoutState,
   HighlighterOptions,
   HighlighterOptionsFor,
+  HighlightCache,
   HighlightResult,
   HighlightResultMap,
   OutputFormat,
