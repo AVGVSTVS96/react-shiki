@@ -94,7 +94,7 @@
     "@tsdown/css": "^0.23.0",
     "@types/hast": "^3.0.5",
     "@types/jest": "^30.0.0",
-    "@types/node": "25.9.9",
+    "@types/node": "26.6.6",
     "@types/react": "catalog:",
     "@vitejs/plugin-react": "^6.1.2",
     "html-react-parser": "^6.1.8",
