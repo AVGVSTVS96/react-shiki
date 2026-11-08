@@ -1,1 +1,1 @@
-package/README.md
+packages/react-shiki/README.md

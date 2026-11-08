@@ -40,7 +40,7 @@ if (!hasDependencyTable) {
 const shortSha = execFileSync("git", ["rev-parse", "--short", "HEAD"], {
   encoding: "utf8",
 }).trim();
-const packageName = JSON.parse(readFileSync("package/package.json", "utf8")).name;
+const packageName = JSON.parse(readFileSync("packages/react-shiki/package.json", "utf8")).name;
 const fileName = `.changeset/renovate-${shortSha}.md`;
 const message = ["---", `'${packageName}': patch`, "---", "", "Updated dependencies", ""].join(
   "\n",

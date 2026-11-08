@@ -43,7 +43,7 @@
     {
       "description": "The MDX language-service plugin requires the TypeScript 6 JavaScript compiler API.",
       "matchFileNames": [
-        "playground/package.json"
+        "apps/playground/package.json"
       ],
       "matchPackageNames": [
         "typescript"

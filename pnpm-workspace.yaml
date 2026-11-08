@@ -1,6 +1,6 @@
 packages:
-  - package
-  - playground
+  - packages/*
+  - apps/*
 
 catalog:
   react: ^19.3.0
