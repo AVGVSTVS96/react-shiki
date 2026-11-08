@@ -77,7 +77,7 @@
     "@testing-library/react": "^16.3.3",
     "@tsdown/css": "^0.23.7",
     "@types/hast": "^3.0.5",
-    "@types/node": "25.9.9",
+    "@types/node": "26.6.6",
     "@types/react": "catalog:",
     "@types/react-dom": "catalog:",
     "@vitejs/plugin-react": "^6.2.1",
