@@ -28,8 +28,8 @@ export const bundledHighlighterFactory =
     getSingletonHighlighter: GetSingletonHighlighter,
     bundledLanguages: Record<string, DynamicImportLanguageRegistration>
   ): HighlighterFactory =>
-  (langsToLoad, themesToLoad, engine) =>
-    getSingletonHighlighter({
+  async (langsToLoad, themesToLoad, engine) =>
+    await getSingletonHighlighter({
       langs: langsToLoad.filter((lang) =>
         isLoadableLanguage(lang, bundledLanguages)
       ),

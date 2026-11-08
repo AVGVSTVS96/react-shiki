@@ -1,7 +1,8 @@
 import { defineConfig } from 'tsdown';
 
 export default defineConfig((options) => {
-  const dev = !!options.watch;
+  const dev = options.watch !== undefined && options.watch !== false;
+
   return {
     entry: {
       index: 'src/index.ts',

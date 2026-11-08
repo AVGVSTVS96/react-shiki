@@ -19,9 +19,11 @@ let warnedTokensOutputFormat = false;
  * so fall back to 'react' instead of crashing the render.
  */
 const resolveOutputFormat = (
-  outputFormat: HighlighterOptions['outputFormat']
+  outputFormat: OutputFormat | undefined
 ): HighlighterOptions['outputFormat'] => {
-  if ((outputFormat as OutputFormat) !== 'tokens') return outputFormat;
+  if (outputFormat !== 'tokens') {
+    return outputFormat;
+  }
 
   if (!warnedTokensOutputFormat) {
     warnedTokensOutputFormat = true;
@@ -29,6 +31,7 @@ const resolveOutputFormat = (
       "[react-shiki] outputFormat 'tokens' is only supported by the useShikiHighlighter hook, falling back to 'react'"
     );
   }
+
   return 'react';
 };
 
@@ -108,8 +111,9 @@ export interface ShikiHighlighterProps extends HighlighterOptions {
  */
 export const createShikiHighlighterComponent = (
   useShikiHighlighterImpl: UseShikiHighlighter
-) => {
-  return forwardRef<HTMLElement, ShikiHighlighterProps>(
+) =>
+  forwardRef<HTMLElement, ShikiHighlighterProps>(
+    // oxlint-disable-next-line react/display-name -- naming the render function would change the name React DevTools shows for the published component
     (
       {
         language,
@@ -171,6 +175,7 @@ export const createShikiHighlighterComponent = (
           {typeof highlightedCode === 'string' ? (
             <div
               data-slot="content"
+              // oxlint-disable-next-line react/no-danger -- outputFormat 'html' renders shiki's escaped HTML by design
               dangerouslySetInnerHTML={{ __html: highlightedCode }}
             />
           ) : (
@@ -180,4 +185,3 @@ export const createShikiHighlighterComponent = (
       );
     }
   );
-};

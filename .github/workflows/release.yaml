@@ -29,7 +29,7 @@ jobs:
           # npm trusted publishing requires npm >= 11.5.1 and Node >= 22.14.0.
           # Node 24 ships with npm 11+.
           node-version: 24.21.0
-          cache: "pnpm"
+          cache: 'pnpm'
 
       - name: Install dependencies
         run: pnpm install --frozen-lockfile
@@ -39,8 +39,8 @@ jobs:
         uses: changesets/action@v2
         with:
           github-token: ${{ secrets.GITHUB_TOKEN }}
-          commit-message: "chore: update versions"
-          pr-title: "chore: update versions"
+          commit-message: 'chore: update versions'
+          pr-title: 'chore: update versions'
           publish-script: pnpm ci:publish
         env:
           # The custom changelog generator also uses this token.

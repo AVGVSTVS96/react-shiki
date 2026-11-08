@@ -25,4 +25,4 @@ jobs:
           git config --global user.email "41898282+github-actions[bot]@users.noreply.github.com"
 
       - name: Generate changeset
-        run: node .github/scripts/generate-renovate-changeset.mjs
+        run: node .github/scripts/generate-renovate-changeset.ts

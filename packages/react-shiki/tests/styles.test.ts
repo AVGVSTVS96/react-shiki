@@ -1,60 +1,53 @@
 import { afterEach, describe, expect, it, vi } from 'vitest';
-import type {
-  HighlighterOptions,
-  UseShikiHighlighter,
-} from '../src/lib/types';
+import type { UseShikiHighlighter } from '../src/lib/types';
+import { createFakeHighlighter } from './fakes';
 
-const noopHook = (() => null) as UseShikiHighlighter;
+const noopHook: UseShikiHighlighter = () => null;
 
-// Enough of a highlighter for useHighlight's effect to settle quietly
-const fakeHighlighter = {
-  codeToHast: () => ({ type: 'root', children: [] }),
-  codeToHtml: () => '',
-  codeToTokens: () => ({ tokens: [] }),
-  getLoadedLanguages: () => ['text'],
-  loadLanguage: async () => {},
-} as unknown as NonNullable<HighlighterOptions['highlighter']>;
+const fakeHighlighter = createFakeHighlighter();
 
 const fakeFactory = async () => fakeHighlighter;
 
-interface FakeSheet {
-  cssText: string;
+class FakeSheet {
+  cssText = '';
+
+  replaceSync(css: string) {
+    this.cssText = css;
+  }
+}
+
+function IllegalConstructor(): never {
+  throw new TypeError('Illegal constructor');
 }
 
 let cleanupRtl: (() => void) | undefined;
 
-// Injection state and React must come from one fresh registry per test:
-// the dedupe Set is module-level, and mixing React copies breaks hooks
-const importFresh = async () => {
+const importFreshRegistry = async () => {
   vi.resetModules();
+
   const [component, hook, rtl, react] = await Promise.all([
     import('../src/lib/component'),
     import('../src/lib/hook'),
     import('@testing-library/react'),
     import('react'),
   ]);
+
   cleanupRtl = rtl.cleanup;
+
   return {
     createComponent: component.createShikiHighlighterComponent,
     useHighlight: hook.useHighlight,
     render: rtl.render,
     renderHook: rtl.renderHook,
-    /** Settles useHighlight's async effect so assertions see final state. */
-    flush: () => rtl.act(async () => {}),
+    settle: async () => {
+      await rtl.act(async () => {});
+    },
     h: react.createElement,
   };
 };
 
 const stubConstructableSheets = () => {
-  vi.stubGlobal(
-    'CSSStyleSheet',
-    class {
-      cssText = '';
-      replaceSync(css: string) {
-        this.cssText = css;
-      }
-    }
-  );
+  vi.stubGlobal('CSSStyleSheet', FakeSheet);
   Object.defineProperty(document, 'adoptedStyleSheets', {
     value: [],
     writable: true,
@@ -63,71 +56,79 @@ const stubConstructableSheets = () => {
 };
 
 const stubFailingSheets = () => {
-  vi.stubGlobal(
-    'CSSStyleSheet',
-    class {
-      constructor() {
-        throw new TypeError('Illegal constructor');
-      }
-    }
-  );
+  vi.stubGlobal('CSSStyleSheet', IllegalConstructor);
 };
 
-const adoptedSheets = () =>
-  document.adoptedStyleSheets as unknown as FakeSheet[];
+const adoptedCss = () =>
+  document.adoptedStyleSheets.map((sheet) =>
+    sheet instanceof FakeSheet ? sheet.cssText : null
+  );
 
 describe('scoped style injection', () => {
   afterEach(() => {
     cleanupRtl?.();
     vi.unstubAllGlobals();
+
     for (const el of document.querySelectorAll(
       'style[data-react-shiki]'
     )) {
       el.remove();
     }
+
     Reflect.deleteProperty(document, 'adoptedStyleSheets');
   });
 
   it('injects component styles on first mount without an extra render', async () => {
     stubConstructableSheets();
-    const { createComponent, render, h } = await importFresh();
+    const { createComponent, render, h } = await importFreshRegistry();
 
-    const hook = vi.fn(noopHook);
-    const Component = createComponent(hook);
-    expect(adoptedSheets()).toHaveLength(0);
+    const hookCalls = vi.fn<() => void>();
 
-    render(h(Component, { language: 'ts', theme: 'github-dark' }, 'x'));
+    const Component = createComponent(() => {
+      hookCalls();
 
-    expect(hook).toHaveBeenCalledTimes(1);
-    expect(adoptedSheets()).toHaveLength(1);
-    expect(adoptedSheets()[0].cssText).toContain('.rs-root');
-    expect(adoptedSheets()[0].cssText).not.toContain(
-      '.rs-highlighted-line'
+      return null;
+    });
+
+    expect(adoptedCss()).toHaveLength(0);
+
+    render(
+      h(Component, {
+        language: 'ts',
+        theme: 'github-dark',
+        children: 'x',
+      })
     );
+
+    expect(hookCalls).toHaveBeenCalledOnce();
+    expect(adoptedCss()).toHaveLength(1);
+    expect(adoptedCss()[0]).toContain('.rs-root');
+    expect(adoptedCss()[0]).not.toContain('.rs-highlighted-line');
   });
 
   it('leaves feature style ownership to the highlighting hook', async () => {
     stubConstructableSheets();
-    const { createComponent, render, h } = await importFresh();
+    const { createComponent, render, h } = await importFreshRegistry();
 
     render(
-      h(
-        createComponent(noopHook),
-        { language: 'ts', theme: 'github-dark', showLineNumbers: true },
-        'x'
-      )
+      h(createComponent(noopHook), {
+        language: 'ts',
+        theme: 'github-dark',
+        showLineNumbers: true,
+        children: 'x',
+      })
     );
 
-    expect(adoptedSheets()).toHaveLength(1);
-    expect(adoptedSheets()[0].cssText).toContain('.rs-root');
-    expect(adoptedSheets()[0].cssText).not.toContain(
-      '.rs-highlighted-line'
-    );
+    expect(adoptedCss()).toHaveLength(1);
+    expect(adoptedCss()[0]).toContain('.rs-root');
+    expect(adoptedCss()[0]).not.toContain('.rs-highlighted-line');
   });
 
   it('hook without line features injects nothing', async () => {
     stubConstructableSheets();
-    const { useHighlight, renderHook, flush } = await importFresh();
+
+    const { useHighlight, renderHook, settle } =
+      await importFreshRegistry();
 
     renderHook(() =>
       useHighlight(
@@ -138,15 +139,17 @@ describe('scoped style injection', () => {
         fakeFactory
       )
     );
-    await flush();
+    await settle();
 
-    expect(adoptedSheets()).toHaveLength(0);
+    expect(adoptedCss()).toHaveLength(0);
     expect(document.querySelector('style[data-react-shiki]')).toBeNull();
   });
 
   it('hook injects feature styles when line features become enabled', async () => {
     stubConstructableSheets();
-    const { useHighlight, renderHook, flush } = await importFresh();
+
+    const { useHighlight, renderHook, settle } =
+      await importFreshRegistry();
 
     const { rerender } = renderHook(
       ({ showLineNumbers }) =>
@@ -159,42 +162,41 @@ describe('scoped style injection', () => {
         ),
       { initialProps: { showLineNumbers: false } }
     );
-    await flush();
-    expect(adoptedSheets()).toHaveLength(0);
+
+    await settle();
+    expect(adoptedCss()).toHaveLength(0);
 
     rerender({ showLineNumbers: true });
-    await flush();
+    await settle();
 
-    const css = adoptedSheets().map((s) => s.cssText);
+    const css = adoptedCss();
     expect(css).toHaveLength(1);
     expect(css[0]).toContain('.rs-highlighted-line');
     expect(css[0]).not.toContain('.rs-root');
 
     rerender({ showLineNumbers: true });
-    expect(adoptedSheets()).toHaveLength(1);
+    expect(adoptedCss()).toHaveLength(1);
   });
 
   it('falls back to <style> elements when constructable sheets fail', async () => {
     stubFailingSheets();
+
     const {
       createComponent,
       useHighlight,
       render,
       renderHook,
-      flush,
+      settle,
       h,
-    } = await importFresh();
+    } = await importFreshRegistry();
 
     render(
-      h(
-        createComponent(noopHook),
-        {
-          language: 'ts',
-          theme: 'github-dark',
-          highlightLineNumbers: [1],
-        },
-        'x'
-      )
+      h(createComponent(noopHook), {
+        language: 'ts',
+        theme: 'github-dark',
+        highlightLineNumbers: [1],
+        children: 'x',
+      })
     );
     renderHook(() =>
       useHighlight(
@@ -205,36 +207,43 @@ describe('scoped style injection', () => {
         fakeFactory
       )
     );
-    await flush();
+    await settle();
 
     const styles = [
       ...document.querySelectorAll('style[data-react-shiki]'),
     ];
+
     expect(styles).toHaveLength(2);
-    expect(styles[0].textContent).toContain('.rs-root');
-    expect(styles[1].textContent).toContain('.rs-highlighted-line');
+    expect(styles[0]?.textContent).toContain('.rs-root');
+    expect(styles[1]?.textContent).toContain('.rs-highlighted-line');
   });
 
   it('injects each sheet once across renders and instances', async () => {
     stubConstructableSheets();
+
     const {
       createComponent,
       useHighlight,
       render,
       renderHook,
-      flush,
+      settle,
       h,
-    } = await importFresh();
+    } = await importFreshRegistry();
 
     const Component = createComponent(noopHook);
+
     const props = {
       language: 'ts',
       theme: 'github-dark',
       showLineNumbers: true,
     };
-    const { rerender } = render(h(Component, props, 'x'));
-    rerender(h(Component, props, 'y'));
-    render(h(createComponent(noopHook), props, 'z'));
+
+    const { rerender } = render(
+      h(Component, { ...props, children: 'x' })
+    );
+
+    rerender(h(Component, { ...props, children: 'y' }));
+    render(h(createComponent(noopHook), { ...props, children: 'z' }));
     renderHook(() =>
       useHighlight(
         'code',
@@ -253,8 +262,8 @@ describe('scoped style injection', () => {
         fakeFactory
       )
     );
-    await flush();
+    await settle();
 
-    expect(adoptedSheets()).toHaveLength(2);
+    expect(adoptedCss()).toHaveLength(2);
   });
 });

@@ -6,12 +6,17 @@ import * as React from 'react';
 import '../styles/index.css';
 
 const injected = new Set<string>();
+
 const useStyleInsertionEffect =
   React.useInsertionEffect ?? React.useLayoutEffect;
 
 const inject = (css: string, key: string) => {
-  if (injected.has(key) || typeof document === 'undefined') return;
+  if (injected.has(key) || typeof document === 'undefined') {
+    return;
+  }
+
   injected.add(key);
+
   try {
     // Not governed by CSP style-src in current browsers, unlike the <style> fallback
     const sheet = new CSSStyleSheet();
@@ -35,6 +40,8 @@ export const useComponentStyles = () => {
 /** Installs line-number/highlight styles only when those options are used. */
 export const useFeatureStyles = (enabled: boolean) => {
   useStyleInsertionEffect(() => {
-    if (enabled) inject(featuresCss, 'features');
+    if (enabled) {
+      inject(featuresCss, 'features');
+    }
   }, [enabled]);
 };

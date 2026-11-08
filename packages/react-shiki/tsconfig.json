@@ -13,8 +13,8 @@
     "noUncheckedIndexedAccess": true,
     "noImplicitOverride": true,
     "lib": ["es2022", "dom", "dom.iterable"],
-    "types": ["vitest", "node"]
+    "types": ["vitest/globals", "node"]
   },
-  "include": ["src/**/*.ts", "src/**/*.tsx"],
+  "include": ["src", "tests", "scripts", "*.config.ts"],
   "exclude": ["node_modules"]
 }

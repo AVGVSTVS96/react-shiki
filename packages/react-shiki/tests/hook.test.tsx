@@ -1,37 +1,31 @@
-import { act, render, waitFor } from '@testing-library/react';
-import { vi } from 'vitest';
+import { setTimeout as delay } from 'node:timers/promises';
+import { act, render, renderHook, waitFor } from '@testing-library/react';
+import { vi, afterEach, expect, describe, beforeEach, it } from 'vitest';
 import {
   useShikiHighlighter,
   createJavaScriptRegexEngine,
 } from '../src/index';
 import { useShikiHighlighter as useShikiHighlighterCore } from '../src/core';
 import type {
-  HighlightResult,
+  HighlighterFactory,
+  HighlighterOptions,
   Language,
-  PreloadLanguage,
   Theme,
   Themes,
 } from '../src/lib/types';
-import type { ShikiTransformer, Highlighter, LanguageInput } from 'shiki';
+import type {
+  HighlighterCore,
+  LanguageRegistration,
+  ShikiTransformer,
+} from 'shiki';
 import { throttleHighlighting } from '../src/lib/utils';
 import { useHighlight as useBaseHook } from '../src/lib/hook';
+import { createFakeHighlighter, outOfType } from './fakes';
 
-interface TestComponentProps {
+interface TestComponentProps extends HighlighterOptions {
   code: string;
   language: Language;
   theme: Theme | Themes;
-  transformers?: ShikiTransformer[];
-  langAlias?: Record<string, string>;
-  preloadLanguages?: PreloadLanguage[];
-  showLineNumbers?: boolean;
-  startingLineNumber?: number;
-  highlightLineNumbers?: number[];
-  outputFormat?: 'react' | 'html';
-  defaultColor?: string;
-  cssVariablePrefix?: string;
-  mergeWhitespaces?: boolean;
-  structure?: 'classic' | 'inline';
-  decorations?: any[];
 }
 
 const TestComponent = ({
@@ -42,95 +36,103 @@ const TestComponent = ({
 }: TestComponentProps) => {
   const highlighted = useShikiHighlighter(code, language, theme, options);
 
-  // Handle HTML output format
-  if (
-    options.outputFormat === 'html' &&
-    typeof highlighted === 'string'
-  ) {
-    return (
-      <div data-testid="highlighted">
-        <div dangerouslySetInnerHTML={{ __html: highlighted }} />
-      </div>
-    );
-  }
+  return <div data-testid="highlighted">{highlighted}</div>;
+};
+
+const renderComponent = (props?: Partial<TestComponentProps>) => {
+  const defaultProps: TestComponentProps = {
+    code: '<div>Hello World</div>',
+    language: 'html',
+    theme: 'github-light',
+    ...props,
+  };
+
+  return render(<TestComponent {...defaultProps} />);
+};
+
+const findSpan = (container: Element | null | undefined, text: string) =>
+  [...(container?.querySelectorAll('span') ?? [])].find(
+    (span) => span.textContent === text
+  );
+
+const htmlFragment = (html: string | null) => {
+  const template = document.createElement('template');
+  template.innerHTML = html ?? '';
+
+  return template.content;
+};
+
+const embeddedMarkdown = '```python\nprint("hi")\n```';
+
+interface EmbeddedHarnessProps {
+  code?: string;
+  highlighter?: HighlighterCore;
+  factory: HighlighterFactory;
+}
+
+const EmbeddedHarness = ({
+  code = embeddedMarkdown,
+  highlighter,
+  factory,
+}: EmbeddedHarnessProps) => {
+  const highlighted = useBaseHook(
+    code,
+    'markdown',
+    'github-dark',
+    { outputFormat: 'html', highlighter },
+    factory
+  );
+
+  return <div data-testid="output">{highlighted ?? ''}</div>;
+};
+
+const createMarkdownHighlighter = (
+  bundled: Record<string, LanguageRegistration> = {}
+) => {
+  const highlighter = createFakeHighlighter();
+  highlighter.getBundledLanguages.mockReturnValue(bundled);
+  highlighter.getLoadedLanguages.mockReturnValue(['markdown']);
+
+  return highlighter;
+};
+
+const EngineHarness = () => {
+  const highlighted = useShikiHighlighter(
+    'const add = (a, b) => a + b;',
+    'javascript',
+    'github-dark',
+    {
+      engine: createJavaScriptRegexEngine(),
+    }
+  );
 
   return <div data-testid="highlighted">{highlighted}</div>;
 };
 
+const pythonGrammar: LanguageRegistration = {
+  name: 'python',
+  scopeName: 'source.python',
+  patterns: [],
+  repository: {},
+};
+
 describe('useShikiHighlighter Hook', () => {
-  type HookFactory = Parameters<typeof useBaseHook>[4];
-
-  const createMockHighlighter = (
-    bundled: Record<string, LanguageInput> = {}
-  ) => {
-    const highlighter = {
-      getBundledLanguages: vi.fn(() => bundled),
-      loadLanguage: vi.fn(async () => {}),
-      getLoadedLanguages: vi.fn(() => ['markdown']),
-      codeToHtml: vi.fn(() => '<pre class="shiki"><code>ok</code></pre>'),
-      codeToHast: vi.fn(() => ({ type: 'root', children: [] })),
-      codeToTokens: vi.fn(() => ({
-        tokens: [[{ content: 'ok', offset: 0 }]],
-      })),
-    } as unknown as Highlighter;
-
-    return highlighter;
-  };
-
-  interface EmbeddedHarnessProps {
-    code?: string;
-    highlighter?: Highlighter;
-    factory: HookFactory;
-  }
-
-  const EmbeddedHarness = ({
-    code = '```python\nprint("hi")\n```',
-    highlighter,
-    factory,
-  }: EmbeddedHarnessProps) => {
-    const highlighted = useBaseHook(
-      code,
-      'markdown',
-      'github-dark',
-      { outputFormat: 'html', highlighter },
-      factory
-    );
-
-    return (
-      <div data-testid="output">
-        {typeof highlighted === 'string' ? highlighted : ''}
-      </div>
-    );
-  };
-
-  const renderComponent = (props?: Partial<TestComponentProps>) => {
-    const defaultProps: TestComponentProps = {
-      code: '<div>Hello World</div>',
-      language: 'html',
-      theme: 'github-light',
-      ...props,
-    };
-    return render(<TestComponent {...defaultProps} />);
-  };
-
   describe('Basic Rendering', () => {
-    test('renders correct DOM structure', async () => {
+    it('renders a pre with theme classes, a code element, and line spans', async () => {
       const { getByTestId } = renderComponent();
       await waitFor(
         () => {
           const container = getByTestId('highlighted');
 
-          // Check pre element with theme classes
           const preElement = container.querySelector(
             'pre.shiki.github-light'
           );
+
           expect(preElement).toBeInTheDocument();
 
-          // Check code element inside pre
           const codeElement = preElement?.querySelector('code');
           expect(codeElement).toBeInTheDocument();
 
-          // Check line spans inside code
           const lineSpan = codeElement?.querySelector('span.line');
           expect(lineSpan).toBeInTheDocument();
         },
@@ -138,33 +140,39 @@ describe('useShikiHighlighter Hook', () => {
       );
     });
 
-    test('falls back to plaintext for unknown languages', async () => {
+    it('falls back to plaintext for unknown languages: text matches the input exactly, no inline-styled spans', async () => {
       const code = 'function test() { return true; }';
+
       const { getByTestId } = renderComponent({
         code,
         language: 'unknownlang',
       });
+
       await waitFor(() => {
         const container = getByTestId('highlighted');
+
         const preElement = container.querySelector(
           'pre.shiki.github-light'
         );
+
         const codeElement = preElement?.querySelector('code');
         const lineSpan = codeElement?.querySelector('span.line');
 
         expect(preElement).toBeInTheDocument();
         expect(codeElement).toBeInTheDocument();
         expect(lineSpan).toBeInTheDocument();
-        // The rendered text should exactly match the input
         expect(preElement?.textContent).toBe(code);
-        // Ensure no inline-styled spans exist
-        expect(lineSpan?.querySelectorAll('span[style]').length).toBe(0);
+        expect(lineSpan?.querySelectorAll('span[style]')).toHaveLength(0);
       });
     });
 
-    test('falls back to plaintext for malformed custom language objects', async () => {
+    it('falls back to plaintext for malformed custom language objects', async () => {
       const code = 'function test() { return true; }';
-      const malformedLanguage = { name: 'broken-lang' } as any;
+
+      const malformedLanguage = outOfType<Language>({
+        name: 'broken-lang',
+      });
+
       const { getByTestId } = renderComponent({
         code,
         language: malformedLanguage,
@@ -172,9 +180,11 @@ describe('useShikiHighlighter Hook', () => {
 
       await waitFor(() => {
         const container = getByTestId('highlighted');
+
         const preElement = container.querySelector(
           'pre.shiki.github-light'
         );
+
         const codeElement = preElement?.querySelector('code');
         const lineSpan = codeElement?.querySelector('span.line');
 
@@ -182,58 +192,60 @@ describe('useShikiHighlighter Hook', () => {
         expect(codeElement).toBeInTheDocument();
         expect(lineSpan).toBeInTheDocument();
         expect(preElement?.textContent).toBe(code);
-        expect(lineSpan?.querySelectorAll('span[style]').length).toBe(0);
+        expect(lineSpan?.querySelectorAll('span[style]')).toHaveLength(0);
       });
     });
   });
 
   describe('Dynamic Language Imports', () => {
-    const pointGrammar = {
+    const pointGrammar: LanguageRegistration = {
       name: 'point',
       scopeName: 'source.point',
       patterns: [{ match: '\\b(move|draw)\\b', name: 'keyword.control' }],
       repository: {},
     };
 
-    const expectHighlightedKeyword = async (
-      getByTestId: (id: string) => HTMLElement
-    ) => {
+    it('highlights with a grammar preloaded via getter', async () => {
+      const { getByTestId } = renderComponent({
+        code: 'move 10 20',
+        language: 'point',
+        preloadLanguages: [async () => pointGrammar],
+      });
+
       await waitFor(() => {
-        const preElement =
-          getByTestId('highlighted').querySelector('pre');
-        const keyword = Array.from(
-          preElement?.querySelectorAll('span') || []
-        ).find((span) => span.textContent === 'move');
+        const keyword = findSpan(
+          getByTestId('highlighted').querySelector('pre'),
+          'move'
+        );
 
         expect(keyword).toBeInTheDocument();
         expect(keyword).toHaveStyle('color: #D73A49');
       });
-    };
-
-    test('highlights with a grammar preloaded via getter', async () => {
-      const { getByTestId } = renderComponent({
-        code: 'move 10 20',
-        language: 'point',
-        preloadLanguages: [() => Promise.resolve(pointGrammar)],
-      });
-
-      await expectHighlightedKeyword(getByTestId);
     });
 
-    test('highlights with a grammar preloaded via module promise', async () => {
+    it('highlights with a grammar preloaded via module promise', async () => {
       const { getByTestId } = renderComponent({
         code: 'move 10 20',
         language: 'point',
         preloadLanguages: [Promise.resolve({ default: pointGrammar })],
       });
 
-      await expectHighlightedKeyword(getByTestId);
+      await waitFor(() => {
+        const keyword = findSpan(
+          getByTestId('highlighted').querySelector('pre'),
+          'move'
+        );
+
+        expect(keyword).toBeInTheDocument();
+        expect(keyword).toHaveStyle('color: #D73A49');
+      });
     });
   });
 
   describe('Language Aliases', () => {
-    test('applies highlighting on aliased language', async () => {
+    it('applies highlighting on aliased language', async () => {
       const code = 'package main';
+
       const { getByTestId } = renderComponent({
         code,
         language: 'golang',
@@ -243,17 +255,18 @@ describe('useShikiHighlighter Hook', () => {
       await waitFor(() => {
         const container = getByTestId('highlighted');
         const preElement = container.querySelector('pre');
-        const spanElement = preElement?.querySelector(
-          'code>span>span'
-        ) as HTMLSpanElement | null;
+
+        const spanElement =
+          preElement?.querySelector<HTMLSpanElement>('code>span>span');
 
         expect(spanElement).toBeInTheDocument();
         expect(spanElement).toHaveStyle('color: #D73A49');
       });
     });
 
-    test('handles multiple language aliases', async () => {
+    it('handles multiple language aliases', async () => {
       const code = 'def hello():\n    print("world")';
+
       const { getByTestId } = renderComponent({
         code,
         language: 'indents',
@@ -262,10 +275,11 @@ describe('useShikiHighlighter Hook', () => {
 
       await waitFor(() => {
         const container = getByTestId('highlighted');
-        const preElement = container.querySelector('pre');
-        const defKeyword = Array.from(
-          preElement?.querySelectorAll('span') || []
-        ).find((span) => span.textContent === 'def');
+
+        const defKeyword = findSpan(
+          container.querySelector('pre'),
+          'def'
+        );
 
         expect(defKeyword).toBeInTheDocument();
         expect(defKeyword).toHaveStyle('color: #D73A49');
@@ -274,9 +288,9 @@ describe('useShikiHighlighter Hook', () => {
   });
 
   describe('Transformers', () => {
-    test('applies custom transformers', async () => {
+    it('applies a custom transformer that adds an attribute to the <pre> tag', async () => {
       const customCode = 'console.log("Test");';
-      // Transformer that adds a custom attribute to the <pre> tag
+
       const addDataAttributeTransformer: ShikiTransformer = {
         pre(node) {
           node.properties = {
@@ -304,37 +318,24 @@ describe('useShikiHighlighter Hook', () => {
   });
 
   describe('Async robustness', () => {
-    test('ignores stale highlight results from earlier requests', async () => {
-      const deferreds: Array<{
-        resolve: (highlighter: Highlighter) => void;
-      }> = [];
+    it('ignores stale highlight results from earlier requests', async () => {
+      const pending: ((highlighter: HighlighterCore) => void)[] = [];
 
-      const createDeferredFactory = vi.fn(
-        () =>
-          new Promise<Highlighter>((resolve) => {
-            deferreds.push({ resolve });
+      const createDeferredFactory = vi.fn<HighlighterFactory>(
+        async () =>
+          // oxlint-disable-next-line promise/avoid-new -- the test resolves the two requests by hand, newest first
+          await new Promise((resolve) => {
+            pending.push(resolve);
           })
       );
 
-      const oldHighlighter = {
-        getBundledLanguages: vi.fn(() => ({})),
-        loadLanguage: vi.fn(async () => {}),
-        getLoadedLanguages: vi.fn(() => ['javascript']),
-        codeToHtml: vi.fn(
-          () => '<pre class="shiki"><code>old result</code></pre>'
-        ),
-        codeToHast: vi.fn(() => ({ type: 'root', children: [] })),
-      } as unknown as Highlighter;
+      const oldHighlighter = createFakeHighlighter(
+        '<pre class="shiki"><code>old result</code></pre>'
+      );
 
-      const newHighlighter = {
-        getBundledLanguages: vi.fn(() => ({})),
-        loadLanguage: vi.fn(async () => {}),
-        getLoadedLanguages: vi.fn(() => ['javascript']),
-        codeToHtml: vi.fn(
-          () => '<pre class="shiki"><code>new result</code></pre>'
-        ),
-        codeToHast: vi.fn(() => ({ type: 'root', children: [] })),
-      } as unknown as Highlighter;
+      const newHighlighter = createFakeHighlighter(
+        '<pre class="shiki"><code>new result</code></pre>'
+      );
 
       const Harness = ({ code }: { code: string }) => {
         const highlighted = useBaseHook(
@@ -345,23 +346,21 @@ describe('useShikiHighlighter Hook', () => {
           createDeferredFactory
         );
 
-        return (
-          <div data-testid="output">
-            {typeof highlighted === 'string' ? highlighted : ''}
-          </div>
-        );
+        return <div data-testid="output">{highlighted ?? ''}</div>;
       };
 
       const { rerender, getByTestId } = render(
-        <Harness code={'const oldValue = 1;'} />
+        <Harness code="const oldValue = 1;" />
       );
 
-      rerender(<Harness code={'const newValue = 2;'} />);
+      rerender(<Harness code="const newValue = 2;" />);
 
-      expect(deferreds).toHaveLength(2);
+      expect(pending).toHaveLength(2);
+
+      const [resolveOld, resolveNew] = pending;
 
       await act(async () => {
-        deferreds[1].resolve(newHighlighter);
+        resolveNew?.(newHighlighter);
         await Promise.resolve();
       });
 
@@ -370,7 +369,7 @@ describe('useShikiHighlighter Hook', () => {
       });
 
       await act(async () => {
-        deferreds[0].resolve(oldHighlighter);
+        resolveOld?.(oldHighlighter);
         await Promise.resolve();
       });
 
@@ -382,20 +381,14 @@ describe('useShikiHighlighter Hook', () => {
       });
     });
 
-    test('preserves the last resolved highlight when language becomes invalid', async () => {
-      const highlighter = {
-        getBundledLanguages: vi.fn(() => ({})),
-        loadLanguage: vi.fn(async () => {}),
-        getLoadedLanguages: vi.fn(() => ['javascript']),
-        codeToHtml: vi.fn(
-          () => '<pre class="shiki"><code>stable result</code></pre>'
-        ),
-        codeToHast: vi.fn(() => ({ type: 'root', children: [] })),
-      } as unknown as Highlighter;
+    it('preserves the last resolved highlight when language becomes invalid', async () => {
+      const highlighter = createFakeHighlighter(
+        '<pre class="shiki"><code>stable result</code></pre>'
+      );
 
-      const factory = vi.fn(async () => highlighter);
+      const factory = vi.fn<HighlighterFactory>(async () => highlighter);
 
-      const Harness = ({ language }: { language: Language | any }) => {
+      const Harness = ({ language }: { language: Language }) => {
         const highlighted = useBaseHook(
           'const value = 1;',
           language,
@@ -404,11 +397,7 @@ describe('useShikiHighlighter Hook', () => {
           factory
         );
 
-        return (
-          <div data-testid="output">
-            {typeof highlighted === 'string' ? highlighted : ''}
-          </div>
-        );
+        return <div data-testid="output">{highlighted ?? ''}</div>;
       };
 
       const { getByTestId, rerender } = render(
@@ -421,7 +410,11 @@ describe('useShikiHighlighter Hook', () => {
         );
       });
 
-      rerender(<Harness language={{ scopeName: 'source.invalid' }} />);
+      rerender(
+        <Harness
+          language={outOfType<Language>({ scopeName: 'source.invalid' })}
+        />
+      );
 
       await waitFor(() => {
         expect(getByTestId('output').innerHTML).toContain(
@@ -429,50 +422,39 @@ describe('useShikiHighlighter Hook', () => {
         );
       });
 
-      expect(factory).toHaveBeenCalledTimes(1);
+      expect(factory).toHaveBeenCalledOnce();
     });
   });
 
   describe('Render stability', () => {
-    // Regression coverage for issue #161: https://github.com/AVGVSTVS96/react-shiki/issues/161
-    // The hook must treat semantically-identical
-    // renders as no-ops so heavy work (Oniguruma, codeToHtml, codeToHast)
-    // runs once per real input change, never per parent re-render.
+    // https://github.com/AVGVSTVS96/react-shiki/issues/161: identical re-renders must be no-ops, so heavy work runs once per real input change
 
-    test('tolerates a fresh factory arrow on every render', async () => {
-      const highlighter = createMockHighlighter();
-      const codeToHtml = highlighter.codeToHtml as ReturnType<
-        typeof vi.fn
-      >;
+    it('tolerates a fresh factory arrow on every render', async () => {
+      const highlighter = createMarkdownHighlighter();
 
       const UnstableFactoryHarness = ({ tick }: { tick: number }) => {
-        // tick forces a parent re-render but does not change anything the
-        // hook should care about.
         void tick;
 
-        // A fresh arrow each render — same shape as the `/core` entry's
-        // `async () => highlighter`. The hook should tolerate this.
-        const factory = async () => highlighter;
+        const freshFactoryLikeCoreEntry = async () => highlighter;
 
         const highlighted = useBaseHook(
           'SELECT 1',
           'sql',
           'github-dark',
           { outputFormat: 'html', highlighter },
-          factory
+          freshFactoryLikeCoreEntry
         );
 
-        return (
-          <div data-testid="out">
-            {typeof highlighted === 'string' ? highlighted : ''}
-          </div>
-        );
+        return <div data-testid="out">{highlighted ?? ''}</div>;
       };
 
       const { rerender } = render(<UnstableFactoryHarness tick={0} />);
 
       await waitFor(() => {
-        expect(codeToHtml).toHaveBeenCalled();
+        expect(highlighter.codeToHtml).toHaveBeenCalledWith(
+          'SELECT 1',
+          expect.objectContaining({ theme: 'github-dark' })
+        );
       });
 
       rerender(<UnstableFactoryHarness tick={1} />);
@@ -480,20 +462,14 @@ describe('useShikiHighlighter Hook', () => {
       rerender(<UnstableFactoryHarness tick={3} />);
 
       await act(async () => {
-        await new Promise((r) => setTimeout(r, 50));
+        await delay(50);
       });
 
-      expect(codeToHtml).toHaveBeenCalledTimes(1);
+      expect(highlighter.codeToHtml).toHaveBeenCalledOnce();
     });
 
-    test('useShikiHighlighter (core entry) tokenizes once per mount', async () => {
-      // Pins the bug location: `core.ts` must not introduce an unstable
-      // `highlighterFactory` arrow each render. With the bug present,
-      // codeToHtml is invoked more than once as the effect re-fires.
-      const highlighter = createMockHighlighter();
-      const codeToHtml = highlighter.codeToHtml as ReturnType<
-        typeof vi.fn
-      >;
+    it('useShikiHighlighter (core entry) keeps its factory stable: tokenizes once per mount', async () => {
+      const highlighter = createMarkdownHighlighter();
 
       const CoreHarness = () => {
         const highlighted = useShikiHighlighterCore(
@@ -503,24 +479,23 @@ describe('useShikiHighlighter Hook', () => {
           { highlighter, outputFormat: 'html' }
         );
 
-        return (
-          <div data-testid="out">
-            {typeof highlighted === 'string' ? highlighted : ''}
-          </div>
-        );
+        return <div data-testid="out">{highlighted ?? ''}</div>;
       };
 
       render(<CoreHarness />);
 
       await waitFor(() => {
-        expect(codeToHtml).toHaveBeenCalled();
+        expect(highlighter.codeToHtml).toHaveBeenCalledWith(
+          'SELECT 1',
+          expect.objectContaining({ theme: 'github-dark' })
+        );
       });
 
       await act(async () => {
-        await new Promise((r) => setTimeout(r, 50));
+        await delay(50);
       });
 
-      expect(codeToHtml).toHaveBeenCalledTimes(1);
+      expect(highlighter.codeToHtml).toHaveBeenCalledOnce();
     });
   });
 
@@ -529,7 +504,7 @@ describe('useShikiHighlighter Hook', () => {
   return 'hello';
 }`;
 
-    test('does not show line numbers by default', async () => {
+    it('does not show line numbers by default', async () => {
       const { getByTestId } = renderComponent({
         code,
         language: 'javascript',
@@ -542,11 +517,12 @@ describe('useShikiHighlighter Hook', () => {
 
         const rsLineElements =
           container.querySelectorAll('.rs-line-number');
+
         expect(rsLineElements).toHaveLength(0);
       });
     });
 
-    test('shows line numbers when enabled', async () => {
+    it('shows line numbers when enabled', async () => {
       const { getByTestId } = renderComponent({
         code,
         language: 'javascript',
@@ -560,11 +536,12 @@ describe('useShikiHighlighter Hook', () => {
 
         const rsLineElements =
           container.querySelectorAll('.rs-line-number');
+
         expect(rsLineElements.length).toBeGreaterThan(0);
       });
     });
 
-    test('sets custom starting line number', async () => {
+    it('sets custom starting line number', async () => {
       const { getByTestId } = renderComponent({
         code,
         language: 'javascript',
@@ -574,9 +551,11 @@ describe('useShikiHighlighter Hook', () => {
 
       await waitFor(() => {
         const container = getByTestId('highlighted');
+
         const elementsWithStyle = container.querySelectorAll(
           '[style*="--line-start"]'
         );
+
         expect(elementsWithStyle.length).toBeGreaterThan(0);
         expect(elementsWithStyle[0]?.getAttribute('style')).toContain(
           '--line-start: 42'
@@ -584,7 +563,7 @@ describe('useShikiHighlighter Hook', () => {
       });
     });
 
-    test('does not set line-start CSS variable when starting from 1', async () => {
+    it('does not set line-start CSS variable when starting from 1', async () => {
       const { getByTestId } = renderComponent({
         code,
         language: 'javascript',
@@ -594,14 +573,16 @@ describe('useShikiHighlighter Hook', () => {
 
       await waitFor(() => {
         const container = getByTestId('highlighted');
+
         const elementsWithStyle = container.querySelectorAll(
           '[style*="--line-start"]'
         );
-        expect(elementsWithStyle.length).toBe(0);
+
+        expect(elementsWithStyle).toHaveLength(0);
       });
     });
 
-    test('highlights displayed line numbers', async () => {
+    it('highlights displayed line numbers', async () => {
       const { getByTestId } = renderComponent({
         code,
         language: 'javascript',
@@ -611,6 +592,7 @@ describe('useShikiHighlighter Hook', () => {
 
       await waitFor(() => {
         const container = getByTestId('highlighted');
+
         const highlightedLines = container.querySelectorAll(
           '.rs-highlighted-line'
         );
@@ -636,12 +618,14 @@ describe('useShikiHighlighter Hook', () => {
         { scope: 'keyword', settings: { foreground: '#ff0000' } },
       ],
     };
+
     const customDarkTheme = {
       name: 'custom-dark',
       tokenColors: [
         { scope: 'keyword', settings: { foreground: '#00ff00' } },
       ],
     };
+
     const customDimTheme = {
       name: 'custom-dim',
       tokenColors: [
@@ -649,7 +633,7 @@ describe('useShikiHighlighter Hook', () => {
       ],
     };
 
-    test('renders with light as default and CSS variables for other themes', async () => {
+    it('renders with light as default and a --shiki-dark CSS variable for the other theme', async () => {
       const { getByTestId } = renderComponent({
         code,
         language: 'javascript',
@@ -666,16 +650,16 @@ describe('useShikiHighlighter Hook', () => {
         const spans = container.querySelectorAll(
           'span[style*="--shiki-"]'
         );
+
         expect(spans.length).toBeGreaterThan(0);
 
-        // Light is default, so we should have --shiki-dark CSS variable
-        const span = spans[0];
+        const [span] = spans;
         const style = span?.getAttribute('style');
         expect(style).toContain('--shiki-dark');
       });
     });
 
-    test('uses dark as default when defaultColor is dark', async () => {
+    it('uses dark as default when defaultColor is dark', async () => {
       const { getByTestId } = renderComponent({
         code,
         language: 'javascript',
@@ -685,18 +669,20 @@ describe('useShikiHighlighter Hook', () => {
 
       await waitFor(() => {
         const container = getByTestId('highlighted');
+
         const spans = container.querySelectorAll(
           'span[style*="--shiki-"]'
         );
+
         expect(spans.length).toBeGreaterThan(0);
 
-        const span = spans[0];
+        const [span] = spans;
         const style = span?.getAttribute('style');
         expect(style).toContain('--shiki-light');
       });
     });
 
-    test('uses custom CSS variable prefix', async () => {
+    it('uses custom CSS variable prefix', async () => {
       const { getByTestId } = renderComponent({
         code,
         language: 'javascript',
@@ -707,19 +693,21 @@ describe('useShikiHighlighter Hook', () => {
 
       await waitFor(() => {
         const container = getByTestId('highlighted');
+
         const spans = container.querySelectorAll(
           'span[style*="--custom-"]'
         );
+
         expect(spans.length).toBeGreaterThan(0);
 
-        const span = spans[0];
+        const [span] = spans;
         const style = span?.getAttribute('style');
         expect(style).toContain('--custom-dark');
         expect(style).not.toContain('--shiki-dark');
       });
     });
 
-    test.each([
+    it.each<{ name: string; theme: Themes }>([
       {
         name: 'two bundled string themes',
         theme: { light: 'github-light', dark: 'github-dark' },
@@ -768,6 +756,7 @@ describe('useShikiHighlighter Hook', () => {
         const spans = container.querySelectorAll(
           'span[style*="--shiki-"]'
         );
+
         expect(spans.length).toBeGreaterThan(0);
       });
     });
@@ -776,7 +765,7 @@ describe('useShikiHighlighter Hook', () => {
   describe('Rendering Options', () => {
     const sampleCode = 'const x = 1;\nconst y = 2;';
 
-    test('passes mergeWhitespaces option to Shiki', async () => {
+    it('passes mergeWhitespaces option to Shiki without breaking rendering (whitespace itself is Shiki’s job)', async () => {
       const { getByTestId } = renderComponent({
         code: sampleCode,
         language: 'javascript',
@@ -786,12 +775,10 @@ describe('useShikiHighlighter Hook', () => {
       await waitFor(() => {
         const container = getByTestId('highlighted');
         expect(container.querySelector('pre')).toBeInTheDocument();
-        // We're primarily testing that the option doesn't break rendering
-        // The actual whitespace behavior is Shiki's responsibility
       });
     });
 
-    test('passes structure option to Shiki', async () => {
+    it('passes structure option to Shiki: inline renders spans and <br> with no pre or .line spans', async () => {
       const { getByTestId } = renderComponent({
         code: sampleCode,
         language: 'javascript',
@@ -800,18 +787,15 @@ describe('useShikiHighlighter Hook', () => {
 
       await waitFor(() => {
         const container = getByTestId('highlighted');
-        // With inline structure, there's no pre element
         const preElement = container.querySelector('pre');
         expect(preElement).not.toBeInTheDocument();
-        // Instead, content is rendered with spans and br tags
         const brElement = container.querySelector('br');
         expect(brElement).toBeInTheDocument();
-        // No .line spans with inline structure
         expect(container.querySelector('.line')).not.toBeInTheDocument();
       });
     });
 
-    test('passes decorations option to Shiki', async () => {
+    it('passes decorations option to Shiki', async () => {
       const decoration = {
         start: 0,
         end: 5,
@@ -836,7 +820,7 @@ describe('useShikiHighlighter Hook', () => {
   describe('Output Format', () => {
     const sampleCode = 'const x = 1;\nconst y = 2;';
 
-    test('returns React nodes by default', async () => {
+    it('returns React nodes by default', async () => {
       const { getByTestId } = renderComponent({
         code: sampleCode,
         language: 'javascript',
@@ -844,106 +828,55 @@ describe('useShikiHighlighter Hook', () => {
 
       await waitFor(() => {
         const container = getByTestId('highlighted');
-        // Should have rendered React elements
         expect(container.querySelector('pre')).toBeInTheDocument();
         expect(container.querySelector('code')).toBeInTheDocument();
       });
     });
 
-    test('returns HTML string when outputFormat is html', async () => {
-      let capturedOutput: any = null;
-
-      const TestCapture = () => {
-        const highlighted = useShikiHighlighter(
-          sampleCode,
-          'javascript',
-          'github-dark',
-          { outputFormat: 'html' }
-        );
-        capturedOutput = highlighted;
-
-        if (typeof highlighted === 'string' && highlighted) {
-          return (
-            <div
-              data-testid="output"
-              dangerouslySetInnerHTML={{ __html: highlighted }}
-            />
-          );
-        }
-        return <div data-testid="output">Loading...</div>;
-      };
-
-      const { getByTestId } = render(<TestCapture />);
+    it('returns HTML string when outputFormat is html', async () => {
+      const { result } = renderHook(() =>
+        useShikiHighlighter(sampleCode, 'javascript', 'github-dark', {
+          outputFormat: 'html',
+        })
+      );
 
       await waitFor(() => {
-        // Should return an HTML string
-        expect(typeof capturedOutput).toBe('string');
-        expect(capturedOutput).toContain('<pre');
+        expect(result.current).toBeTypeOf('string');
+        expect(result.current).toContain('<pre');
 
-        const container = getByTestId('output');
-        expect(container.querySelector('pre')).toBeInTheDocument();
+        const output = htmlFragment(result.current);
+        expect(output.querySelector('pre')).not.toBeNull();
       });
     });
 
-    test('HTML output contains syntax highlighting', async () => {
-      let capturedOutput: any = null;
-
-      const TestCapture = () => {
-        const highlighted = useShikiHighlighter(
-          'const x = 1;',
-          'javascript',
-          'github-dark',
-          { outputFormat: 'html' }
-        );
-        capturedOutput = highlighted;
-
-        if (typeof highlighted === 'string' && highlighted) {
-          return (
-            <div
-              data-testid="output"
-              dangerouslySetInnerHTML={{ __html: highlighted }}
-            />
-          );
-        }
-        return <div data-testid="output">Loading...</div>;
-      };
-
-      const { getByTestId } = render(<TestCapture />);
+    it('HTML output contains syntax highlighting and preserves the code', async () => {
+      const { result } = renderHook(() =>
+        useShikiHighlighter('const x = 1;', 'javascript', 'github-dark', {
+          outputFormat: 'html',
+        })
+      );
 
       await waitFor(() => {
-        // Verify HTML string contains syntax highlighting elements
-        expect(capturedOutput).toContain('style=');
-        expect(capturedOutput).toContain('color:');
+        expect(result.current).toContain('style=');
+        expect(result.current).toContain('color:');
 
-        // Verify rendered DOM has highlighted spans
-        const container = getByTestId('output');
-        const spans = container.querySelectorAll('span[style*="color"]');
+        const output = htmlFragment(result.current);
+        const spans = output.querySelectorAll('span[style*="color"]');
         expect(spans.length).toBeGreaterThan(0);
 
-        // Verify the code content is preserved
-        expect(container.textContent).toContain('const x = 1;');
+        expect(output.textContent).toContain('const x = 1;');
       });
     });
 
-    test('returns Shiki tokens when outputFormat is tokens', async () => {
-      let capturedOutput: HighlightResult<'tokens'> = null;
-
-      const TestCapture = () => {
-        const highlighted = useShikiHighlighter(
-          'const x = 1;',
-          'javascript',
-          'github-dark',
-          { outputFormat: 'tokens' }
-        );
-        capturedOutput = highlighted;
-
-        return <div data-testid="output">ready</div>;
-      };
-
-      render(<TestCapture />);
+    it('returns Shiki tokens when outputFormat is tokens', async () => {
+      const { result } = renderHook(() =>
+        useShikiHighlighter('const x = 1;', 'javascript', 'github-dark', {
+          outputFormat: 'tokens',
+        })
+      );
 
       await waitFor(() => {
-        expect(capturedOutput).toMatchObject({
+        expect(result.current).toMatchObject({
           tokens: [
             expect.arrayContaining([
               expect.objectContaining({
@@ -953,15 +886,16 @@ describe('useShikiHighlighter Hook', () => {
             ]),
           ],
         });
-        expect(capturedOutput?.tokens[0]?.length).toBeGreaterThan(1);
+        expect(result.current?.tokens[0]?.length).toBeGreaterThan(1);
       });
     });
 
-    test('falls back to react rendering for unrecognized outputFormat', async () => {
+    it('falls back to react rendering for unrecognized outputFormat', async () => {
       const { getByTestId } = renderComponent({
         code: 'const x = 1;',
         language: 'javascript',
-        outputFormat: 'token' as any,
+        outputFormat:
+          outOfType<HighlighterOptions['outputFormat']>('token'),
       });
 
       await waitFor(() => {
@@ -974,27 +908,13 @@ describe('useShikiHighlighter Hook', () => {
   });
 
   describe('Engine Configuration', () => {
-    test('accepts custom engine option and highlights code', async () => {
-      const TestComponent = () => {
-        const highlighted = useShikiHighlighter(
-          'const add = (a, b) => a + b;',
-          'javascript',
-          'github-dark',
-          {
-            engine: createJavaScriptRegexEngine(),
-          }
-        );
-
-        return <div data-testid="highlighted">{highlighted}</div>;
-      };
-
-      const { getByTestId } = render(<TestComponent />);
+    it('accepts custom engine option and highlights code', async () => {
+      const { getByTestId } = render(<EngineHarness />);
 
       await waitFor(() => {
         const container = getByTestId('highlighted');
         expect(container).toBeInTheDocument();
 
-        // Verify syntax highlighting occurred
         const spans = container.querySelectorAll('span[style*="color"]');
         expect(spans.length).toBeGreaterThan(0);
       });
@@ -1010,16 +930,12 @@ describe('useShikiHighlighter Hook', () => {
       vi.useRealTimers();
     });
 
-    test('throttles highlighting function calls based on timing', () => {
-      // Mock date to have a consistent starting point
-      const originalDateNow = Date.now;
+    it('throttles highlighting function calls based on timing', () => {
       const mockTime = 1000;
-      Date.now = vi.fn(() => mockTime);
+      const throttleMs = 500;
+      const now = vi.spyOn(Date, 'now').mockReturnValue(mockTime);
+      const performHighlight = vi.fn<() => Promise<void>>();
 
-      // Mock the perform highlight function
-      const performHighlight = vi.fn().mockResolvedValue(undefined);
-
-      // Setup timeout control like in the hook
       const timeoutControl = {
         current: {
           timeoutId: undefined,
@@ -1027,32 +943,27 @@ describe('useShikiHighlighter Hook', () => {
         },
       };
 
-      // First call should schedule immediately since nextAllowedTime is in the past
-      throttleHighlighting(performHighlight, timeoutControl, 500);
+      throttleHighlighting(performHighlight, timeoutControl, throttleMs);
       expect(timeoutControl.current.timeoutId).toBeDefined();
 
-      // Run the timeout
       vi.runAllTimers();
-      expect(performHighlight).toHaveBeenCalledTimes(1);
-      expect(timeoutControl.current.nextAllowedTime).toBe(1500); // 1000 + 500
+      expect(performHighlight).toHaveBeenCalledOnce();
+      expect(timeoutControl.current.nextAllowedTime).toBe(
+        mockTime + throttleMs
+      );
 
-      // Reset the mock
       performHighlight.mockClear();
 
-      // Call again - should be delayed by the throttle duration
-      throttleHighlighting(performHighlight, timeoutControl, 500);
-      expect(performHighlight).not.toHaveBeenCalled(); // Not called yet
-
-      // Advance halfway through the delay - should still not be called
-      vi.advanceTimersByTime(250);
+      throttleHighlighting(performHighlight, timeoutControl, throttleMs);
       expect(performHighlight).not.toHaveBeenCalled();
 
-      // Advance the full delay
-      vi.advanceTimersByTime(250);
-      expect(performHighlight).toHaveBeenCalledTimes(1);
+      vi.advanceTimersByTime(throttleMs / 2);
+      expect(performHighlight).not.toHaveBeenCalled();
 
-      // Restore original Date.now
-      Date.now = originalDateNow;
+      vi.advanceTimersByTime(throttleMs / 2);
+      expect(performHighlight).toHaveBeenCalledOnce();
+
+      now.mockRestore();
     });
   });
 
@@ -1061,7 +972,7 @@ describe('useShikiHighlighter Hook', () => {
       vi.restoreAllMocks();
     });
 
-    test('loads only guessed embedded languages that exist in bundled languages', async () => {
+    it('loads only guessed embedded languages that exist in bundled languages', async () => {
       const markdown = [
         '# Example',
         '',
@@ -1073,27 +984,24 @@ describe('useShikiHighlighter Hook', () => {
         'noop',
         '```',
       ].join('\n');
-      const pythonGrammar: LanguageInput = {
-        name: 'python',
-        scopeName: 'source.python',
-        patterns: [],
-      };
-      const highlighter = createMockHighlighter({
+
+      const highlighter = createMarkdownHighlighter({
         python: pythonGrammar,
       });
-      const factory: HookFactory = vi.fn().mockResolvedValue(highlighter);
+
+      const factory = vi.fn<HighlighterFactory>(async () => highlighter);
 
       render(<EmbeddedHarness code={markdown} factory={factory} />);
 
       await waitFor(() => {
-        expect(highlighter.loadLanguage).toHaveBeenCalledTimes(1);
+        expect(highlighter.loadLanguage).toHaveBeenCalledOnce();
         expect(highlighter.loadLanguage).toHaveBeenCalledWith(
           pythonGrammar
         );
       });
     });
 
-    test('detects embedded language from a real markdown document and loads only bundled matches', async () => {
+    it('detects embedded language from a real markdown document and loads only bundled matches', async () => {
       const markdown = [
         '# Example',
         '',
@@ -1107,15 +1015,12 @@ describe('useShikiHighlighter Hook', () => {
         'noop',
         '```',
       ].join('\n');
-      const pythonGrammar: LanguageInput = {
-        name: 'python',
-        scopeName: 'source.python',
-        patterns: [],
-      };
-      const highlighter = createMockHighlighter({
+
+      const highlighter = createMarkdownHighlighter({
         python: pythonGrammar,
       });
-      const factory: HookFactory = vi.fn().mockResolvedValue(highlighter);
+
+      const factory = vi.fn<HighlighterFactory>(async () => highlighter);
 
       render(<EmbeddedHarness code={markdown} factory={factory} />);
 
@@ -1126,16 +1031,12 @@ describe('useShikiHighlighter Hook', () => {
       });
     });
 
-    test('does not auto-load embedded languages when a custom highlighter is provided', async () => {
-      const pythonGrammar: LanguageInput = {
-        name: 'python',
-        scopeName: 'source.python',
-        patterns: [],
-      };
-      const customHighlighter = createMockHighlighter({
+    it('does not auto-load embedded languages when a custom highlighter is provided', async () => {
+      const customHighlighter = createMarkdownHighlighter({
         python: pythonGrammar,
       });
-      const factory: HookFactory = vi.fn();
+
+      const factory = vi.fn<HighlighterFactory>();
 
       render(
         <EmbeddedHarness
@@ -1145,7 +1046,10 @@ describe('useShikiHighlighter Hook', () => {
       );
 
       await waitFor(() => {
-        expect(customHighlighter.codeToHtml).toHaveBeenCalled();
+        expect(customHighlighter.codeToHtml).toHaveBeenCalledWith(
+          embeddedMarkdown,
+          expect.objectContaining({ theme: 'github-dark' })
+        );
         expect(customHighlighter.loadLanguage).not.toHaveBeenCalled();
         expect(factory).not.toHaveBeenCalled();
       });

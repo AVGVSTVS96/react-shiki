@@ -42,6 +42,7 @@ type Language =
  */
 type PreloadLanguage = Language | LanguageInput;
 
+// oxlint-disable-next-line typescript/ban-types -- string & {} keeps 'dark' and 'light' in editor autocomplete
 type MultiThemeKey = 'dark' | 'light' | (string & {});
 
 /**
@@ -183,7 +184,8 @@ interface ReactShikiOptions {
  * Extends CodeToHastOptions to allow passing any Shiki options directly
  */
 interface HighlighterOptions
-  extends ReactShikiOptions,
+  extends
+    ReactShikiOptions,
     Pick<
       CodeOptionsMultipleThemes<BundledTheme>,
       'defaultColor' | 'cssVariablePrefix'

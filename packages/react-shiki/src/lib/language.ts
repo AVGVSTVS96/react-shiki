@@ -10,8 +10,13 @@ import type {
 
 export const FALLBACK_LANGUAGE = 'plaintext';
 
-const toArray = <T>(value?: T | T[]): T[] =>
-  value == null ? [] : Array.isArray(value) ? value : [value];
+const toArray = <T>(value?: T | T[]): T[] => {
+  if (value == null) {
+    return [];
+  }
+
+  return Array.isArray(value) ? value : [value];
+};
 
 /** Deferred `LanguageInput` forms (getter, promise, module, array) that shiki resolves itself */
 type DynamicLanguage = Exclude<LanguageInput, LanguageRegistration>;
@@ -31,18 +36,33 @@ const isRegistration = (
 
 /** Dedupe identity: strings and registrations by value, dynamic inputs by reference */
 const languageKey = (lang: PreloadLanguage): string | object | null => {
-  if (lang == null) return null;
-  if (typeof lang === 'string') return `s:${lang}`;
-  if (isDynamicLanguage(lang)) return lang;
+  if (lang == null) {
+    return null;
+  }
+
+  if (typeof lang === 'string') {
+    return `s:${lang}`;
+  }
+
+  if (isDynamicLanguage(lang)) {
+    return lang;
+  }
+
   return `o:${lang.name}::${lang.scopeName}`;
 };
 
 const dedupeLanguages = (langs: PreloadLanguage[]): PreloadLanguage[] => {
   const seen = new Set<string | object>();
+
   return langs.filter((lang) => {
     const key = languageKey(lang);
-    if (key == null || seen.has(key)) return false;
+
+    if (key == null || seen.has(key)) {
+      return false;
+    }
+
     seen.add(key);
+
     return true;
   });
 };
@@ -61,10 +81,10 @@ const registrationMatches = (
   !!candidate.aliases?.some(matches) ||
   !!candidate.fileTypes?.some(matches);
 
-type LanguageResult = {
+interface LanguageResult {
   languageId: string;
   langsToLoad: PreloadLanguage[];
-};
+}
 
 /**
  * Resolves the language prop to a shiki language id plus everything the
@@ -101,6 +121,7 @@ export const resolveLanguage = (
 
   const normalized = lang.trim();
   const query = normalized.toLowerCase();
+
   const matches = (str: string | undefined): boolean =>
     str?.toLowerCase() === query;
 
@@ -108,6 +129,7 @@ export const resolveLanguage = (
   const customMatch = [...customLangs, ...preloadLangs]
     .filter(isRegistration)
     .find((candidate) => registrationMatches(candidate, matches));
+
   if (customMatch) {
     return result(customMatch.name || normalized, customMatch);
   }
@@ -115,6 +137,7 @@ export const resolveLanguage = (
   const alias = Object.entries(langAliases ?? {}).find(([name]) =>
     matches(name)
   )?.[1];
+
   if (alias) {
     return result(alias, alias);
   }
@@ -132,9 +155,18 @@ export const isLoadableLanguage = <T extends string>(
   lang: PreloadLanguage,
   bundledLanguages: Record<T, DynamicImportLanguageRegistration>
 ): lang is NonNullable<PreloadLanguage> => {
-  if (lang == null) return false;
-  if (typeof lang === 'string') return lang in bundledLanguages;
-  if (isDynamicLanguage(lang)) return true;
+  if (lang == null) {
+    return false;
+  }
+
+  if (typeof lang === 'string') {
+    return lang in bundledLanguages;
+  }
+
+  if (isDynamicLanguage(lang)) {
+    return true;
+  }
+
   return (
     typeof lang.name === 'string' && typeof lang.scopeName === 'string'
   );
@@ -159,7 +191,9 @@ export const getEmbeddedLanguages = (
 ): LanguageInput[] => {
   const bundled: Record<string, LanguageInput> =
     highlighter.getBundledLanguages();
+
   return guessEmbeddedLanguages(code, languageId).flatMap(
+    // oxlint-disable-next-line typescript/promise-function-async -- returns shiki's LanguageInput, which can itself be a promise
     (language) => bundled[language] ?? []
   );
 };

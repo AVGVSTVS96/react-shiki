@@ -6,14 +6,18 @@ const engines = new Map<EngineName, Promise<RegexEngine>>();
 // Dynamic imports keep unused engines out of the loaded graph: naming an
 // engine loads only that engine, and 'javascript' never fetches the wasm.
 const loaders: Record<EngineName, () => Promise<RegexEngine>> = {
-  javascript: () =>
-    import('shiki/engine/javascript').then((m) =>
-      m.createJavaScriptRegexEngine()
-    ),
-  oniguruma: () =>
-    import('shiki/engine/oniguruma').then((m) =>
-      m.createOnigurumaEngine(import('shiki/wasm'))
-    ),
+  javascript: async () => {
+    const { createJavaScriptRegexEngine } =
+      await import('shiki/engine/javascript');
+
+    return createJavaScriptRegexEngine();
+  },
+  oniguruma: async () => {
+    const { createOnigurumaEngine } =
+      await import('shiki/engine/oniguruma');
+
+    return await createOnigurumaEngine(import('shiki/wasm'));
+  },
 };
 
 /**
@@ -26,22 +30,27 @@ const loaders: Record<EngineName, () => Promise<RegexEngine>> = {
 export const resolveEngine = (
   engine: EngineName | Awaitable<RegexEngine> | undefined
 ): Awaitable<RegexEngine> | undefined => {
-  if (typeof engine !== 'string') return engine;
+  if (typeof engine !== 'string') {
+    return engine;
+  }
 
-  const load = loaders[engine];
-  if (!load) {
+  if (!Object.hasOwn(loaders, engine)) {
     throw new Error(
       `[react-shiki] unknown engine '${engine}', expected 'javascript' or 'oniguruma'`
     );
   }
 
   const cached = engines.get(engine);
-  if (cached) return cached;
 
-  const instance = load();
+  if (cached) {
+    return cached;
+  }
+
+  const instance = loaders[engine]();
   // Evict rejected loads (e.g. transient wasm fetch failure) so the
   // next highlight retries instead of reusing the cached rejection.
   instance.catch(() => engines.delete(engine));
   engines.set(engine, instance);
+
   return instance;
 };

@@ -1,13 +1,11 @@
 import { useHighlight } from './lib/hook';
 import { createFullHighlighter } from './bundles/full';
 import type { UseShikiHighlighter } from './lib/types';
+import { createShikiHighlighterComponent } from './lib/component';
+// oxlint-disable-next-line unicorn/prefer-export-from -- `export type … from` here makes tsdown fold the core entry's declarations into the shared .d.mts chunk
+import type { ShikiHighlighterProps } from './lib/component';
 
 export { isInlineCode, rehypeInlineCodeProperty } from './lib/plugins';
-
-import {
-  createShikiHighlighterComponent,
-  type ShikiHighlighterProps,
-} from './lib/component';
 
 export type { ShikiHighlighterProps };
 
@@ -67,5 +65,7 @@ export const useShikiHighlighter: UseShikiHighlighter = (
  * Includes all languages and themes for maximum compatibility.
  */
 export const ShikiHighlighter =
+  // oxlint-disable-next-line eslint/no-inline-comments -- the #__PURE__ annotation lets bundlers drop the component when only the hook is used
   /*#__PURE__*/ createShikiHighlighterComponent(useShikiHighlighter);
+
 export default ShikiHighlighter;

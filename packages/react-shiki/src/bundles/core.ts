@@ -13,5 +13,6 @@ export function validateCoreHighlighter(
         'Use createHighlighterCore() from react-shiki or switch to react-shiki for plug-and-play usage.'
     );
   }
+
   return highlighter;
 }

@@ -1,0 +1,15 @@
+{
+  "$schema": "./node_modules/oxfmt/configuration_schema.json",
+  "printWidth": 74,
+  "singleQuote": true,
+  "trailingComma": "es5",
+  "ignorePatterns": [
+    ".github/workflows/claude.yml",
+    "tools/oxlint/no-comments.ts",
+    "pnpm-lock.yaml",
+    "**/CHANGELOG.md",
+    "**/*.md",
+    "**/*.mdx",
+    "**/*.css"
+  ]
+}

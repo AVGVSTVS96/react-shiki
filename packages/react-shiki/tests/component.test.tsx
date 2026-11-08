@@ -1,28 +1,27 @@
-import React, { useRef } from 'react';
-import { vi } from 'vitest';
+import { createRef } from 'react';
+import { vi, describe, expect, it } from 'vitest';
 import { render, waitFor } from '@testing-library/react';
 import {
   ShikiHighlighter,
   createJavaScriptRegexEngine,
 } from '../src/index';
+import type {
+  LanguageRegistration,
+  ShikiHighlighterProps,
+} from '../src/index';
+import { outOfType } from './fakes';
 
-// Test fixtures
 const codeSample = 'console.log("Hello World");';
 
-// Test utilities
 const getContainer = (container: HTMLElement) =>
-  container.querySelector(
-    '[data-slot="container"]'
-  ) as HTMLElement | null;
+  container.querySelector<HTMLElement>('[data-slot="container"]');
 
 const getLanguageLabel = (container: HTMLElement | null) =>
-  container?.querySelector(
-    '[data-slot="language-label"]'
-  ) as HTMLElement | null;
+  container?.querySelector<HTMLElement>('[data-slot="language-label"]');
 
 describe('ShikiHighlighter Component', () => {
   describe('Component-specific Props', () => {
-    test('renders with default div element', async () => {
+    it('renders with default div element', async () => {
       const { container } = render(
         <ShikiHighlighter language="javascript" theme="github-light">
           {codeSample}
@@ -39,7 +38,7 @@ describe('ShikiHighlighter Component', () => {
       });
     });
 
-    test('renders with custom element via "as" prop', async () => {
+    it('renders with custom element via "as" prop', async () => {
       const { container } = render(
         <ShikiHighlighter
           language="javascript"
@@ -57,7 +56,7 @@ describe('ShikiHighlighter Component', () => {
       });
     });
 
-    test('shows language label by default', async () => {
+    it('shows language label by default, without an id so several code blocks never duplicate one', async () => {
       const { container } = render(
         <ShikiHighlighter language="javascript" theme="github-light">
           {codeSample}
@@ -70,12 +69,11 @@ describe('ShikiHighlighter Component', () => {
 
         expect(langLabel).toBeInTheDocument();
         expect(langLabel?.textContent).toBe('javascript');
-        // No id: multiple code blocks would otherwise produce duplicate ids
         expect(langLabel?.id).toBe('');
       });
     });
 
-    test('hides language label when showLanguage is false', async () => {
+    it('hides language label when showLanguage is false', async () => {
       const { container } = render(
         <ShikiHighlighter
           language="javascript"
@@ -93,7 +91,7 @@ describe('ShikiHighlighter Component', () => {
       });
     });
 
-    test('keeps original alias string in label while highlighting alias target', async () => {
+    it('keeps original alias string in label while highlighting alias target', async () => {
       const { container } = render(
         <ShikiHighlighter
           language="golang"
@@ -107,9 +105,10 @@ describe('ShikiHighlighter Component', () => {
       await waitFor(() => {
         const outerContainer = getContainer(container);
         const langLabel = getLanguageLabel(outerContainer);
-        const highlightedKeyword = Array.from(
-          outerContainer?.querySelectorAll('span') || []
-        ).find((span) => span.textContent === 'package');
+
+        const highlightedKeyword = [
+          ...(outerContainer?.querySelectorAll('span') ?? []),
+        ].find((span) => span.textContent === 'package');
 
         expect(langLabel).toBeInTheDocument();
         expect(langLabel?.textContent).toBe('golang');
@@ -117,7 +116,7 @@ describe('ShikiHighlighter Component', () => {
       });
     });
 
-    test('shows original language in label for unknown languages', async () => {
+    it('shows original language in label for unknown languages', async () => {
       const { container } = render(
         <ShikiHighlighter language="unknownlang" theme="github-light">
           {codeSample}
@@ -128,17 +127,19 @@ describe('ShikiHighlighter Component', () => {
         const outerContainer = getContainer(container);
         const langLabel = getLanguageLabel(outerContainer);
 
-        // Verify language label shows original language
         expect(langLabel).toBeInTheDocument();
         expect(langLabel?.textContent).toBe('unknownlang');
       });
     });
 
-    test('uses language object name for label rendering', async () => {
-      const customLanguage = {
+    it('uses language object name for label rendering', async () => {
+      const customLanguage: LanguageRegistration = {
         name: 'my-language',
         scopeName: 'source.my-language',
+        patterns: [],
+        repository: {},
       };
+
       const { container } = render(
         <ShikiHighlighter language={customLanguage} theme="github-light">
           {codeSample}
@@ -154,7 +155,7 @@ describe('ShikiHighlighter Component', () => {
       });
     });
 
-    test('applies custom className to container', async () => {
+    it('applies custom className to container', async () => {
       const { container } = render(
         <ShikiHighlighter
           language="javascript"
@@ -172,7 +173,7 @@ describe('ShikiHighlighter Component', () => {
       });
     });
 
-    test('applies custom style to container', async () => {
+    it('applies custom style to container', async () => {
       const customStyle = { border: '1px solid red' };
 
       const { container } = render(
@@ -191,7 +192,7 @@ describe('ShikiHighlighter Component', () => {
       });
     });
 
-    test('applies custom className and style to language label', async () => {
+    it('applies custom className and style to language label', async () => {
       const customStyle = { border: '1px solid red' };
       const customLangStyle = { color: 'blue' };
 
@@ -212,7 +213,6 @@ describe('ShikiHighlighter Component', () => {
         const outerContainer = getContainer(container);
         const langLabel = getLanguageLabel(outerContainer);
 
-        // Verify container styling
         expect(outerContainer?.style.border).toBe('1px solid red');
         expect(outerContainer?.className).toContain('custom-code-block');
 
@@ -222,7 +222,7 @@ describe('ShikiHighlighter Component', () => {
       });
     });
 
-    test('automatically uses dangerouslySetInnerHTML when outputFormat is html', async () => {
+    it('automatically uses dangerouslySetInnerHTML when outputFormat is html', async () => {
       const { container } = render(
         <ShikiHighlighter
           language="javascript"
@@ -237,18 +237,18 @@ describe('ShikiHighlighter Component', () => {
         const shikiContainer = getContainer(container);
         expect(shikiContainer).toBeInTheDocument();
 
-        // Should have a div with dangerouslySetInnerHTML
-        const innerDiv = shikiContainer?.querySelector(':scope > div');
-        expect(innerDiv).toBeInTheDocument();
-        expect(innerDiv?.getAttribute('data-slot')).toBe('content');
+        const innerDiv =
+          shikiContainer?.querySelector<HTMLElement>(':scope > div');
 
-        // Should still render highlighted code
+        expect(innerDiv).toBeInTheDocument();
+        expect(innerDiv?.dataset.slot).toBe('content');
+
         expect(container.querySelector('pre')).toBeInTheDocument();
         expect(container.querySelector('code')).toBeInTheDocument();
       });
     });
 
-    test('warns and falls back to react output when outputFormat is tokens', async () => {
+    it('warns and falls back to react output when outputFormat is tokens', async () => {
       const warnSpy = vi
         .spyOn(console, 'warn')
         .mockImplementation(() => {});
@@ -257,8 +257,9 @@ describe('ShikiHighlighter Component', () => {
         <ShikiHighlighter
           language="javascript"
           theme="github-dark"
-          // Types forbid 'tokens' on the component; plain-JS callers can still pass it
-          outputFormat={'tokens' as never}
+          outputFormat={outOfType<ShikiHighlighterProps['outputFormat']>(
+            'tokens'
+          )}
         >
           {codeSample}
         </ShikiHighlighter>
@@ -269,7 +270,6 @@ describe('ShikiHighlighter Component', () => {
           expect.stringContaining("outputFormat 'tokens'")
         );
 
-        // Falls back to React element output instead of crashing
         const shikiContainer = getContainer(container);
         expect(
           shikiContainer?.querySelector('pre.shiki')
@@ -282,90 +282,74 @@ describe('ShikiHighlighter Component', () => {
   });
 
   describe('Ref Forwarding', () => {
-    const RefTestComponent = ({
-      onRefSet,
-      as,
-    }: {
-      onRefSet: (ref: HTMLElement | null) => void;
-      as?: 'div' | 'pre';
-    }) => {
-      const ref = useRef<HTMLElement>(null);
+    it('forwards ref to the default container element (div)', async () => {
+      const ref = createRef<HTMLElement>();
 
-      React.useEffect(() => {
-        onRefSet(ref.current);
-      }, [onRefSet]);
-
-      return (
+      render(
         <ShikiHighlighter
-          ref={ref as any}
+          ref={ref}
           language="javascript"
           theme="github-light"
-          as={as}
         >
           {codeSample}
         </ShikiHighlighter>
       );
-    };
-
-    test('forwards ref to the default container element (div)', async () => {
-      let refCurrent: HTMLElement | null = null;
-
-      render(
-        <RefTestComponent
-          onRefSet={(ref) => {
-            refCurrent = ref;
-          }}
-        />
-      );
 
       await waitFor(() => {
-        expect(refCurrent).not.toBeNull();
-        expect(refCurrent?.tagName.toLowerCase()).toBe('div');
-        expect(refCurrent?.getAttribute('data-slot')).toBe('container');
+        expect(ref.current).not.toBeNull();
+        expect(ref.current?.tagName.toLowerCase()).toBe('div');
+        expect(ref.current?.dataset.slot).toBe('container');
       });
     });
 
-    test('forwards ref to custom element when using "as" prop', async () => {
-      let refCurrent: HTMLElement | null = null;
+    it('forwards ref to custom element when using "as" prop', async () => {
+      const ref = createRef<HTMLElement>();
 
       render(
-        <RefTestComponent
-          onRefSet={(ref) => {
-            refCurrent = ref;
-          }}
+        <ShikiHighlighter
+          ref={ref}
+          language="javascript"
+          theme="github-light"
           as="div"
-        />
+        >
+          {codeSample}
+        </ShikiHighlighter>
       );
 
       await waitFor(() => {
-        expect(refCurrent).not.toBeNull();
-        expect(refCurrent?.tagName.toLowerCase()).toBe('div');
-        expect(refCurrent?.getAttribute('data-slot')).toBe('container');
+        expect(ref.current).not.toBeNull();
+        expect(ref.current?.tagName.toLowerCase()).toBe('div');
+        expect(ref.current?.dataset.slot).toBe('container');
       });
     });
 
-    test('ref provides access to DOM methods', async () => {
-      let refCurrent: HTMLElement | null = null;
+    it('ref provides access to DOM methods', async () => {
+      const ref = createRef<HTMLElement>();
 
       render(
-        <RefTestComponent
-          onRefSet={(ref) => {
-            refCurrent = ref;
-          }}
-        />
+        <ShikiHighlighter
+          ref={ref}
+          language="javascript"
+          theme="github-light"
+        >
+          {codeSample}
+        </ShikiHighlighter>
       );
 
       await waitFor(() => {
-        expect(refCurrent).not.toBeNull();
-        expect(typeof refCurrent?.focus).toBe('function');
-        expect(typeof refCurrent?.getBoundingClientRect).toBe('function');
-        expect(refCurrent?.tagName.toLowerCase()).toBe('div');
+        expect(ref.current).not.toBeNull();
+        expect(ref.current).toBeInstanceOf(HTMLElement);
+        expect(() => {
+          ref.current?.focus();
+        }).not.toThrow();
+        expect(ref.current?.getBoundingClientRect()).toBeDefined();
+        expect(ref.current?.tagName.toLowerCase()).toBe('div');
       });
     });
   });
 
   describe('Engine Configuration', () => {
-    test('accepts custom engine prop and highlights code', async () => {
+    it('accepts custom engine prop and highlights code', async () => {
       const { container } = render(
         <ShikiHighlighter
           language="javascript"

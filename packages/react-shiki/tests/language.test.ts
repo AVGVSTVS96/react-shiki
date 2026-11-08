@@ -1,99 +1,107 @@
-import { describe, expect, test } from 'vitest';
+import { describe, expect, it } from 'vitest';
+import type {
+  DynamicImportLanguageRegistration,
+  LanguageRegistration,
+} from 'shiki';
 import {
   FALLBACK_LANGUAGE,
   isLoadableLanguage,
   resolveLanguage,
   resolveLoadedLanguage,
 } from '../src/lib/language';
+import type { PreloadLanguage } from '../src/lib/types';
+import { outOfType } from './fakes';
+
+const emptyGrammarImport: DynamicImportLanguageRegistration =
+  async () => ({
+    default: [],
+  });
 
 const bundledLanguages = {
-  javascript: {},
-  typescript: {},
-} as const;
+  javascript: emptyGrammarImport,
+  typescript: emptyGrammarImport,
+};
 
-describe('isLoadableLanguage', () => {
-  test('returns true for bundled language strings', () => {
+const registration: LanguageRegistration = {
+  name: 'my-language',
+  scopeName: 'source.my-language',
+  patterns: [],
+  repository: {},
+};
+
+describe(isLoadableLanguage, () => {
+  it('returns true for bundled language strings', () => {
     expect(isLoadableLanguage('javascript', bundledLanguages)).toBe(true);
     expect(isLoadableLanguage('typescript', bundledLanguages)).toBe(true);
   });
 
-  test('returns false for unknown language strings', () => {
+  it('returns false for unknown language strings', () => {
     expect(isLoadableLanguage('unknownlang', bundledLanguages)).toBe(
       false
     );
   });
 
-  test('returns true for language registrations with required fields', () => {
+  it('returns true for language registrations with required fields', () => {
+    expect(isLoadableLanguage(registration, bundledLanguages)).toBe(true);
+  });
+
+  it('returns true for dynamic language inputs', () => {
+    expect(
+      isLoadableLanguage(async () => registration, bundledLanguages)
+    ).toBe(true);
     expect(
       isLoadableLanguage(
-        {
-          name: 'my-language',
-          scopeName: 'source.my-language',
-        },
+        Promise.resolve({ default: registration }),
         bundledLanguages
       )
     ).toBe(true);
   });
 
-  test('returns true for dynamic language inputs', () => {
+  it('returns false for incomplete language registration objects', () => {
     expect(
       isLoadableLanguage(
-        () => Promise.resolve({}) as any,
-        bundledLanguages
-      )
-    ).toBe(true);
-    expect(
-      isLoadableLanguage(Promise.resolve({}) as any, bundledLanguages)
-    ).toBe(true);
-  });
-
-  test('returns false for incomplete language registration objects', () => {
-    expect(
-      isLoadableLanguage(
-        {
-          name: 'my-language',
-        },
+        outOfType<PreloadLanguage>({ name: 'my-language' }),
         bundledLanguages
       )
     ).toBe(false);
     expect(
       isLoadableLanguage(
-        {
-          scopeName: 'source.my-language',
-        },
+        outOfType<PreloadLanguage>({ scopeName: 'source.my-language' }),
         bundledLanguages
       )
     ).toBe(false);
   });
 });
 
-describe('resolveLoadedLanguage', () => {
-  test('returns loaded language when available', () => {
+describe(resolveLoadedLanguage, () => {
+  it('returns loaded language when available', () => {
     expect(
       resolveLoadedLanguage('javascript', ['javascript', 'typescript'])
     ).toBe('javascript');
   });
 
-  test('falls back to plaintext when language is not loaded', () => {
+  it('falls back to plaintext when language is not loaded', () => {
     expect(resolveLoadedLanguage('python', ['javascript'])).toBe(
       FALLBACK_LANGUAGE
     );
   });
 
-  test('keeps special languages even when not explicitly loaded', () => {
+  it('keeps special languages even when not explicitly loaded', () => {
     expect(resolveLoadedLanguage('text', [])).toBe('text');
   });
 });
 
-describe('resolveLanguage', () => {
-  const customLanguage = {
-    name: 'my-language',
-    scopeName: 'source.my-language',
+describe(resolveLanguage, () => {
+  const customLanguage: LanguageRegistration = {
+    ...registration,
     aliases: ['my-lang'],
     fileTypes: ['ml'],
   };
 
-  test('returns plaintext for nullish and empty languages', () => {
+  const grammarImport = async () => customLanguage;
+  const otherImport = async () => customLanguage;
+
+  it('returns plaintext for nullish and empty languages', () => {
     expect(resolveLanguage(undefined)).toEqual({
       languageId: FALLBACK_LANGUAGE,
       langsToLoad: [],
@@ -108,31 +116,31 @@ describe('resolveLanguage', () => {
     });
   });
 
-  test('uses custom language object directly', () => {
+  it('uses custom language object directly', () => {
     expect(resolveLanguage(customLanguage)).toEqual({
       languageId: 'my-language',
       langsToLoad: [customLanguage],
     });
   });
 
-  test('resolves custom language by name', () => {
+  it('resolves custom language by name', () => {
     expect(resolveLanguage('my-language', customLanguage)).toEqual({
       languageId: 'my-language',
       langsToLoad: [customLanguage],
     });
   });
 
-  test('trims language strings before custom language lookup', () => {
+  it('trims language strings before custom language lookup', () => {
     expect(resolveLanguage('  my-language  ', customLanguage)).toEqual({
       languageId: 'my-language',
       langsToLoad: [customLanguage],
     });
   });
 
-  test('resolves custom language by scopeName tail', () => {
-    const scopeNameLanguage = {
+  it('resolves custom language by scopeName tail', () => {
+    const scopeNameLanguage: LanguageRegistration = {
+      ...registration,
       name: 'scope-based-language',
-      scopeName: 'source.my-language',
     };
 
     expect(resolveLanguage('my-language', [scopeNameLanguage])).toEqual({
@@ -141,7 +149,7 @@ describe('resolveLanguage', () => {
     });
   });
 
-  test('resolves custom language by alias and file type', () => {
+  it('resolves custom language by alias and file type', () => {
     const aliasedLang = { ...customLanguage, aliases: ['My-Lang'] };
     expect(resolveLanguage('my-lang', aliasedLang)).toEqual({
       languageId: 'my-language',
@@ -155,7 +163,7 @@ describe('resolveLanguage', () => {
     });
   });
 
-  test('resolves alias map before passing through', () => {
+  it('resolves alias map before passing through', () => {
     expect(
       resolveLanguage('mylang', undefined, {
         mylang: 'javascript',
@@ -166,7 +174,7 @@ describe('resolveLanguage', () => {
     });
   });
 
-  test('trims language strings before alias lookup', () => {
+  it('trims language strings before alias lookup', () => {
     expect(
       resolveLanguage('  mylang  ', undefined, {
         mylang: 'javascript',
@@ -177,7 +185,7 @@ describe('resolveLanguage', () => {
     });
   });
 
-  test('matches alias map keys case-insensitively', () => {
+  it('matches alias map keys case-insensitively', () => {
     expect(
       resolveLanguage('MyLang', undefined, {
         mylang: 'javascript',
@@ -188,14 +196,14 @@ describe('resolveLanguage', () => {
     });
   });
 
-  test('falls back to passthrough when no resolver match exists', () => {
+  it('falls back to passthrough when no resolver match exists', () => {
     expect(resolveLanguage('plain-old-lang', customLanguage)).toEqual({
       languageId: 'plain-old-lang',
       langsToLoad: ['plain-old-lang', customLanguage],
     });
   });
 
-  test('trims passthrough language ids', () => {
+  it('trims passthrough language ids', () => {
     expect(resolveLanguage('  plain-old-lang  ', customLanguage)).toEqual(
       {
         languageId: 'plain-old-lang',
@@ -204,7 +212,7 @@ describe('resolveLanguage', () => {
     );
   });
 
-  test('gives custom language precedence over alias map', () => {
+  it('gives custom language precedence over alias map', () => {
     expect(
       resolveLanguage('my-language', customLanguage, {
         'my-language': 'typescript',
@@ -215,7 +223,7 @@ describe('resolveLanguage', () => {
     });
   });
 
-  test('matches custom language from preloadLanguages', () => {
+  it('matches custom language from preloadLanguages', () => {
     expect(
       resolveLanguage('my-language', undefined, undefined, customLanguage)
     ).toEqual({
@@ -224,7 +232,7 @@ describe('resolveLanguage', () => {
     });
   });
 
-  test('merges preloadLanguages and customLanguages without duplicates', () => {
+  it('merges preloadLanguages and customLanguages without duplicates', () => {
     expect(
       resolveLanguage('typescript', customLanguage, undefined, [
         'javascript',
@@ -236,8 +244,7 @@ describe('resolveLanguage', () => {
     });
   });
 
-  test('passes dynamic imports through to the factory', () => {
-    const grammarImport = () => Promise.resolve(customLanguage);
+  it('passes dynamic imports through to the factory', () => {
     expect(
       resolveLanguage('my-language', undefined, undefined, [
         grammarImport,
@@ -248,9 +255,7 @@ describe('resolveLanguage', () => {
     });
   });
 
-  test('dedupes dynamic imports by reference', () => {
-    const grammarImport = () => Promise.resolve(customLanguage);
-    const otherImport = () => Promise.resolve(customLanguage);
+  it('dedupes dynamic imports by reference', () => {
     expect(
       resolveLanguage('typescript', undefined, undefined, [
         grammarImport,
@@ -263,7 +268,7 @@ describe('resolveLanguage', () => {
     });
   });
 
-  test('dedupes repeated preload string ids while preserving order', () => {
+  it('dedupes repeated preload string ids while preserving order', () => {
     expect(
       resolveLanguage('typescript', undefined, undefined, [
         'javascript',

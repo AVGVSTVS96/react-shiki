@@ -2,28 +2,32 @@
   "name": "root",
   "private": true,
   "license": "MIT",
+  "type": "module",
   "scripts": {
-    "prepare": "git config core.hooksPath .githooks",
+    "prepare": "lefthook install",
     "dev": "pnpm --stream -r --parallel dev",
     "build": "pnpm --stream -r --parallel build",
+    "check": "pnpm package:build && oxlint && oxfmt --check && tsc -p . && pnpm -r typecheck && pnpm --filter react-shiki test",
+    "fix": "oxlint --fix; oxfmt",
     "package:dev": "pnpm --filter react-shiki dev",
     "package:build": "pnpm --filter react-shiki build",
     "playground:dev": "pnpm --filter playground dev",
     "playground:build": "pnpm --filter playground build",
-    "test": "pnpm --filter react-shiki test",
     "bench": "pnpm --filter react-shiki bench",
-    "lint": "pnpm --filter react-shiki lint",
-    "lint:fix": "pnpm --filter react-shiki lint:fix",
-    "check": "pnpm --filter react-shiki check",
-    "format": "pnpm --filter react-shiki format",
     "changeset": "changeset",
     "ci:publish": "pnpm package:build && changeset publish"
   },
   "devDependencies": {
-    "@biomejs/biome": "^2.5.15",
     "@changesets/cli": "^3.0.3",
+    "@oxlint/plugins": "1.92.0",
+    "@types/node": "25.9.9",
     "changesets-changelog-clean": "^1.4.0",
-    "typescript": "^7.0.2"
+    "lefthook": "2.2.2",
+    "oxfmt": "0.77.0",
+    "oxlint": "1.92.0",
+    "oxlint-tsgolint": "7.0.2006",
+    "typescript": "^7.0.2",
+    "ultracite": "8.1.1"
   },
   "packageManager": "pnpm@12.9.1"
 }

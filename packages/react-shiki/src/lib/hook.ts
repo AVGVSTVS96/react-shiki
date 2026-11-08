@@ -1,4 +1,5 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
+import type { ReactElement } from 'react';
 import { jsx, jsxs, Fragment } from 'react/jsx-runtime';
 import { toJsxRuntime } from 'hast-util-to-jsx-runtime';
 import type { CodeToHastOptions } from 'shiki';
@@ -43,6 +44,7 @@ export async function highlight<F extends OutputFormat = 'react'>(
 ): Promise<HighlightResultMap[F]> {
   const { languageId, langsToLoad, themesToLoad, shikiOptions } =
     resolved;
+
   const format: OutputFormat = opts.outputFormat ?? 'react';
 
   const highlighter =
@@ -53,9 +55,11 @@ export async function highlight<F extends OutputFormat = 'react'>(
         themesToLoad,
         resolveEngine(opts.engine)
       );
+
       await hl.loadLanguage(
         ...getEmbeddedLanguages(code, languageId, hl)
       );
+
       return hl;
     })());
 
@@ -63,10 +67,12 @@ export async function highlight<F extends OutputFormat = 'react'>(
     languageId,
     highlighter.getLoadedLanguages()
   );
+
   const options = { ...shikiOptions, lang: language };
 
-  const outputs: { [K in OutputFormat]: () => HighlightResultMap[K] } = {
-    react: () =>
+  const outputs = {
+    react: (): ReactElement =>
+      // oxlint-disable-next-line typescript/no-unsafe-return -- toJsxRuntime returns the global JSX.Element, which React 19's types no longer declare
       toJsxRuntime(highlighter.codeToHast(code, options), {
         jsx,
         jsxs,
@@ -74,10 +80,11 @@ export async function highlight<F extends OutputFormat = 'react'>(
       }),
     html: () => highlighter.codeToHtml(code, options),
     tokens: () => highlighter.codeToTokens(code, options),
-  };
+  } satisfies { [K in OutputFormat]: () => HighlightResultMap[K] };
 
   // Untyped call sites can pass formats outside OutputFormat; degrade to
   // react rendering like the pre-tokens ternary did instead of throwing.
+  // oxlint-disable-next-line typescript/no-unsafe-type-assertion, anti-slop/require-safety-comment-for-type-assertion -- outputs[format] returns HighlightResultMap[format], and TS can't tie format to the generic F
   return (outputs[format] ?? outputs.react)() as HighlightResultMap[F];
 }
 
@@ -85,9 +92,11 @@ export const useHighlight = <F extends OutputFormat = 'react'>(
   code: string,
   lang: Language,
   themeInput: Theme | Themes,
-  options: HighlighterOptionsFor<F> = {},
+  optionsInput: HighlighterOptionsFor<F> | undefined,
   highlighterFactory: HighlighterFactory
 ): HighlightResult<F> => {
+  const options = optionsInput ?? {};
+
   const [highlightedCode, setHighlightedCode] =
     useState<HighlightResult<F>>(null);
 
@@ -106,6 +115,7 @@ export const useHighlight = <F extends OutputFormat = 'react'>(
   const resolved = useMemo(() => {
     const { languageId, langsToLoad } = resolveLanguage(
       stableLang,
+      // oxlint-disable-next-line typescript/no-deprecated -- the hook still honors its own deprecated prop
       stableOpts.customLanguages,
       stableOpts.langAlias,
       stableOpts.preloadLanguages
@@ -114,6 +124,7 @@ export const useHighlight = <F extends OutputFormat = 'react'>(
     const theme = resolveTheme(stableTheme);
 
     const shikiOptions = buildShikiOptions(languageId, theme, stableOpts);
+
     return {
       languageId,
       langsToLoad,
@@ -136,8 +147,7 @@ export const useHighlight = <F extends OutputFormat = 'react'>(
 
   useEffect(() => {
     const requestId = ++requestIdRef.current;
-
-    if (!resolved.languageId) return;
+    const timeouts = timeoutControl.current;
 
     const run = async () => {
       try {
@@ -147,6 +157,7 @@ export const useHighlight = <F extends OutputFormat = 'react'>(
           stableOpts,
           highlighterFactoryRef.current
         );
+
         if (requestId === requestIdRef.current) {
           setHighlightedCode(result);
         }
@@ -155,14 +166,16 @@ export const useHighlight = <F extends OutputFormat = 'react'>(
       }
     };
 
-    if (stableOpts.delay) {
-      throttleHighlighting(run, timeoutControl, stableOpts.delay);
-    } else {
-      run();
+    if (resolved.languageId) {
+      if (stableOpts.delay) {
+        throttleHighlighting(run, timeoutControl, stableOpts.delay);
+      } else {
+        void run();
+      }
     }
 
     return () => {
-      clearTimeout(timeoutControl.current.timeoutId);
+      clearTimeout(timeouts.timeoutId);
     };
   }, [code, resolved, stableOpts]);
 

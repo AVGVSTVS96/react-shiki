@@ -1,61 +1,64 @@
-import { describe, test, expect } from 'vitest';
+import { describe, expect, it, vi } from 'vitest';
+import { setTimeout as delay } from 'node:timers/promises';
 import { render, waitFor } from '@testing-library/react';
 import { useShikiHighlighter, ShikiHighlighter } from '../src/index';
 
-// All tests in this file use the JavaScript engine: the underlying
-// highlighter is a singleton, so the first highlight decides the engine
-// for the whole test environment.
+const HookHarness = () => {
+  const out = useShikiHighlighter(
+    'const a = 1;',
+    'javascript',
+    'github-dark',
+    { engine: 'javascript' }
+  );
 
-describe("engine: 'javascript'", () => {
-  test('highlights via the hook', async () => {
-    const Harness = () => {
-      const out = useShikiHighlighter(
-        'const a = 1;',
-        'javascript',
-        'github-dark',
-        { engine: 'javascript' }
-      );
-      return <div data-testid="out">{out}</div>;
-    };
+  return <div data-testid="out">{out}</div>;
+};
 
-    const { getByTestId } = render(<Harness />);
+const settleMs = 300;
+
+describe("engine: 'javascript' (every test uses it: the singleton highlighter keeps the first highlight's engine)", () => {
+  it('highlights via the hook', async () => {
+    const { getByTestId } = render(<HookHarness />);
     await waitFor(() => {
       expect(getByTestId('out').textContent).toContain('const a = 1;');
       expect(getByTestId('out').querySelector('pre')).not.toBeNull();
     });
   });
 
-  test('is referentially stable when passed inline: renders settle', async () => {
-    const renders = { count: 0 };
+  it('is referentially stable when passed inline: renders settle', async () => {
+    const rendered = vi.fn<() => void>();
+
     const Harness = () => {
-      renders.count++;
+      rendered();
+
       const out = useShikiHighlighter(
         'const b = 2;',
         'javascript',
         'github-dark',
         { engine: 'javascript' }
       );
+
       return <div data-testid="out">{out}</div>;
     };
 
     const { getByTestId } = render(<Harness />);
-    await waitFor(() =>
-      expect(getByTestId('out').textContent).toContain('const b = 2;')
-    );
-    const settled = renders.count;
+    await waitFor(() => {
+      expect(getByTestId('out').textContent).toContain('const b = 2;');
+    });
+    const settled = rendered.mock.calls.length;
 
-    await new Promise((r) => setTimeout(r, 300));
-    expect(renders.count).toBe(settled);
+    await delay(settleMs);
+    expect(rendered).toHaveBeenCalledTimes(settled);
   });
 
-  test('works as a component prop', async () => {
+  it('works as a component prop', async () => {
     const { container } = render(
       <ShikiHighlighter
         language="javascript"
         theme="github-dark"
         engine="javascript"
       >
-        {'const c = 3;'}
+        const c = 3;
       </ShikiHighlighter>
     );
 

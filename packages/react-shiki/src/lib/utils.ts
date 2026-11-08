@@ -39,8 +39,9 @@ export const throttleHighlighting = (
     0,
     timeoutControl.current.nextAllowedTime - Date.now()
   );
+
   timeoutControl.current.timeoutId = setTimeout(() => {
-    performHighlight();
+    void performHighlight();
     timeoutControl.current.nextAllowedTime = Date.now() + throttleMs;
   }, delay);
 };

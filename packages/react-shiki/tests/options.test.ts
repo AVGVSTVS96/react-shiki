@@ -1,11 +1,13 @@
-import { describe, expect, test, vi } from 'vitest';
+import { describe, expect, vi, it } from 'vitest';
 import type { ShikiTransformer } from 'shiki';
 
 import { buildShikiOptions } from '../src/lib/options';
 import { resolveTheme, DEFAULT_THEMES } from '../src/lib/theme';
+import type { Themes } from '../src/lib/types';
+import { outOfType } from './fakes';
 
-describe('buildShikiOptions', () => {
-  test('builds single-theme options with language passthrough', () => {
+describe(buildShikiOptions, () => {
+  it('builds single-theme options with language passthrough', () => {
     const options = buildShikiOptions(
       'typescript',
       resolveTheme('github-dark'),
@@ -20,7 +22,7 @@ describe('buildShikiOptions', () => {
     });
   });
 
-  test('builds multi-theme options and keeps theme-specific fields', () => {
+  it('builds multi-theme options and keeps theme-specific fields', () => {
     const options = buildShikiOptions(
       'typescript',
       resolveTheme({
@@ -45,14 +47,14 @@ describe('buildShikiOptions', () => {
     });
   });
 
-  test('uses default themes for invalid multi-theme input', () => {
+  it('uses default themes for invalid multi-theme input', () => {
     const warnSpy = vi
       .spyOn(console, 'warn')
       .mockImplementation(() => {});
 
     const options = buildShikiOptions(
       'typescript',
-      resolveTheme({ light: '', dark: 123 } as any),
+      resolveTheme(outOfType<Themes>({ light: '', dark: 123 })),
       {}
     );
 
@@ -67,10 +69,11 @@ describe('buildShikiOptions', () => {
     warnSpy.mockRestore();
   });
 
-  test('adds line number transformer without mutating caller array', () => {
+  it('adds line number transformer without mutating caller array', () => {
     const callerTransformer: ShikiTransformer = {
       name: 'custom-transformer',
     };
+
     const inputTransformers = [callerTransformer];
 
     const options = buildShikiOptions(
@@ -91,7 +94,7 @@ describe('buildShikiOptions', () => {
     });
   });
 
-  test('adds highlighted line transformer with starting line number', () => {
+  it('adds highlighted line transformer with starting line number', () => {
     const options = buildShikiOptions(
       'typescript',
       resolveTheme('github-dark'),

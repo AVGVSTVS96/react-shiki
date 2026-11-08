@@ -43,6 +43,7 @@ export const buildShikiOptions = (
 ): CodeToHastOptions => {
   const {
     delay,
+    // oxlint-disable-next-line typescript/no-deprecated -- omitted from the options passed through to shiki
     customLanguages,
     preloadLanguages,
     outputFormat,
@@ -58,10 +59,12 @@ export const buildShikiOptions = (
     ...shikiPassthrough
   } = options;
 
-  const transformers = [...(userTransformers || [])];
+  const transformers = [...(userTransformers ?? [])];
+
   if (showLineNumbers) {
     transformers.push(lineNumbersTransformer(startingLineNumber));
   }
+
   if (highlightLineNumbers?.length) {
     transformers.push(
       highlightedLinesTransformer(

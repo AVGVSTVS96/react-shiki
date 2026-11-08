@@ -33,7 +33,7 @@ export function rehypeInlineCodeProperty() {
  * const isInline = node && isInlineCode(node: Element)
  */
 export const isInlineCode = (node: Element): boolean => {
-  const textContent = (node.children || [])
+  const textContent = (node.children ?? [])
     .filter((child) => child.type === 'text')
     .map((child) => child.value)
     .join('');

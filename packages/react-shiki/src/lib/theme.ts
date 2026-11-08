@@ -7,20 +7,28 @@ export const DEFAULT_THEMES: Themes = {
 };
 
 export type ResolvedTheme =
-  | { isMulti: true; themes: Themes; themesToLoad: Theme[] }
+  | {
+      isMulti: true;
+      themes: Record<string, Theme>;
+      themesToLoad: Theme[];
+    }
   | { isMulti: false; theme: Theme; themesToLoad: Theme[] };
 
 const isTextmateTheme = (
-  value: unknown
+  value: Theme | Themes | undefined
 ): value is ThemeRegistrationAny => {
-  if (typeof value !== 'object' || value === null) return false;
-  const v = value as Partial<ThemeRegistrationAny> & {
-    settings?: unknown;
-  };
+  if (typeof value !== 'object' || value === null) {
+    return false;
+  }
+
   const hasTokens =
-    Array.isArray(v.tokenColors) || Array.isArray(v.settings);
+    ('tokenColors' in value && Array.isArray(value.tokenColors)) ||
+    ('settings' in value && Array.isArray(value.settings));
+
   const hasIdentity =
-    typeof v.name === 'string' || typeof v.type === 'string';
+    ('name' in value && typeof value.name === 'string') ||
+    ('type' in value && typeof value.type === 'string');
+
   return hasTokens && hasIdentity;
 };
 
@@ -48,6 +56,7 @@ export function resolveTheme(themeInput: Theme | Themes): ResolvedTheme {
     console.warn(
       '[react-shiki] invalid multi-theme config, falling back to defaults'
     );
+
     return {
       isMulti: true,
       themes: DEFAULT_THEMES,
@@ -61,10 +70,11 @@ export function resolveTheme(themeInput: Theme | Themes): ResolvedTheme {
     );
   }
 
-  const themes = Object.fromEntries(validEntries) as Themes;
+  const themes = Object.fromEntries(validEntries);
+
   return {
     isMulti: true,
     themes,
-    themesToLoad: validEntries.map(([, value]) => value as Theme),
+    themesToLoad: validEntries.map(([, value]) => value),
   };
 }

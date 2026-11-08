@@ -1,20 +1,11 @@
-/**
- * Attribution: Benchmark written by AI.
- *
- * This benchmark measures the performance of three transformation approaches:
- * - codeToHast -> toJsxRuntime: Used in the useShikiHighlighter hook for React output
- * - codeToHtml -> html-react-parser: An alternative approach
- * - codeToHtml -> dangerouslySetInnerHTML: Used for HTML output (both Shiki native and react-shiki)
- *
- * Each benchmark is run with different code sizes and configurations to provide
- * a comprehensive view of performance characteristics.
- */
 import { describe, test, beforeAll, afterAll, beforeEach } from 'vitest';
 
-import {
-  getSingletonHighlighter,
-  type CodeToHastOptions,
-  type Highlighter,
+import { getSingletonHighlighter } from 'shiki';
+import type {
+  BundledLanguage,
+  BundledTheme,
+  CodeToHastOptions,
+  Highlighter,
 } from 'shiki';
 import { jsx, jsxs, Fragment } from 'react/jsx-runtime';
 import { toJsxRuntime } from 'hast-util-to-jsx-runtime';
@@ -24,9 +15,7 @@ import type { Language, Theme, Themes } from '../src/lib/types';
 
 import { resolveLanguage } from '../src/lib/language';
 import { resolveTheme } from '../src/lib/theme';
-// --- Test Data ---
 
-// Small code sample (few lines)
 const smallCodeJS = `
 function hello(name) {
   console.log('Hello, ' + name + '!');
@@ -34,7 +23,6 @@ function hello(name) {
 }
 `.trim();
 
-// Medium code sample (original JS sample)
 const mediumCodeJS = `
 function hello(name) {
   console.log('Hello, ' + name + '!');
@@ -47,7 +35,6 @@ const result = hello('Developer');
 console.log(result);
 `.trim();
 
-// Large code sample (original TSX sample)
 const largeCodeTSX = `
 import React, { useState, useEffect } from 'react';
 
@@ -97,13 +84,20 @@ export const MyComponent: React.FC<MyComponentProps> = ({ initialTitle, items })
 };
 `.trim();
 
-// Very large code sample (for stress testing)
-const veryLargeCodeJS = Array(10).fill(mediumCodeJS).join('\n\n');
+const veryLargeCodeJS = Array.from(
+  { length: 10 },
+  () => mediumCodeJS
+).join('\n\n');
 
-// --- Test Configurations ---
+interface BenchConfig {
+  name: string;
+  code: string;
+  lang: BundledLanguage;
+  theme: BundledTheme | Record<'light' | 'dark', BundledTheme>;
+  size: 'small' | 'medium' | 'large' | 'very-large';
+}
 
-// Base configurations for raw transformation benchmarks
-const rawTransformConfigs = [
+const rawTransformConfigs: BenchConfig[] = [
   {
     name: 'Small JS - Single Theme',
     code: smallCodeJS,
@@ -148,125 +142,88 @@ const rawTransformConfigs = [
   },
 ];
 
-// Base options for Shiki
-const shikiOptionsBase = {};
-
-// --- Benchmark Functions ---
-
-// Approach A: codeToHast -> toJsxRuntime
-async function runApproachA(
-  highlighter: Highlighter,
-  code: string,
+const shikiOptions = (
   lang: Language,
   theme: Theme | Themes
-) {
+): CodeToHastOptions => {
   const { languageId } = resolveLanguage(lang);
   const resolved = resolveTheme(theme);
 
-  const options: CodeToHastOptions = {
-    ...shikiOptionsBase,
+  return {
     lang: languageId,
     ...(resolved.isMulti
       ? { themes: resolved.themes }
       : { theme: resolved.theme }),
   };
+};
 
-  const hast = highlighter.codeToHast(code, options);
-  const reactNodes = toJsxRuntime(hast, { jsx, jsxs, Fragment });
-  return reactNodes;
-}
-
-// Approach B: codeToHtml -> htmlReactParser
-async function runApproachB(
+async function hastToJsxRuntime(
   highlighter: Highlighter,
   code: string,
   lang: Language,
   theme: Theme | Themes
 ) {
-  const { languageId } = resolveLanguage(lang);
-  const resolved = resolveTheme(theme);
+  const hast = highlighter.codeToHast(code, shikiOptions(lang, theme));
 
-  const options: CodeToHastOptions = {
-    ...(shikiOptionsBase as CodeToHastOptions),
-    lang: languageId,
-    ...(resolved.isMulti
-      ? { themes: resolved.themes }
-      : { theme: resolved.theme }),
-  };
-
-  const html = highlighter.codeToHtml(code, options);
-  const reactNodes = htmlReactParser(html);
-  return reactNodes;
+  // oxlint-disable-next-line typescript/no-unsafe-return -- toJsxRuntime returns the global JSX.Element, which React 19's types no longer declare
+  return toJsxRuntime(hast, { jsx, jsxs, Fragment });
 }
 
-// Approach C: codeToHtml -> dangerouslySetInnerHTML (Both Shiki native and react-shiki HTML output)
-async function runApproachC(
+async function htmlToReactParser(
   highlighter: Highlighter,
   code: string,
   lang: Language,
   theme: Theme | Themes
 ) {
-  const { languageId } = resolveLanguage(lang);
-  const resolved = resolveTheme(theme);
+  const html = highlighter.codeToHtml(code, shikiOptions(lang, theme));
 
-  const options: CodeToHastOptions = {
-    ...(shikiOptionsBase as CodeToHastOptions),
-    lang: languageId,
-    ...(resolved.isMulti
-      ? { themes: resolved.themes }
-      : { theme: resolved.theme }),
-  };
-
-  const html = highlighter.codeToHtml(code, options);
-  // Return an object mimicking what would be passed to dangerouslySetInnerHTML
-  return { __html: html };
+  return htmlReactParser(html);
 }
 
-// --- Vitest Benchmark Suite ---
+async function htmlForInnerHtml(
+  highlighter: Highlighter,
+  code: string,
+  lang: Language,
+  theme: Theme | Themes
+) {
+  return {
+    __html: highlighter.codeToHtml(code, shikiOptions(lang, theme)),
+  };
+}
 
 let highlighterInstance: Highlighter | null = null;
 
-// Initialize highlighter once before all tests
 beforeAll(async () => {
   console.log('Initializing Shiki highlighter for benchmarks...');
+
   try {
-    // Use raw transformation configs for all tests
-    const allConfigs = rawTransformConfigs;
-
-    const languagesToLoad = new Set(
-      allConfigs
-        .flatMap((c) => resolveLanguage(c.lang).langsToLoad)
-        .filter(Boolean)
-    );
-
-    const themesToLoad = new Set(
-      allConfigs
-        .flatMap((c) => resolveTheme(c.theme).themesToLoad)
-        .filter(Boolean)
-    );
-
     highlighterInstance = await getSingletonHighlighter({
-      langs: Array.from(languagesToLoad) as any[],
-      themes: Array.from(themesToLoad) as Theme[],
+      langs: [...new Set(rawTransformConfigs.map((c) => c.lang))],
+      themes: [
+        ...new Set(
+          rawTransformConfigs.flatMap(
+            (c) => resolveTheme(c.theme).themesToLoad
+          )
+        ),
+      ],
     });
 
     console.log('Highlighter initialized successfully.');
   } catch (error) {
     console.error('Failed to initialize Shiki highlighter:', error);
-    throw new Error(`Shiki initialization failed in beforeAll: ${error}`);
+    throw new Error('Shiki initialization failed in beforeAll', {
+      cause: error,
+    });
   }
-}, 30000);
+}, 30_000);
 
-// Cleanup
 afterAll(() => {
   highlighterInstance?.dispose();
   highlighterInstance = null;
   console.log('Benchmark suite finished.');
 });
 
-// Warm-up phase before each benchmark group
 beforeEach(() => {
-  // Run a few iterations to warm up the JIT
   if (highlighterInstance) {
     for (let i = 0; i < 3; i++) {
       highlighterInstance.codeToHast('console.log("warm-up");', {
@@ -277,46 +234,32 @@ beforeEach(() => {
   }
 });
 
-// Compare the same three transformations through Vitest 5's bench fixture.
 describe('Raw Transformation Performance', () => {
-  for (const config of rawTransformConfigs) {
-    test(`Scenario: ${config.name}`, { timeout: 20000 }, async ({
-      bench,
-    }) => {
-      if (!highlighterInstance)
+  // oxlint-disable-next-line vitest/expect-expect -- a benchmark measures, it has nothing to assert
+  test.for(rawTransformConfigs)(
+    'Scenario: $name',
+    { timeout: 20_000 },
+    async (config, { bench }) => {
+      if (!highlighterInstance) {
         throw new Error('Highlighter not initialized');
+      }
+
       const highlighter = highlighterInstance;
+      const { code, lang, theme } = config;
+
       await bench.compare(
-        bench('codeToHast -> toJsxRuntime', () =>
-          runApproachA(
-            highlighter,
-            config.code,
-            config.lang,
-            config.theme
-          )
-        ),
-        bench('codeToHtml -> html-react-parser', () =>
-          runApproachB(
-            highlighter,
-            config.code,
-            config.lang,
-            config.theme
-          )
-        ),
-        bench('codeToHtml -> dangerouslySetInnerHTML', () =>
-          runApproachC(
-            highlighter,
-            config.code,
-            config.lang,
-            config.theme
-          )
-        ),
+        bench('codeToHast -> toJsxRuntime', async () =>
+          await hastToJsxRuntime(highlighter, code, lang, theme)),
+        bench('codeToHtml -> html-react-parser', async () =>
+          await htmlToReactParser(highlighter, code, lang, theme)),
+        bench('codeToHtml -> dangerouslySetInnerHTML', async () =>
+          await htmlForInnerHtml(highlighter, code, lang, theme)),
         {
           time: 2000,
           iterations: config.size === 'very-large' ? 5 : 20,
           warmupIterations: 3,
         }
       );
-    });
-  }
+    }
+  );
 });

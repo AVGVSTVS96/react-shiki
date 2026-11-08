@@ -1,5 +1,7 @@
-import { describe, expect, test, vi } from 'vitest';
+import { describe, expect, vi, it } from 'vitest';
 import { resolveTheme, DEFAULT_THEMES } from '../src/lib/theme';
+import type { Themes } from '../src/lib/types';
+import { outOfType } from './fakes';
 
 const customTheme = {
   name: 'custom-theme',
@@ -13,8 +15,8 @@ const customTheme = {
   ],
 };
 
-describe('resolveTheme', () => {
-  test('resolves a single bundled theme', () => {
+describe(resolveTheme, () => {
+  it('resolves a single bundled theme', () => {
     const result = resolveTheme('github-dark');
 
     expect(result).toEqual({
@@ -24,7 +26,7 @@ describe('resolveTheme', () => {
     });
   });
 
-  test('resolves textmate theme objects as single-theme configs', () => {
+  it('resolves textmate theme objects as single-theme configs', () => {
     const result = resolveTheme(customTheme);
 
     expect(result).toEqual({
@@ -34,7 +36,7 @@ describe('resolveTheme', () => {
     });
   });
 
-  test('resolves valid multi-theme configs and collects all themes', () => {
+  it('resolves valid multi-theme configs and collects all themes', () => {
     const result = resolveTheme({
       light: 'github-light',
       dark: customTheme,
@@ -47,15 +49,17 @@ describe('resolveTheme', () => {
     });
   });
 
-  test('warns and falls back to defaults for invalid config shape', () => {
+  it('warns and falls back to defaults for invalid config shape', () => {
     const warnSpy = vi
       .spyOn(console, 'warn')
       .mockImplementation(() => {});
 
-    const result = resolveTheme({
-      light: '',
-      dark: 123,
-    } as any);
+    const result = resolveTheme(
+      outOfType<Themes>({
+        light: '',
+        dark: 123,
+      })
+    );
 
     expect(result).toEqual({
       isMulti: true,
