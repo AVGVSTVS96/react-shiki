@@ -1,0 +1,92 @@
+name: Compat
+
+on: [pull_request]
+
+jobs:
+  build:
+    name: build (node ${{ matrix.node-version }})
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        node-version: [22, 24, 26]
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v7
+
+      - name: Install pnpm
+        uses: pnpm/action-setup@v6
+
+      - name: Setup Node.js ${{ matrix.node-version }}
+        uses: actions/setup-node@v7
+        with:
+          node-version: ${{ matrix.node-version }}
+          cache: pnpm
+
+      - name: Install dependencies
+        run: pnpm --filter react-shiki install --frozen-lockfile
+
+      - name: Build
+        run: pnpm --filter react-shiki build
+
+      - name: Verify package integrity
+        run: pnpm --filter react-shiki check:package
+
+  test:
+    name: test (react ${{ matrix.react-version }})
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - react-version: 18.3.1
+            types-version: 18
+          - react-version: 19.2.6
+            types-version: 19
+          - react-version: catalog
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v7
+
+      - name: Install pnpm
+        uses: pnpm/action-setup@v6
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v7
+        with:
+          node-version: 24.21.0
+          cache: pnpm
+
+      - name: Install dependencies
+        run: pnpm --filter react-shiki install --frozen-lockfile
+
+      - name: Use React ${{ matrix.react-version }}
+        if: matrix.react-version != 'catalog'
+        run: pnpm --filter react-shiki add --save-dev react@${{ matrix.react-version }} react-dom@${{ matrix.react-version }} @types/react@${{ matrix.types-version }} @types/react-dom@${{ matrix.types-version }}
+
+      - name: Test
+        run: pnpm --filter react-shiki test
+
+      - name: Benchmark smoke test
+        if: matrix.react-version == 'catalog'
+        run: pnpm --filter react-shiki bench --run -t 'Small JS'
+
+  playground:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v7
+
+      - name: Install pnpm
+        uses: pnpm/action-setup@v6
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v7
+        with:
+          node-version: 24.21.0
+          cache: pnpm
+
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+
+      - name: Build playground
+        run: pnpm playground:build

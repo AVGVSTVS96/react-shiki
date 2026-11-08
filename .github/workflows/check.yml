@@ -1,6 +1,9 @@
 name: Check
 
-on: [pull_request]
+on:
+  pull_request:
+  push:
+    branches: [main]
 
 jobs:
   check:
@@ -19,12 +22,13 @@ jobs:
           cache: pnpm
 
       - name: Install dependencies
-        run: pnpm --filter react-shiki install --frozen-lockfile
+        run: pnpm install --frozen-lockfile
 
       - name: Check
-        run: pnpm --filter react-shiki check
+        run: pnpm check
 
       - name: Validate release plan and changelog
+        if: github.event_name == 'pull_request'
         env:
           GITHUB_TOKEN: ${{ github.token }}
         run: |
