@@ -3,8 +3,8 @@ packages:
   - apps/*
 
 catalog:
-  react: ^19.3.0
-  react-dom: ^19.3.0
+  react: ^19.3.1
+  react-dom: ^19.3.1
   '@types/react': ^19.3.0
   '@types/react-dom': ^19.3.0
 
@@ -12,7 +12,3 @@ allowBuilds:
   '@tailwindcss/oxide': true
   esbuild: true
   lefthook: false
-
-# Vite 8.3.3 is included in this validated dependency upgrade batch.
-minimumReleaseAgeExclude:
-  - vite@8.3.3
