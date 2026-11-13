@@ -1,5 +1,20 @@
 # react-shiki
 
+## 0.11.3
+
+### Patch Changes
+
+- Feat: add a `cache` option. Pass a `Map` and highlighted output is kept across unmounts, so remounting unchanged code (switching chat threads, virtualized lists) paints on the first render without highlighting again. Output is stored on unmount, so partial code from streaming never lands in the cache, and entries are keyed by code, language, theme and options. _[`#208`](https://github.com/AVGVSTVS96/react-shiki/pull/208) [`161cb25`](https://github.com/avgvstvs96/react-shiki/commit/161cb2548b1fb8143668bbb7421a4595e7f2fa59) [@AVGVSTVS96](https://github.com/AVGVSTVS96)_
+
+	
+	```tsx
+	const cache = new Map();
+	
+	<ShikiHighlighter language="tsx" theme="github-dark" cache={cache}>
+	  {code}
+	</ShikiHighlighter>;
+	```
+
 ## 0.11.2
 
 ### Patch Changes
