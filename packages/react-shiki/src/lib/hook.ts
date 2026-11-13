@@ -5,6 +5,7 @@ import { toJsxRuntime } from 'hast-util-to-jsx-runtime';
 import type { CodeToHastOptions } from 'shiki';
 
 import type {
+  HighlightCache,
   HighlighterFactory,
   HighlighterOptions,
   HighlighterOptionsFor,
@@ -88,6 +89,20 @@ export async function highlight<F extends OutputFormat = 'react'>(
   return (outputs[format] ?? outputs.react)() as HighlightResultMap[F];
 }
 
+const readCache = <F extends OutputFormat>(
+  cache: HighlightCache | undefined,
+  key: string | undefined
+): HighlightResult<F> => {
+  if (!key) {
+    return null;
+  }
+
+  // oxlint-disable-next-line typescript/no-unsafe-type-assertion, anti-slop/require-safety-comment-for-type-assertion -- the key includes outputFormat, so an entry under it is HighlightResultMap[F]
+  const cached = cache?.get(key) as HighlightResultMap[F] | undefined;
+
+  return cached === undefined || cached === '' ? null : cached;
+};
+
 export const useHighlight = <F extends OutputFormat = 'react'>(
   code: string,
   lang: Language,
@@ -95,22 +110,19 @@ export const useHighlight = <F extends OutputFormat = 'react'>(
   optionsInput: HighlighterOptionsFor<F> | undefined,
   highlighterFactory: HighlighterFactory
 ): HighlightResult<F> => {
-  const options = optionsInput ?? {};
-
-  const [highlightedCode, setHighlightedCode] =
-    useState<HighlightResult<F>>(null);
+  const { cache, ...rest } = optionsInput ?? {};
+  const cacheRef = useRef(cache);
+  cacheRef.current = cache;
 
   // This hook owns the line-number/highlight output, so it also owns the
   // corresponding styles. The primitive boolean limits effect reruns.
   useFeatureStyles(
-    Boolean(
-      options.showLineNumbers || options.highlightLineNumbers?.length
-    )
+    Boolean(rest.showLineNumbers || rest.highlightLineNumbers?.length)
   );
 
   const stableLang = useStableValue(lang);
   const stableTheme = useStableValue(themeInput);
-  const stableOpts = useStableValue(options);
+  const stableOpts = useStableValue(rest);
 
   const resolved = useMemo(() => {
     const { languageId, langsToLoad } = resolveLanguage(
@@ -133,6 +145,40 @@ export const useHighlight = <F extends OutputFormat = 'react'>(
     };
   }, [stableLang, stableTheme, stableOpts]);
 
+  const hasCache = Boolean(cache);
+
+  const cacheScope = useMemo(
+    () =>
+      hasCache
+        ? JSON.stringify([
+            stableOpts.outputFormat ?? 'react',
+            resolved.shikiOptions,
+            stableOpts.startingLineNumber,
+            stableOpts.highlightLineNumbers,
+          ])
+        : undefined,
+    [hasCache, resolved, stableOpts]
+  );
+
+  const cacheKey = cacheScope && `${cacheScope}\n${code}`;
+
+  const [highlightedCode, setHighlightedCode] = useState(() =>
+    readCache<F>(cache, cacheKey)
+  );
+
+  const shown = useRef({ key: cacheKey, result: highlightedCode });
+
+  useEffect(
+    () => () => {
+      const { key, result } = shown.current;
+
+      if (key && result !== null && result !== '') {
+        cacheRef.current?.set(key, result);
+      }
+    },
+    []
+  );
+
   const requestIdRef = useRef(0);
 
   const timeoutControl = useRef<TimeoutState>({
@@ -149,6 +195,11 @@ export const useHighlight = <F extends OutputFormat = 'react'>(
     const requestId = ++requestIdRef.current;
     const timeouts = timeoutControl.current;
 
+    const show = (result: HighlightResult<F>) => {
+      shown.current = { key: cacheKey, result };
+      setHighlightedCode(result);
+    };
+
     const run = async () => {
       try {
         const result = await highlight<F>(
@@ -159,25 +210,35 @@ export const useHighlight = <F extends OutputFormat = 'react'>(
         );
 
         if (requestId === requestIdRef.current) {
-          setHighlightedCode(result);
+          show(result);
         }
       } catch (error) {
         console.error('[react-shiki] highlight failed', error);
       }
     };
 
-    if (resolved.languageId) {
-      if (stableOpts.delay) {
-        throttleHighlighting(run, timeoutControl, stableOpts.delay);
-      } else {
-        void run();
+    const cached = readCache<F>(cacheRef.current, cacheKey);
+
+    if (!resolved.languageId) {
+      return () => {
+        clearTimeout(timeouts.timeoutId);
+      };
+    }
+
+    if (cached !== null) {
+      if (shown.current.result !== cached) {
+        show(cached);
       }
+    } else if (stableOpts.delay) {
+      throttleHighlighting(run, timeoutControl, stableOpts.delay);
+    } else {
+      void run();
     }
 
     return () => {
       clearTimeout(timeouts.timeoutId);
     };
-  }, [code, resolved, stableOpts]);
+  }, [code, cacheKey, resolved, stableOpts]);
 
   return highlightedCode;
 };

@@ -7,9 +7,12 @@ import {
 } from '../src/index';
 import { useShikiHighlighter as useShikiHighlighterCore } from '../src/core';
 import type {
+  HighlightCache,
   HighlighterFactory,
   HighlighterOptions,
+  HighlightResultMap,
   Language,
+  OutputFormat,
   Theme,
   Themes,
 } from '../src/lib/types';
@@ -496,6 +499,133 @@ describe('useShikiHighlighter Hook', () => {
       });
 
       expect(highlighter.codeToHtml).toHaveBeenCalledOnce();
+    });
+  });
+
+  describe('Cache', () => {
+    interface CacheHarnessProps {
+      code: string;
+      theme?: Theme;
+      cache: HighlightCache;
+    }
+
+    const setup = () => {
+      const highlighter = createFakeHighlighter();
+      highlighter.codeToHtml.mockImplementation(
+        (code: string) => `<pre>${code}</pre>`
+      );
+
+      const Harness = ({
+        code,
+        theme = 'github-dark',
+        cache,
+      }: CacheHarnessProps) => {
+        const highlighted = useBaseHook(
+          code,
+          'sql',
+          theme,
+          { cache, highlighter, outputFormat: 'html' },
+          async () => highlighter
+        );
+
+        return <div data-testid="out">{highlighted ?? 'pending'}</div>;
+      };
+
+      return { Harness, codeToHtml: highlighter.codeToHtml };
+    };
+
+    it('paints cached output on the first render of a remount without highlighting', async () => {
+      const { Harness, codeToHtml } = setup();
+      const cache: HighlightCache = new Map();
+
+      const first = render(<Harness code="SELECT 1" cache={cache} />);
+      await waitFor(() => {
+        expect(first.getByTestId('out').textContent).toBe(
+          '<pre>SELECT 1</pre>'
+        );
+      });
+      first.unmount();
+
+      const second = render(<Harness code="SELECT 1" cache={cache} />);
+
+      expect(second.getByTestId('out').textContent).toBe(
+        '<pre>SELECT 1</pre>'
+      );
+
+      await act(async () => {
+        await delay(20);
+      });
+
+      expect(codeToHtml).toHaveBeenCalledOnce();
+    });
+
+    it('stores only what was shown at unmount, not streaming partials', async () => {
+      const { Harness } = setup();
+      const cache = new Map<string, HighlightResultMap[OutputFormat]>();
+
+      const view = render(<Harness code="SEL" cache={cache} />);
+      await waitFor(() => {
+        expect(view.getByTestId('out').textContent).toBe(
+          '<pre>SEL</pre>'
+        );
+      });
+      view.rerender(<Harness code="SELECT 1" cache={cache} />);
+      await waitFor(() => {
+        expect(view.getByTestId('out').textContent).toBe(
+          '<pre>SELECT 1</pre>'
+        );
+      });
+
+      expect(cache.size).toBe(0);
+
+      view.unmount();
+
+      expect([...cache.values()]).toStrictEqual(['<pre>SELECT 1</pre>']);
+    });
+
+    it('misses the cache for a different theme', async () => {
+      const { Harness, codeToHtml } = setup();
+      const cache: HighlightCache = new Map();
+
+      const first = render(<Harness code="SELECT 1" cache={cache} />);
+      await waitFor(() => {
+        expect(codeToHtml).toHaveBeenCalledOnce();
+      });
+      first.unmount();
+
+      const second = render(
+        <Harness code="SELECT 1" theme="nord" cache={cache} />
+      );
+
+      expect(second.getByTestId('out').textContent).toBe('pending');
+
+      await waitFor(() => {
+        expect(codeToHtml).toHaveBeenCalledTimes(2);
+      });
+    });
+
+    it('reuses cached code when switching back to it while mounted', async () => {
+      const { Harness, codeToHtml } = setup();
+      const cache: HighlightCache = new Map();
+
+      const first = render(<Harness code="SELECT 1" cache={cache} />);
+      await waitFor(() => {
+        expect(codeToHtml).toHaveBeenCalledOnce();
+      });
+      first.unmount();
+
+      const view = render(<Harness code="SELECT 2" cache={cache} />);
+      await waitFor(() => {
+        expect(codeToHtml).toHaveBeenCalledTimes(2);
+      });
+      view.rerender(<Harness code="SELECT 1" cache={cache} />);
+      await waitFor(() => {
+        expect(view.getByTestId('out').textContent).toBe(
+          '<pre>SELECT 1</pre>'
+        );
+      });
+
+      expect(codeToHtml).toHaveBeenCalledTimes(2);
     });
   });
 
