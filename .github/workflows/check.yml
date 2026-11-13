@@ -12,20 +12,21 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v7
 
-      - name: Install pnpm
-        uses: pnpm/action-setup@v6
+      - name: Install bun
+        uses: oven-sh/setup-bun@v2
+        with:
+          bun-version-file: package.json
 
       - name: Setup Node.js
         uses: actions/setup-node@v7
         with:
           node-version: 24.21.0
-          cache: pnpm
 
       - name: Install dependencies
-        run: pnpm install --frozen-lockfile
+        run: bun install --frozen-lockfile
 
       - name: Check
-        run: pnpm check
+        run: bun run check
 
       - name: Validate release plan and changelog
         if: github.event_name == 'pull_request'
@@ -33,5 +34,5 @@ jobs:
           GITHUB_TOKEN: ${{ github.token }}
         run: |
           if test -n "$(rg --files .changeset -g '*.md' -g '!README.md')"; then
-            pnpm changeset version
+            bun run changeset version
           fi

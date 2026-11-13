@@ -1,4 +1,4 @@
 pre-commit:
   commands:
     check:
-      run: pnpm check
+      run: bun run check

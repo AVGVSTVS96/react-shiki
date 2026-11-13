@@ -6,7 +6,6 @@
   "ignorePatterns": [
     ".github/workflows/claude.yml",
     "tools/oxlint/no-comments.ts",
-    "pnpm-lock.yaml",
     "**/CHANGELOG.md",
     "**/*.md",
     "**/*.mdx",

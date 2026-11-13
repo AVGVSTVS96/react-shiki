@@ -1,0 +1,4 @@
+[install]
+linker = "isolated"
+exact = true
+minimumReleaseAge = 86400

@@ -6,7 +6,7 @@
   "scripts": {
     "dev": "vite",
     "build": "tsc -b && vite build",
-    "prebuild": "pnpm --filter react-shiki run build",
+    "prebuild": "bun --filter react-shiki build",
     "preview": "vite preview",
     "typecheck": "tsc -b"
   },

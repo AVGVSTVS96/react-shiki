@@ -2,20 +2,33 @@
   "name": "root",
   "private": true,
   "license": "MIT",
+  "workspaces": {
+    "packages": [
+      "packages/*",
+      "apps/*"
+    ],
+    "catalog": {
+      "react": "^19.3.1",
+      "react-dom": "^19.3.1",
+      "@types/react": "^19.3.0",
+      "@types/react-dom": "^19.3.0"
+    }
+  },
   "type": "module",
   "scripts": {
     "prepare": "lefthook install",
-    "dev": "pnpm --stream -r --parallel dev",
-    "build": "pnpm --stream -r --parallel build",
-    "check": "pnpm package:build && oxlint && oxfmt --check && tsc -p . && pnpm -r typecheck && pnpm --filter react-shiki test",
+    "dev": "bun --filter '*' dev",
+    "build": "bun --filter '*' build",
+    "check": "bun run package:build && oxlint && oxfmt --check && tsc -p . && bun --filter '*' typecheck && bun --filter react-shiki test",
     "fix": "oxlint --fix; oxfmt",
-    "package:dev": "pnpm --filter react-shiki dev",
-    "package:build": "pnpm --filter react-shiki build",
-    "playground:dev": "pnpm --filter playground dev",
-    "playground:build": "pnpm --filter playground build",
-    "bench": "pnpm --filter react-shiki bench",
+    "package:dev": "bun --filter react-shiki dev",
+    "package:build": "bun --filter react-shiki build",
+    "playground:dev": "bun --filter playground dev",
+    "playground:build": "bun --filter playground build",
+    "bench": "bun --filter react-shiki bench",
     "changeset": "changeset",
-    "ci:publish": "pnpm package:build && changeset publish"
+    "ci:publish": "bun run package:build && changeset pack --out-dir .release && node .github/scripts/repack.ts && changeset publish --from-pack-dir .release",
+    "ci:version": "changeset version && bun install --lockfile-only"
   },
   "devDependencies": {
     "@changesets/cli": "^3.0.3",
@@ -29,5 +42,5 @@
     "typescript": "^7.0.2",
     "ultracite": "8.1.1"
   },
-  "packageManager": "pnpm@12.18.0"
+  "packageManager": "bun@1.4.3"
 }
